@@ -80,6 +80,14 @@ const config: HardhatUserConfig = {
       saveDeployments: true,
       tags: ["staging"],
     },
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts,
+      chainId: 4,
+      live: true,
+      saveDeployments: true,
+      tags: ["staging"],
+    },
     goerli: {
       url: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts,
@@ -164,13 +172,17 @@ const config: HardhatUserConfig = {
     ),
   },
   solidity: {
-    version: "0.6.12",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
-      },
-    },
+    compilers: [
+      {
+        version: "0.6.11",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      }
+    ]
   },
   tenderly: {
     project: process.env.TENDERLY_PROJECT,
