@@ -6,7 +6,7 @@ export default async ({ getNamedAccounts, deployments }) => {
 
     const { address }: MerkleDistributor = await deploy("MerkleDistributor", {
         from: deployer,
-        args: ["0xf86e8c9993a7601f0f56f34a0c3255afa0c1f493", "0xf29518d290811849413e53aa3e3d3b63864f42356ca4a1b12287aace41a31fa3"],
+        args: ["0x6b3595068778dd592e39a122f4f5a5cf09c90fe2", "0x46b5d189cdd7d522e3c120e9750a570e1aa74ab969a0fb2f55536e9479e88918"],
     });
 
     console.log(address)
