@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.6.11;
+pragma solidity 0.6.9;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import "./interfaces/IMerkleDistributor.sol";
 import "./Ownable.sol";
+
 
 contract MerkleDistributor is IMerkleDistributor, Ownable {
     address public immutable override token;
@@ -22,33 +23,27 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         frozen = false;
     }
 
+    function claim(uint256 index, address account, uint256 amount, bytes32[] calldata merkleProof) external override {
+        require(!frozen, "MerkleDistributor: Claiming is frozen.");
+        require(!isClaimed(index), "MerkleDistributor: Drop already claimed.");
+
+        // Verify the merkle proof.
+        bytes32 node = keccak256(abi.encodePacked(index, account, amount));
+        require(MerkleProof.verify(merkleProof, merkleRoot, node), "MerkleDistributor: Invalid proof.");
+
+        // Mark it claimed and send the token.
+        _setClaimed(index);
+        require(IERC20(token).transfer(account, amount), "MerkleDistributor: Transfer failed.");
+
+        emit Claimed(index, amount, account, week);
+    }
+
     function isClaimed(uint256 index) public view override returns (bool) {
         uint256 claimedWordIndex = index / 256;
         uint256 claimedBitIndex = index % 256;
         uint256 claimedWord = claimedBitMap[week][claimedWordIndex];
         uint256 mask = (1 << claimedBitIndex);
         return claimedWord & mask == mask;
-    }
-
-    function _setClaimed(uint256 index) private {
-        uint256 claimedWordIndex = index / 256;
-        uint256 claimedBitIndex = index % 256;
-        claimedBitMap[week][claimedWordIndex] = claimedBitMap[week][claimedWordIndex] | (1 << claimedBitIndex);
-    }
-
-    function claim(uint256 index, address account, uint256 amount, bytes32[] calldata merkleProof) external override {
-        require(!frozen, 'MerkleDistributor: Claiming is frozen.');
-        require(!isClaimed(index), 'MerkleDistributor: Drop already claimed.');
-
-        // Verify the merkle proof.
-        bytes32 node = keccak256(abi.encodePacked(index, account, amount));
-        require(MerkleProof.verify(merkleProof, merkleRoot, node), 'MerkleDistributor: Invalid proof.');
-
-        // Mark it claimed and send the token.
-        _setClaimed(index);
-        require(IERC20(token).transfer(account, amount), 'MerkleDistributor: Transfer failed.');
-
-        emit Claimed(index, amount, account, week);
     }
 
     function freeze() public override onlyOwner {
@@ -60,7 +55,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
     }
 
     function updateMerkleRoot(bytes32 _merkleRoot) public override onlyOwner {
-        require(frozen, 'MerkleDistributor: Contract not frozen.');
+        require(frozen, "MerkleDistributor: Contract not frozen.");
 
         // Increment the week (simulates the clearing of the claimedBitMap)
         week = week + 1;
@@ -68,5 +63,11 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         merkleRoot = _merkleRoot;
 
         emit MerkleRootUpdated(merkleRoot, week);
+    }
+
+    function _setClaimed(uint256 index) private {
+        uint256 claimedWordIndex = index / 256;
+        uint256 claimedBitIndex = index % 256;
+        claimedBitMap[week][claimedWordIndex] = claimedBitMap[week][claimedWordIndex] | (1 << claimedBitIndex);
     }
 }
