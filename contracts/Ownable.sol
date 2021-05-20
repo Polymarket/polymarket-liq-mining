@@ -2,7 +2,7 @@
 // Audit on 5-Jan-2021 by Keno and BoringCrypto
 
 // P1 - P3: OK
-pragma solidity 0.6.11;
+pragma solidity 0.6.9;
 
 // Source: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol + Claimable.sol
 // Edited by BoringCrypto
