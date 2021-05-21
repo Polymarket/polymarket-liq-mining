@@ -12,8 +12,6 @@ import "solidity-coverage";
 
 import { HardhatUserConfig, task } from "hardhat/config";
 
-import { removeConsoleLog } from "hardhat-preprocessor";
-
 const accounts = {
   mnemonic:
     process.env.MNEMONIC ||
@@ -70,6 +68,8 @@ const config: HardhatUserConfig = {
       live: false,
       saveDeployments: true,
       tags: ["test", "local"],
+      blockGasLimit: 12450000,
+      accounts: { mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn' }
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`,
@@ -163,12 +163,6 @@ const config: HardhatUserConfig = {
       saveDeployments: true,
       tags: ["staging"],
     }
-  },
-  preprocess: {
-    eachLine: removeConsoleLog(
-      (bre) =>
-        bre.network.name !== "hardhat" && bre.network.name !== "localhost"
-    ),
   },
   solidity: {
     compilers: [

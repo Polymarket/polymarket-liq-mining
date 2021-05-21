@@ -1,11 +1,13 @@
 import chai, { expect } from 'chai'
-import { solidity, MockProvider, deployContract } from 'ethereum-waffle'
-import { Contract, BigNumber, constants } from 'ethers'
+import { ethers, waffle } from "hardhat";
+import { Contract, BigNumber, constants, utils } from 'ethers'
 import BalanceTree from '../src/balance-tree'
 
 import Distributor from '../artifacts/contracts/MerkleDistributor.sol/MerkleDistributor.json'
 import TestERC20 from '../artifacts/contracts/test/TestERC20.sol/TestERC20.json'
 import { parseBalanceMap } from '../src/parse-balance-map'
+
+const { solidity, provider, deployContract } = waffle;
 
 chai.use(solidity)
 
@@ -17,20 +19,12 @@ const ZERO_BYTES32 = '0x00000000000000000000000000000000000000000000000000000000
 const ONE_BYTES32 = '0x1111111111111111111111111111111111111111111111111111111111111111'
 
 describe('MerkleDistributor', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
-
   const wallets = provider.getWallets()
   const [wallet0, wallet1] = wallets
 
   let token: Contract
   beforeEach('deploy token', async () => {
-    token = await deployContract(wallet0, TestERC20, ['Token', 'TKN', 0], overrides)
+    token = await deployContract((await ethers.getSigners())[0], TestERC20, ['Token', 'TKN', 0], overrides)
   })
 
   describe('#token', () => {
@@ -93,11 +87,11 @@ describe('MerkleDistributor', () => {
         const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100))
         await expect(distributor.claim(0, wallet0.address, 100, proof0, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(0, 100, wallet0.address, 0)
+          .withArgs(0, 100, wallet0.address, wallet0.address, 0)
         const proof1 = tree.getProof(1, wallet1.address, BigNumber.from(101))
         await expect(distributor.claim(1, wallet1.address, 101, proof1, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(1, 101, wallet1.address, 0)
+          .withArgs(1, 101, wallet1.address, wallet1.address, 0)
       })
 
       it('transfers the token', async () => {
@@ -192,7 +186,7 @@ describe('MerkleDistributor', () => {
         const proof = tree.getProof(0, wallet0.address, BigNumber.from(100))
         const tx = await distributor.claim(0, wallet0.address, 100, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(83214)
+        expect(receipt.gasUsed).to.eq(83326)
       })
     })
     describe('larger tree', () => {
@@ -212,21 +206,21 @@ describe('MerkleDistributor', () => {
         const proof = tree.getProof(4, wallets[4].address, BigNumber.from(5))
         await expect(distributor.claim(4, wallets[4].address, 5, proof, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(4, 5, wallets[4].address, 0)
+          .withArgs(4, 5, wallets[4].address, wallets[4].address, 0)
       })
 
       it('claim index 9', async () => {
         const proof = tree.getProof(9, wallets[9].address, BigNumber.from(10))
         await expect(distributor.claim(9, wallets[9].address, 10, proof, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(9, 10, wallets[9].address, 0)
+          .withArgs(9, 10, wallets[9].address, wallets[9].address, 0)
       })
 
       it('gas', async () => {
         const proof = tree.getProof(9, wallets[9].address, BigNumber.from(10))
         const tx = await distributor.claim(9, wallets[9].address, 10, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(85708)
+        expect(receipt.gasUsed).to.eq(85820)
       })
 
       it('gas second down about 15k', async () => {
@@ -245,13 +239,12 @@ describe('MerkleDistributor', () => {
           overrides
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(70688)
+        expect(receipt.gasUsed).to.eq(70800)
       })
     })
 
     describe('realistic size tree', () => {
       let distributor: Contract
-      let tree: BalanceTree
       const NUM_LEAVES = 100_000
       const NUM_SAMPLES = 25
       const elements: { account: string; amount: BigNumber }[] = []
@@ -259,7 +252,7 @@ describe('MerkleDistributor', () => {
         const node = { account: wallet0.address, amount: BigNumber.from(100) }
         elements.push(node)
       }
-      tree = new BalanceTree(elements)
+      const tree: BalanceTree = new BalanceTree(elements)
 
       it('proof verification works', () => {
         const root = Buffer.from(tree.getHexRoot().slice(2), 'hex')
@@ -281,17 +274,17 @@ describe('MerkleDistributor', () => {
         const proof = tree.getProof(50000, wallet0.address, BigNumber.from(100))
         const tx = await distributor.claim(50000, wallet0.address, 100, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(96398)
+        expect(receipt.gasUsed).to.eq(96510)
       })
       it('gas deeper node', async () => {
         const proof = tree.getProof(90000, wallet0.address, BigNumber.from(100))
         const tx = await distributor.claim(90000, wallet0.address, 100, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(96334)
+        expect(receipt.gasUsed).to.eq(96446)
       })
       it('gas average random distribution', async () => {
         let total: BigNumber = BigNumber.from(0)
-        let count: number = 0
+        let count = 0
         for (let i = 0; i < NUM_LEAVES; i += NUM_LEAVES / NUM_SAMPLES) {
           const proof = tree.getProof(i, wallet0.address, BigNumber.from(100))
           const tx = await distributor.claim(i, wallet0.address, 100, proof, overrides)
@@ -300,12 +293,12 @@ describe('MerkleDistributor', () => {
           count++
         }
         const average = total.div(count)
-        expect(average).to.eq(81823)
+        expect(average).to.eq(81935)
       })
       // this is what we gas golfed by packing the bitmap
       it('gas average first 25', async () => {
         let total: BigNumber = BigNumber.from(0)
-        let count: number = 0
+        let count = 0
         for (let i = 0; i < 25; i++) {
           const proof = tree.getProof(i, wallet0.address, BigNumber.from(100))
           const tx = await distributor.claim(i, wallet0.address, 100, proof, overrides)
@@ -314,7 +307,7 @@ describe('MerkleDistributor', () => {
           count++
         }
         const average = total.div(count)
-        expect(average).to.eq(67572)
+        expect(average).to.eq(67684)
       })
 
       it('no double claims in random distribution', async () => {
@@ -438,16 +431,75 @@ describe('MerkleDistributor', () => {
     })
 
     it('all claims work exactly once', async () => {
-      for (let account in claims) {
+      for (const account in claims) {
         const claim = claims[account]
         await expect(distributor.claim(claim.index, account, claim.amount, claim.proof, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(claim.index, claim.amount, account, 0)
+          .withArgs(claim.index, claim.amount, account, account, 0)
         await expect(distributor.claim(claim.index, account, claim.amount, claim.proof, overrides)).to.be.revertedWith(
           'MerkleDistributor: Drop already claimed.'
         )
       }
       expect(await token.balanceOf(distributor.address)).to.eq(0)
     })
+  })
+
+  describe('#claimFrom', () => {
+      let domain: { name: string; chainId: number; verifyingContract: string; };
+
+      const types = {
+          Claim: [
+              { name: 'recipient', type: 'address' },
+              { name: 'amount', type: 'uint256' },
+              { name: 'week', type: 'uint32' },
+          ]
+      }
+
+      describe('two account tree', () => {
+          let distributor: Contract
+          let tree: BalanceTree
+
+          beforeEach('deploy', async () => {
+            tree = new BalanceTree([
+              { account: wallet0.address, amount: BigNumber.from(100) },
+              { account: wallet1.address, amount: BigNumber.from(101) },
+            ])
+            distributor = await deployContract(wallet1, Distributor, [token.address, tree.getHexRoot()], overrides)
+            await token.setBalance(distributor.address, 201)
+          })
+
+          it('successful claim', async () => {
+            const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100))
+
+            domain = {
+                name: 'PolyMarket Distributor',
+                chainId: (await provider.getNetwork()).chainId,
+                verifyingContract: distributor.address,
+            };
+
+            const hexSig0 = await wallet0._signTypedData(domain, types, {
+                recipient: wallet0.address,
+                amount: 100,
+                week: 0
+            });
+            const { v: v0, r: r0, s: s0 } = utils.splitSignature(hexSig0);
+
+            await expect(distributor.claimFrom(0, 100, proof0, wallet0.address, v0, r0, s0, overrides))
+              .to.emit(distributor, 'Claimed')
+              .withArgs(0, 100, wallet0.address, wallet0.address, 0)
+
+            const hexSig1 = await wallet1._signTypedData(domain, types, {
+                recipient: wallet1.address,
+                amount: 101,
+                week: 0
+            });
+            const { v: v1, r: r1, s: s1 } = utils.splitSignature(hexSig1);
+
+            const proof1 = tree.getProof(1, wallet1.address, BigNumber.from(101))
+            await expect(distributor.claimFrom(1, 101, proof1, wallet1.address, v1, r1, s1, overrides))
+              .to.emit(distributor, 'Claimed')
+              .withArgs(1, 101, wallet1.address, wallet1.address, 0)
+          })
+      })
   })
 })

@@ -23,7 +23,7 @@ interface IMerkleDistributor {
     function updateMerkleRoot(bytes32 newMerkleRoot) external;
 
     // This event is triggered whenever a call to #claim succeeds.
-    event Claimed(uint256 index, uint256 amount, address indexed account, uint256 indexed week);
+    event Claimed(uint256 index, uint256 amount, address indexed airdropRecipient, address indexed tokenReceiver, uint256 indexed week);
     // This event is triggered whenever the merkle root gets updated.
     event MerkleRootUpdated(bytes32 indexed merkleRoot, uint32 indexed week);
 }
