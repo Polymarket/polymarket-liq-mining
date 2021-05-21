@@ -335,26 +335,26 @@ describe('MerkleDistributor', () => {
     it('check the proofs is as expected', () => {
       expect(claims).to.deep.eq({
         [wallet0.address]: {
-          index: 2,
+          index: 1,
           amount: "0xc8",
           proof: [
-              "0x0782528e118c4350a2465fbeabec5e72fff06991a29f21c08d37a0d275e38ddd",
-              "0xf3c5acb53398e1d11dcaa74e37acc33d228f5da944fbdea9a918684074a21cdb"
+              "0xc48a4bd2d62eacb8296f75dd2bf6987cbfba264dfd27cfe77a70dbd7d82bd2ac",
+              "0xd1d56b96964e4c3eacb47e9a0d78a19635474a359bbd0dbc99420cabbb996ab9"
           ],
         },
         [wallet1.address]: {
-          index: 1,
+          index: 0,
           amount: '0x012c',
           proof: [
-              "0xc86fd316fa3e7b83c2665b5ccb63771e78abcc0429e0105c91dde37cb9b857a4",
-              "0xf3c5acb53398e1d11dcaa74e37acc33d228f5da944fbdea9a918684074a21cdb"
+              "0x457a7ea6173187b2ab1cd4ffbc688b5119e65a7d5079d6a97f2a1010232f953e",
+              "0xd1d56b96964e4c3eacb47e9a0d78a19635474a359bbd0dbc99420cabbb996ab9"
           ],
         },
         [wallets[2].address]: {
-          index: 0,
+          index: 2,
           amount: '0xfa',
           proof: [
-            '0x0c9bcaca2a1013557ef7f348b514ab8a8cd6c7051b69e46b1681a2aff22f4a88',
+            '0x93fbca20a981321e9e96e40acb59dd6282ab43a16009d4e3f396b992818acf9f',
           ],
         },
       })
