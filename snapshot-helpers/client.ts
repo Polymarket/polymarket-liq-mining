@@ -1,5 +1,6 @@
 import { ApolloClient, createHttpLink, DefaultOptions, InMemoryCache } from "@apollo/client";
 import fetch from "cross-fetch";
+import { SUBGRAPH_URL } from "./config"
 
 const defaultOptions: DefaultOptions = {
   watchQuery: {
@@ -14,7 +15,7 @@ const defaultOptions: DefaultOptions = {
 
 const client = new ApolloClient({
   link: createHttpLink({
-    uri: process.env.SUBGRAPH_URL,
+    uri: SUBGRAPH_URL,
     fetch,
   }),
   cache: new InMemoryCache(),

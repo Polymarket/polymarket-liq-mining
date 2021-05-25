@@ -1,5 +1,8 @@
-import { BigNumber } from 'ethers'
+import { BigNumber } from 'ethers';
+import yargs from "yargs";
 import { retryWithBackoff } from "promises-tho";
+import { useSubscription } from '@apollo/client';
+import { User, getAllUsers } from "../snapshot-helpers";
 
 /*
 IMPORTANT:
@@ -17,10 +20,27 @@ can use yargs for passing in cli args (https://www.npmjs.com/package/yargs)
 
 const snapshotBalances: { account: string; amount: BigNumber }[] = [];
 
-(async () => {
-    // get all users
+const DEFAULT_TOKEN_SUPPLY = 1000000;
 
-    const points: { account: string; points: number }[] = [];
+//Args
+const args = yargs.options({
+    'timestamp': { type: 'timestamp', demandOption: false, default: Date.now()},
+    'token_supply': { type: 'string', demandOption: false, default: DEFAULT_TOKEN_SUPPLY}
+  }).argv;
+
+(async () => {
+    //args
+    console.log(`timestamp: ${args.timestamp}`);
+    console.log(`total supply: ${args.total_supply}`);
+
+    // get all users
+    // const users: User[] = await getAllUsers(); 
+
+    // users.forEach(user => 
+    //     // console.log(`User: ${user.address}`)
+    //     // user.weight = calculateTokenWeight(user.address)
+    // );
+
     // for every user
         // get their transaction points: getTransactionPoints()
         // get their liquidity points: getLiquidityProviderPoints()
@@ -28,7 +48,7 @@ const snapshotBalances: { account: string; amount: BigNumber }[] = [];
     // get total numbers of points
 
     // for every user
-        // airdrop_amount = user_points / total_points
+        // airdrop_amount = (user.weight / total_weight ) * token_supply
         // eoaAddress = getMagicLinkAddress()
         // snapshotBalances.push({ account: eoaAddress, amount: airdrop_amount })
 

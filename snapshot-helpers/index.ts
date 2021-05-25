@@ -1,13 +1,60 @@
 import client from "./client";
+import { gql } from "@apollo/client";
 
-/*
-function getUsers()
-    graphql query to get all users
-*/
+export interface User {
+    address: string, 
+    weight?: number
+}
+
+const getAllUsersQuery = gql`
+    query allAccounts($lastId: String!){
+        accounts(
+            where: {id_gt: $lastId}
+            first: 1000
+        ){
+            id
+        }
+    }
+`;
+
+/**
+ * Pull all polymarket users from the graph 
+ */
+export const getAllUsers = async () : Promise<User[]> => {
+    var lastId = "";
+    var users: User[] = [];
+
+    while(true) {
+        //Subgraph can only pull 1k accounts at a time, 
+        //queries the subgraph until all users are pulled
+        const { data } = await client.query({
+            query: getAllUsersQuery,
+            variables: {
+                lastId: lastId
+            }
+        });
+
+        if(data.accounts.length == 0){
+            break;
+        }
+        data.accounts.forEach(element => 
+            users.push({address: element.id})    
+        );
+        lastId = data.accounts[data.accounts.length -1].id;
+   }
+   return users;
+}
+
+
+// export const calculateTokenWeight = async (address: string): number {
+
+// }
 
 /*
 // NOTE: not sure what time timestamp will be here because it's a BigInt
 function getTransactionPoints(address: string, timestamp: any)
+
+    //TODO: something something
     returns 1 if the user has made a transaction before timestamp, otherwise 0.
 */
 
