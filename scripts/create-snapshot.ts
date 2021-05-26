@@ -40,9 +40,6 @@ const args = yargs.options({
     // get all users
     const users: User[] = await getAllUsers(); 
 
-    // for every user
-        // get their transaction points: getTransactionPoints()
-        // get their liquidity points: getLiquidityProviderPoints()
     for(let i=0; i< users.length; i++){
         let user = users[i];
         user.points = await calculatePointsPerUser(user.address, timestamp);
@@ -53,11 +50,6 @@ const args = yargs.options({
         return prev + current.points;
     }, 0);
 
-    // for every user
-        // airdrop_amount = (user.weight / total_weight ) * token_supply
-        // eoaAddress = getMagicLinkAddress()
-        // snapshotBalances.push({ account: eoaAddress, amount: airdrop_amount })
-    console.log(`Calculating token airdrop amount for users`)
     for(let i=0; i< users.length; i++){
         let user = users[i];
 
@@ -75,4 +67,5 @@ const args = yargs.options({
     console.log(`Writing snapshot to disk...`);
     fs.writeFileSync(`${snapshot_file_name + timestamp.toString()}.json`, JSON.stringify(snapshotBalances));
     console.log(`Complete!`);
+    
 })()

@@ -1,5 +1,5 @@
 import client from "./client";
-import { gql } from "@apollo/client";
+import { gql, DocumentNode } from "@apollo/client";
 
 export interface User {
     address: string, 
@@ -48,32 +48,60 @@ export const getAllUsers = async () : Promise<User[]> => {
 
 
 export const calculatePointsPerUser = async (address: string, timestamp: number): Promise<number> => {
-    const startingPoints = 0;
-    const pointsForTransacting = await getTransactionPoints(address, timestamp);
-    const pointsForProvidingLiquidity = await getLiquidityProviderPoints(address, timestamp);
-    
-    return startingPoints + pointsForTransacting + pointsForProvidingLiquidity;
+    const userActivity = await getUserActivity(address, timestamp);
+
+    const pointsForTransacting = getPointsForTransacting(userActivity);
+    const pointsForProvidingLiquidity = getPointsForProvidingLiquidity(userActivity);
+
+    return pointsForTransacting + pointsForProvidingLiquidity;
+}
+
+const userActivityQuery : DocumentNode = gql`
+query userActivity($user: String!, $timestamp: Int!) {
+    transactions(
+        where: {user: $user, timestamp_lte: $timestamp}
+        first:1) {
+        id
+    }
+    fpmmfundingaddition(
+        where: {funder: $user, timestamp_lte: $timestamp}
+        first:1) {
+        id
+    }
+}`;
+
+async function getUserActivity(address: string, timestamp: number) : Promise<any> {
+    const response = await client.query({
+        query: userActivityQuery,
+        variables: {user:address, timestamp: timestamp.toString()}
+    });
+    console.log(response);
+    console.log(response.errors);
+
+    return response.data;
+}
+
+function getPointsForTransacting(activityData:any): number {
+    const transactingData = activityData.transactions;
+    if(transactingData.length > 0){
+        return 1;
+    }
+    return 0;
 }
 
 
-async function getTransactionPoints(address: string, timestamp: any) : Promise<number> {
-    //TODO: something something
-
-    return 1;
-}
-
-
-async function getLiquidityProviderPoints(address: string, timestamp: number) : Promise<number> {
-    //returns 3 if the user has provided liquidity before timestamp, otherwise 0.
-
-
+function getPointsForProvidingLiquidity(activityData:any): number {
+    const addLiquidityData = activityData.fpmmFundingAdditions;
+    if(addLiquidityData.length > 0){
+        return 3;
+    }
     return 0;
 }
     
 
-/*
-function getMagicLinkAddress(userAddress: string)
-    - if the address is an EOA, return the address
+async function getMagicLinkAddress(address: string) : Promise<string> {
+    
+    /* - if the address is an EOA, return the address
         - you can use provider.getCode(address) to check if there is code at the address (https://docs.ethers.io/v5/api/providers/provider/#Provider--transaction-methods)
             - if there is code at the address, it is a contract account, not an externally owned account (EOA)
     - find a transaction from userAddress in the graph that was sent through Gas Station Network
@@ -83,4 +111,7 @@ function getMagicLinkAddress(userAddress: string)
         - signature can be found at https://github.com/Polymarket/poly-gsn/blob/main/packages/contracts/contracts/gsn/IRelayHub.sol#L154
         - if this event does not exist on the transaction, try the next tranasaction
         - if the event does exist, find and return the EOA that signed the transaction
-*/
+    */
+
+    return "";
+}
