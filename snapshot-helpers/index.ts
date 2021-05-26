@@ -3,7 +3,7 @@ import { gql } from "@apollo/client";
 
 export interface User {
     address: string, 
-    weight?: number
+    points?: number
 }
 
 const getAllUsersQuery = gql`
@@ -23,7 +23,7 @@ const getAllUsersQuery = gql`
 export const getAllUsers = async () : Promise<User[]> => {
     var lastId = "";
     var users: User[] = [];
-
+    console.log(`Pulling all users from subgraph...`);
     while(true) {
         //Subgraph can only pull 1k accounts at a time, 
         //queries the subgraph until all users are pulled
@@ -42,26 +42,34 @@ export const getAllUsers = async () : Promise<User[]> => {
         );
         lastId = data.accounts[data.accounts.length -1].id;
    }
+   console.log(`Found ${users.length} users!`);
    return users;
 }
 
 
-// export const calculateTokenWeight = async (address: string): number {
+export const calculatePointsPerUser = async (address: string, timestamp: number): Promise<number> => {
+    const startingPoints = 0;
+    const pointsForTransacting = await getTransactionPoints(address, timestamp);
+    const pointsForProvidingLiquidity = await getLiquidityProviderPoints(address, timestamp);
+    
+    return startingPoints + pointsForTransacting + pointsForProvidingLiquidity;
+}
 
-// }
 
-/*
-// NOTE: not sure what time timestamp will be here because it's a BigInt
-function getTransactionPoints(address: string, timestamp: any)
-
+async function getTransactionPoints(address: string, timestamp: any) : Promise<number> {
     //TODO: something something
-    returns 1 if the user has made a transaction before timestamp, otherwise 0.
-*/
 
-/*
-function getLiquidityProviderPoints(address: string, timestamp)
-    returns 3 if the user has provided liquidity before timestamp, otherwise 0.
-*/
+    return 1;
+}
+
+
+async function getLiquidityProviderPoints(address: string, timestamp: number) : Promise<number> {
+    //returns 3 if the user has provided liquidity before timestamp, otherwise 0.
+
+
+    return 0;
+}
+    
 
 /*
 function getMagicLinkAddress(userAddress: string)
