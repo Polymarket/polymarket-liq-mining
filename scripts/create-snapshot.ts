@@ -1,23 +1,8 @@
 import { BigNumber, utils, providers } from 'ethers';
 import yargs from "yargs";
 import fs from "fs";
-import { retryWithBackoff } from "promises-tho";
-import { useSubscription } from '@apollo/client';
 import { User, getAllUsers, calculatePointsPerUser, getMagicLinkAddress } from "../snapshot-helpers";
 
-/*
-IMPORTANT:
-All async calls should be wrapped with `retryWithBackoff` (or a similar function) so if there's an
-error with a request, the snapshot won't be wrong. If the request never succeeds, an error should be thrown and
-the snapshot discarded.
-*/
-
-/*
-Add an optional cli argument that enables passing in a timestamp. If a timestamp is not passed in, use the current time.
-Add an optional cli argument that enables passing in the amount of tokens to distribute. If not passed in, use a hard coded value
-
-can use yargs for passing in cli args (https://www.npmjs.com/package/yargs)
-*/
 
 const snapshotBalances: { account: string; amount: number }[] = [];
 
@@ -43,8 +28,8 @@ const args = yargs.options({
     // get all users
     const users: User[] = await getAllUsers(timestamp); 
 
-    for(let i=0; i< users.length; i++){
-        let user = users[i];
+    //calculate points for each user
+    for(let user of users){
         user.points = await calculatePointsPerUser(user.address, timestamp);
     }
 
@@ -53,9 +38,7 @@ const args = yargs.options({
         return prev + current.points;
     }, 0);
 
-    for(let i=0; i< users.length; i++){
-        let user = users[i];
-
+    for(let user of users){
         if(user.points > 0){
             const airdrop_amount = (user.points / total_points) * token_supply;
             console.log(`User ${user.address} receives ${airdrop_amount} tokens`);
@@ -64,9 +47,9 @@ const args = yargs.options({
         }
     }
 
-    // write snapshotBalances to a json file snapshots/<timestamp>.json. Overwrite the file if it already exists
+    const snapshotFile = `${snapshot_file_name + timestamp.toString()}.json`;
     console.log(`Writing snapshot to disk...`);
-    fs.writeFileSync(`${snapshot_file_name + timestamp.toString()}.json`, JSON.stringify(snapshotBalances));
+    fs.writeFileSync(snapshotFile, JSON.stringify(snapshotBalances));
     console.log(`Complete!`);
     
 })()
