@@ -1,9 +1,9 @@
-import { BigNumber, utils } from 'ethers';
+import { BigNumber, utils, providers } from 'ethers';
 import yargs from "yargs";
 import fs from "fs";
 import { retryWithBackoff } from "promises-tho";
 import { useSubscription } from '@apollo/client';
-import { User, getAllUsers, calculatePointsPerUser } from "../snapshot-helpers";
+import { User, getAllUsers, calculatePointsPerUser, getMagicLinkAddress } from "../snapshot-helpers";
 
 /*
 IMPORTANT:
@@ -35,10 +35,13 @@ const args = yargs.options({
     const timestamp = args.timestamp;
     const token_supply = args.token_supply;
     const snapshot_file_name = args.snapshot_file_name;
+
+    const provider = new providers.JsonRpcProvider();
+
     console.log(`Generating token snapshot with timestamp: ${timestamp} and token total supply: ${token_supply} ..`);
 
     // get all users
-    const users: User[] = await getAllUsers(); 
+    const users: User[] = await getAllUsers(timestamp); 
 
     for(let i=0; i< users.length; i++){
         let user = users[i];
@@ -56,9 +59,7 @@ const args = yargs.options({
         if(user.points > 0){
             const airdrop_amount = (user.points / total_points) * token_supply;
             console.log(`User ${user.address} receives ${airdrop_amount} tokens`);
-            // const eoaAddress = getMagicLinkAddress(user.address);
-            const eoaAddress = "0x" + i.toString();
-            // snapshotBalances.push({ account: eoaAddress, amount: utils.parseEther(airdrop_amount.toString()) });
+            const eoaAddress = await getMagicLinkAddress(user.address);
             snapshotBalances.push({ account: eoaAddress, amount: airdrop_amount });
         }
     }
