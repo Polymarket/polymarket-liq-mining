@@ -36,7 +36,8 @@ async function writeSnapshot(timestamp: number, snapshotFilePath: string, snapsh
     console.log(`Generating token snapshot with timestamp: ${timestamp} and token total supply: ${supply}...`);
     
     // get all users
-    const users: User[] = await getAllUsers(timestamp); 
+    // const users: User[] = await getAllUsers(timestamp); 
+    const users: User[] = [{address: "0x04b577f404dbc19fd737c3c1758a2871b8c087b9"}, {address: "0x051b61b3e02b1a07cd97d1b019f1604687e2acb0"}];
 
     //calculate points for each user
     for(const user of users){

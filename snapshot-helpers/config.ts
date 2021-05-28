@@ -1,2 +1,2 @@
 export const SUBGRAPH_URL = "https://api.thegraph.com/subgraphs/name/tokenunion/polymarket-matic";
-export const RPC_ENDPOINT = "https://rpc-polybackup-mainnet.maticvigil.com/v1/ea1bb94329e5fa87489704c1141745bdab51f1b0"
+export const RPC_ENDPOINT = "https://polygon-mainnet.infura.io/v3/ba42d3d24a874a83ab66a7ff3fbc0bd9"

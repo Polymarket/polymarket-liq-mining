@@ -26,15 +26,15 @@ query userActivity($user: String!, $timestamp: BigInt!) {
 }`;
 
 export const allTransactionsPerUserQuery = gql`
-query allTransactions($lastTxnId: String!, $lastFundingTxnId: String!, $user: String!){
+query allTransactions($user: String!){
     transactions(
-        where: {id_gt: $lastTxnId, user: $user}
+        where: {user: $user}
         first: 1000
     ){
         id
     }
     fpmmFundingAdditions(
-        where: {funder: $user, id_gt: $lastFundingTxnId}
+        where: {funder: $user}
         first:1) {
         id
     }
