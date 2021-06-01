@@ -25,7 +25,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
 
     // The EIP-712 typehash for the claim id struct
     bytes32 public constant CLAIM_TYPEHASH = keccak256(
-        "Claim(uint256 index,uint256 amount,uint32 week)"
+        "Claim(address recipient,uint256 amount,uint32 week)"
     );
 
     constructor(address token_, bytes32 merkleRoot_) public {
@@ -39,32 +39,33 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         require(!frozen, "MerkleDistributor: Claiming is frozen.");
         require(!isClaimed(index), "MerkleDistributor: Drop already claimed.");
 
-        _claim(index, account, amount, merkleProof);
+        _claim(index, account, account, amount, merkleProof);
     }
 
     function claimFrom(
         uint256 index,
         uint256 amount,
         bytes32[] calldata merkleProof,
+        address recipient,
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external {
+    ) external override {
         require(!frozen, "MerkleDistributor: Claiming is frozen.");
         require(!isClaimed(index), "MerkleDistributor: Drop already claimed.");
 
-        bytes32 domainSeparator = keccak256(
-            abi.encode(DOMAIN_TYPEHASH,
+        bytes32 domainSeparator = keccak256(abi.encode(
+            DOMAIN_TYPEHASH,
             keccak256(bytes(NAME)),
             getChainIdInternal(),
-            address(this))
-        );
-        bytes32 structHash = keccak256(abi.encode(CLAIM_TYPEHASH, index, amount, week));
+            address(this)
+        ));
+        bytes32 structHash = keccak256(abi.encode(CLAIM_TYPEHASH, recipient, amount, week));
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
         address signatory = ecrecover(digest, v, r, s);
         require(signatory != address(0), "MerkleDistributor::claimFrom: invalid signature");
 
-        _claim(index, signatory, amount, merkleProof);
+        _claim(index, signatory, recipient, amount, merkleProof);
     }
 
     function isClaimed(uint256 index) public view override returns (bool) {
@@ -94,16 +95,16 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         emit MerkleRootUpdated(merkleRoot, week);
     }
 
-    function _claim(uint256 index, address account, uint256 amount, bytes32[] calldata merkleProof) internal {
+    function _claim(uint256 index, address airdropRecipient, address tokenReceiver, uint256 amount, bytes32[] calldata merkleProof) internal {
         // Verify the merkle proof.
-        bytes32 node = keccak256(abi.encodePacked(index, account, amount));
+        bytes32 node = keccak256(abi.encodePacked(index, airdropRecipient, amount));
         require(MerkleProof.verify(merkleProof, merkleRoot, node), "MerkleDistributor: Invalid proof.");
 
         // Mark it claimed and send the token.
         _setClaimed(index);
-        require(IERC20(token).transfer(account, amount), "MerkleDistributor: Transfer failed.");
+        require(IERC20(token).transfer(tokenReceiver, amount), "MerkleDistributor: Transfer failed.");
 
-        emit Claimed(index, amount, account, week);
+        emit Claimed(index, amount, airdropRecipient, tokenReceiver, week);
     }
 
     function getChainIdInternal() internal pure returns (uint) {
