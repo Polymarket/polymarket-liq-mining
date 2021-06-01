@@ -7,6 +7,12 @@ export const getAllUsersQuery = gql`
             first: 1000
         ){
             id
+            transactions {
+                id
+            }
+            fpmmPoolMemberships {
+                id
+            }
         }
     }
 `;
@@ -29,14 +35,26 @@ export const allTransactionsPerUserQuery = gql`
 query allTransactions($user: String!){
     transactions(
         where: {user: $user}
-        first: 1000
+        first: 100
     ){
         id
     }
     fpmmFundingAdditions(
         where: {funder: $user}
-        first:1) {
+        first:100) {
         id
     }
 }
 `;
+
+//TODO: tradeAmount should be scaled by 10 ^ 6
+export const getTradeVolumePerUserQuery = gql`
+query totalTradeVolume($lastId: String!, $user: String!, $timestamp: BigInt!){
+    transactions(
+        where: {user: $user, id_gt: $lastId, timestamp_lt: $timestamp}
+        first: 1000
+    ){
+        id
+        tradeAmount
+    }
+}`;
