@@ -15,7 +15,7 @@ const args = yargs.options({
   }).argv;
 
 
-(async () => {
+export async function generateVolumeSnapshot(args: any) {
     const timestamp = args.timestamp;
     const supply = args.supply;
     const snapshotFilePath = args.snapshotFilePath;
@@ -45,7 +45,8 @@ const args = yargs.options({
     if(snapshotBalances.length > 1){
         await writeSnapshot(timestamp, snapshotFilePath, snapshotBalances);
     }
-})()
+    return snapshotBalances;
+}
 
 
 async function writeSnapshot(timestamp: number, snapshotFilePath: string, snapshotBalances: any) {
@@ -58,3 +59,5 @@ async function writeSnapshot(timestamp: number, snapshotFilePath: string, snapsh
     fs.writeFileSync(snapshotFile, JSON.stringify(snapshotBalances));
     console.log(`Complete!`);
 }
+
+generateVolumeSnapshot(args);

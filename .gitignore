@@ -17,3 +17,6 @@ typechain/
 # Coverage
 coverage/
 coverage.json
+
+# snapshot tests
+snapshots/tests/

@@ -1,6 +1,5 @@
 import { queryGqlClient } from "./client";
 import { provider } from "./provider";
-import IRelayerHub from "./abis/IRelayHub";
 import { allTransactionsPerUserQuery } from "./queries"
 import { TransactionReceipt } from "@ethersproject/providers";
 import { ethers } from "ethers";
@@ -8,7 +7,7 @@ import fs from "fs";
 
 
 const RELAY_HUB_ADDRESS = "0xD216153c06E857cD7f72665E0aF1d7D82172F494";
-const RElAY_HUB_INTERFACE = new ethers.utils.Interface(IRelayerHub);
+const RElAY_HUB_INTERFACE = new ethers.utils.Interface(["event TransactionRelayed(address,address,address,bytes4,uint8,uint256)"]);
 
 const TXN_RELAY_EVENT_TOPIC_HASH = 
     ethers.utils.keccak256(
@@ -18,7 +17,7 @@ const TXN_RELAY_EVENT_TOPIC_HASH =
 
 async function isEOA(address: string): Promise<boolean> {
     const codeAtAddress = await provider.getCode(address);
-    return codeAtAddress == "0x";
+    return codeAtAddress === "0x";
 }
 
 
@@ -32,14 +31,14 @@ async function getTransactionReceipt(transactionHash: string) : Promise<Transact
     return null;
 }
 
-async function getTransactions(address: string): Promise<string[]> {
+async function getTransactionHashes(address: string): Promise<string[]> {
     const transactionHashes = [];
 
     const { data } = await queryGqlClient(allTransactionsPerUserQuery, 
         {user: address});
     
-    data.transactions.forEach(el => transactionHashes.push(el.id));
-    data.fpmmFundingAdditions.forEach(el => transactionHashes.push(el.id));
+    data.transactions.map(el=> transactionHashes.push(el.id));
+    data.fpmmFundingAdditions.map(el => transactionHashes.push(el.id));
     return transactionHashes;
 }
 
@@ -72,7 +71,7 @@ export const getMagicLinkAddress = async (address: string) : Promise<string> => 
         return address;
     }
 
-    const transactionHashes: string[] = await getTransactions(address);
+    const transactionHashes: string[] = await getTransactionHashes(address);
     for(const transactionHash of transactionHashes){
         const transactionReceipt: TransactionReceipt = await getTransactionReceipt(transactionHash);
         if(transactionReceipt != null){
