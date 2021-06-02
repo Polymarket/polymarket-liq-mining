@@ -4,7 +4,7 @@ import IRelayerHub from "./abis/IRelayHub";
 import { allTransactionsPerUserQuery } from "./queries"
 import { TransactionReceipt } from "@ethersproject/providers";
 import { ethers } from "ethers";
-import { getOrCreateUsersDb } from "./leveldb-helper";
+import fs from "fs";
 
 
 const RELAY_HUB_ADDRESS = "0xD216153c06E857cD7f72665E0aF1d7D82172F494";
@@ -43,22 +43,24 @@ async function getTransactions(address: string): Promise<string[]> {
     return transactionHashes;
 }
 
+const magicAddressCacheName = "proxy-wallet-to-magic-addresses.json";
+const magicAddressCache = JSON.parse(fs.readFileSync(magicAddressCacheName).toString());
 
 /**
- * Gets the corresponding magic address for a proxy wallet address
- * Fetches the address from a pre-populated leveldb instance.
- * Falls back to the subgraph if the address is not found
+ * Gets the corresponding magic link address for a proxy wallet address
+ * Fetches the address from a pre-populated cache instance.
+ * Falls back to the subgraph and RPC provider if the address is not found
  * @param address 
  * @returns 
  */
- export const fetchMagicAddressFromDB = async (address: string) : Promise<string> => {
-    const userDb = await getOrCreateUsersDb();
-    let magicAddress = await userDb.get(address);
-    
+ export const fetchMagicAddress = async (address: string) : Promise<string> => {
+    let magicAddress = magicAddressCache[address];
+    console.log(`magicAddress: ${magicAddress}`);
     if(magicAddress == null){
+        console.log(`Could not find magic address in db, hitting the graph/rpc..`);
         magicAddress = await getMagicLinkAddress(address);
     }
-    return magicAddress
+    return magicAddress;
 }
 
 /**

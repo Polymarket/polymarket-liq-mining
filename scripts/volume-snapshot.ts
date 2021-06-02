@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import fs from "fs";
-import { getTradeVolume, getAllUsers, fetchMagicAddressFromDB } from "../snapshot-helpers";
+import { getTradeVolume, getAllUsers, fetchMagicAddress } from "../snapshot-helpers";
 
 const snapshotBalances: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
 
@@ -15,17 +15,6 @@ const args = yargs.options({
   }).argv;
 
 
-async function writeSnapshot(timestamp: number, snapshotFilePath: string, snapshotBalances: any) {
-    const pathComponents = snapshotFilePath.split("/");
-    const dirPath = pathComponents.slice(0, pathComponents.length-1).join("/");
-
-    const snapshotFile = `${snapshotFilePath + timestamp.toString()}.json`;
-    !fs.existsSync(dirPath) && fs.mkdirSync(dirPath);
-    console.log(`Writing snapshot to disk...`);
-    fs.writeFileSync(snapshotFile, JSON.stringify(snapshotBalances));
-    console.log(`Complete!`);
-}
-
 (async () => {
     const timestamp = args.timestamp;
     const supply = args.supply;
@@ -36,6 +25,7 @@ async function writeSnapshot(timestamp: number, snapshotFilePath: string, snapsh
     // get all users
     const users: string[] = await getAllUsers(timestamp); 
     const then = Date.now();
+
     const tradeVolumes = await getTradeVolume(users, timestamp);
     console.log(`Pulling trade volumes took ${(Date.now() - then)/1000} seconds`);
     
@@ -49,10 +39,23 @@ async function writeSnapshot(timestamp: number, snapshotFilePath: string, snapsh
         const userVolume = tradeVolumes[id];
         if(userVolume > 0){
             const airdropAmount = (userVolume / totalTradeVolume) * supply;
-            const magicAddress = await fetchMagicAddressFromDB(user);
+            const magicAddress = await fetchMagicAddress(user);
             snapshotBalances.push({proxyWallet: user, magicWallet: magicAddress, amount: airdropAmount });
         }
     }
-
-    await writeSnapshot(timestamp, snapshotFilePath, snapshotBalances);
+    if(snapshotBalances.length > 1){
+        await writeSnapshot(timestamp, snapshotFilePath, snapshotBalances);
+    }
 })()
+
+
+async function writeSnapshot(timestamp: number, snapshotFilePath: string, snapshotBalances: any) {
+    const pathComponents = snapshotFilePath.split("/");
+    const dirPath = pathComponents.slice(0, pathComponents.length-1).join("/");
+
+    const snapshotFile = `${snapshotFilePath + timestamp.toString()}.json`;
+    !fs.existsSync(dirPath) && fs.mkdirSync(dirPath);
+    console.log(`Writing snapshot to disk...`);
+    fs.writeFileSync(snapshotFile, JSON.stringify(snapshotBalances));
+    console.log(`Complete!`);
+}

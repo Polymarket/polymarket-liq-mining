@@ -39,7 +39,6 @@ const getTradeVolumePerUserWrapper = async (address: string): Promise<number> =>
     return await getTradeVolumePerUser(address, TS);
 }
 
-// const getTradeVolumeBatched = batch({batchSize: 20}, getTradeVolumePerUserWrapper);
 const getTradeVolumeBatched = batch({batchSize: 100}, getTradeVolumePerUserWrapper);
 
 /**
