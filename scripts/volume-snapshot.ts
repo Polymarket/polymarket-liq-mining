@@ -24,10 +24,9 @@ const args = yargs.options({
     
     // get all users
     const users: string[] = await getAllUsers(timestamp); 
-    const then = Date.now();
 
+    //get volume per user at the timestamp
     const tradeVolumes = await getTradeVolume(users, timestamp);
-    console.log(`Pulling trade volumes took ${(Date.now() - then)/1000} seconds`);
     
     // get total volume
     const totalTradeVolume = tradeVolumes.reduce(function(prev, current){
