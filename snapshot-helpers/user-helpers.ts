@@ -24,8 +24,9 @@ import { queryGqlClient } from "./client";
         }
 
         for(const account of data.accounts){
+            //each account that is added must have added liquidity or traded in the past 
             if(account.transactions.length > 0 || account.fpmmPoolMemberships.length > 0){
-                users.push(account.id);    
+                users.push(account.id);
             }
         }
         lastId = data.accounts[data.accounts.length -1].id;
