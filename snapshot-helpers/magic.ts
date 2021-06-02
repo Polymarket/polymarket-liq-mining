@@ -48,16 +48,14 @@ const magicAddressCache = JSON.parse(fs.readFileSync(magicAddressCacheName).toSt
 
 /**
  * Gets the corresponding magic link address for a proxy wallet address
- * Fetches the address from a pre-populated cache instance.
+ * Fetches the address from a pre-populated cache.
  * Falls back to the subgraph and RPC provider if the address is not found
  * @param address 
  * @returns 
  */
  export const fetchMagicAddress = async (address: string) : Promise<string> => {
     let magicAddress = magicAddressCache[address];
-    console.log(`magicAddress: ${magicAddress}`);
     if(magicAddress == null){
-        console.log(`Could not find magic address in db, hitting the graph/rpc..`);
         magicAddress = await getMagicLinkAddress(address);
     }
     return magicAddress;

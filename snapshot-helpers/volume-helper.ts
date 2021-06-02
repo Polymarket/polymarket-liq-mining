@@ -49,9 +49,7 @@ const getTradeVolumeBatched = batch({batchSize: 100}, getTradeVolumePerUserWrapp
  * @returns 
  */
 export const getTradeVolume = async (addresses: string[], timestamp: number): Promise<number[]> => {
-    console.log(`Calculating trade volume for ${addresses.length} users`)
     TS = timestamp;
     const tradeVolume = await getTradeVolumeBatched(addresses);
-    console.log(`Complete!`);
     return tradeVolume;
 }
