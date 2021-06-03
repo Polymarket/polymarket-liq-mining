@@ -1,6 +1,7 @@
-import * as yargs from "yargs";
 import * as dotenv from "dotenv";
+import * as yargs from "yargs";
 import { generateVolumeSnapshot,  } from "./volume-snapshot";
+import { writeSnapshot } from "../snapshot-helpers";
 
 const DEFAULT_TOKEN_SUPPLY = 1000000;
 const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/volume-weighted-";
@@ -13,5 +14,12 @@ const args = yargs.options({
     'snapshotFilePath': { type: 'string', demandOption: false, default: DEFAULT_SNAPSHOT_FILE_PATH}
   }).argv;
 
-  
-generateVolumeSnapshot(args);
+(async (args:any) => {
+    const timestamp = args.timestamp;
+    const supply = args.supply;
+    const snapshotFilePath = args.snapshotFilePath;
+
+    const snapshot = await generateVolumeSnapshot(timestamp, supply);
+
+    await writeSnapshot(timestamp, snapshotFilePath, snapshot);
+})(args)

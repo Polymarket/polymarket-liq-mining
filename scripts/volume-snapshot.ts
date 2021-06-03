@@ -1,13 +1,9 @@
-import { getTradeVolume, getAllUsers, fetchMagicAddress, writeSnapshot } from "../snapshot-helpers";
+import { getTradeVolume, getAllUsers, fetchMagicAddress } from "../snapshot-helpers";
 
 
 const snapshot: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
 
-export async function generateVolumeSnapshot(args: any): Promise<any> {
-    const timestamp = args.timestamp;
-    const supply = args.supply;
-    const snapshotFilePath = args.snapshotFilePath;
-    
+export async function generateVolumeSnapshot(timestamp: number, supply: number): Promise<any> {
     console.log(`Generating volume weighted snapshot with timestamp: ${timestamp} and token total supply: ${supply}...`);
     
     // get all users
@@ -32,6 +28,5 @@ export async function generateVolumeSnapshot(args: any): Promise<any> {
             snapshot.push({proxyWallet: user, magicWallet: magicAddress, amount: airdropAmount });
         }
     }
-    await writeSnapshot(timestamp, snapshotFilePath, snapshot);
     return snapshot;
 }

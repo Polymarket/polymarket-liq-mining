@@ -5,8 +5,6 @@ import { getTradeVolumePerUserQuery} from "./queries"
 
 const VOLUME_SCALE_FACTOR = Math.pow(10, 6);
 
-let TS = 0;
-
 /**
  * Calculates total trade volume for an address, given a timestamp snapshot
  * 
@@ -28,15 +26,15 @@ const getTradeVolumePerUser = async (address: string, timestamp: number) : Promi
         }
 
         for(const txn of data.transactions){
-            tradeVolume += txn.tradeAmount / VOLUME_SCALE_FACTOR;
+            tradeVolume += txn.tradeAmount;
         }
         lastId = data.transactions[data.transactions.length -1].id;
    }
-   return tradeVolume;
+   return tradeVolume / VOLUME_SCALE_FACTOR;
 }
 
-const getTradeVolumePerUserWrapper = async (address: string): Promise<number> => {
-    return await getTradeVolumePerUser(address, TS);
+const getTradeVolumePerUserWrapper = async (arg: {address: string, timestamp: number}): Promise<number> => {
+    return await getTradeVolumePerUser(arg.address, arg.timestamp);
 }
 
 const getTradeVolumeBatched = batch({batchSize: 100}, getTradeVolumePerUserWrapper);
@@ -49,7 +47,11 @@ const getTradeVolumeBatched = batch({batchSize: 100}, getTradeVolumePerUserWrapp
  * @returns 
  */
 export const getTradeVolume = async (addresses: string[], timestamp: number): Promise<number[]> => {
-    TS = timestamp;
-    const tradeVolume = await getTradeVolumeBatched(addresses);
+    const args: {address: string, timestamp: number}[] = [];
+    for(const address of addresses){
+        args.push({address: address, timestamp: timestamp})
+    }
+
+    const tradeVolume = await getTradeVolumeBatched(args)
     return tradeVolume;
 }
