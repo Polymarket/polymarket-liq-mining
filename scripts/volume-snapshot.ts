@@ -1,12 +1,15 @@
 import yargs from "yargs";
 import fs from "fs";
+import * as dotenv from "dotenv";
 import { getTradeVolume, getAllUsers, fetchMagicAddress } from "../snapshot-helpers";
+
+
+dotenv.config();
 
 const snapshotBalances: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
 
 const DEFAULT_TOKEN_SUPPLY = 1000000;
 const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/volume-weighted-";
-
 
 const args = yargs.options({
     'timestamp': { type: 'number', demandOption: false, default: Date.now()},
@@ -15,7 +18,7 @@ const args = yargs.options({
   }).argv;
 
 
-export async function generateVolumeSnapshot(args: any) {
+export async function generateVolumeSnapshot(args: any): Promise<any> {
     const timestamp = args.timestamp;
     const supply = args.supply;
     const snapshotFilePath = args.snapshotFilePath;
@@ -24,25 +27,27 @@ export async function generateVolumeSnapshot(args: any) {
     
     // get all users
     const users: string[] = await getAllUsers(timestamp); 
-
+    
     //get volume per user at the timestamp
+    console.log(`Fetching trade volume per user at snapshot...`);
     const tradeVolumes = await getTradeVolume(users, timestamp);
     
     // get total volume
     const totalTradeVolume = tradeVolumes.reduce(function(prev, current){
         return prev + current;
     }, 0);
+    console.log(`Complete! Total trade volume: ${totalTradeVolume}!`);
 
-    for(const id in users){
-        const user = users[id];
-        const userVolume = tradeVolumes[id];
+    for(const userIndex in users){
+        const user = users[userIndex];
+        const userVolume = tradeVolumes[userIndex];
         if(userVolume > 0){
             const airdropAmount = (userVolume / totalTradeVolume) * supply;
             const magicAddress = await fetchMagicAddress(user);
             snapshotBalances.push({proxyWallet: user, magicWallet: magicAddress, amount: airdropAmount });
         }
     }
-    if(snapshotBalances.length > 1){
+    if(snapshotBalances.length > 0){
         await writeSnapshot(timestamp, snapshotFilePath, snapshotBalances);
     }
     return snapshotBalances;

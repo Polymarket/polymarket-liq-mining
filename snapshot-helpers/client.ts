@@ -1,6 +1,6 @@
-import { ApolloClient, createHttpLink, DefaultOptions, InMemoryCache, DocumentNode } from "@apollo/client";
+import { ApolloClient, createHttpLink, DefaultOptions, InMemoryCache, DocumentNode, NormalizedCacheObject } from "@apollo/client";
 import fetch from "cross-fetch";
-import { SUBGRAPH_URL } from "./config";
+
 
 const defaultOptions: DefaultOptions = {
   watchQuery: {
@@ -13,17 +13,28 @@ const defaultOptions: DefaultOptions = {
   },
 };
 
-const client = new ApolloClient({
-  link: createHttpLink({
-    uri: SUBGRAPH_URL,
-    fetch,
-  }),
-  cache: new InMemoryCache(),
-  defaultOptions,
-});
+
+//Declare global Apollo client to be initialized *after* environment variables are configured
+let client: ApolloClient<NormalizedCacheObject>;
+
+
+async function getOrInitializeClient(): Promise<ApolloClient<NormalizedCacheObject>> {
+  if(client == null){
+    client = new ApolloClient({
+        link: createHttpLink({
+          uri: process.env.SUBGRAPH_URL,
+          fetch,
+        }),
+        cache: new InMemoryCache(),
+        defaultOptions,
+      });
+  }
+  return client;
+}
 
 export const queryGqlClient = async (queryString: DocumentNode, variables: any): Promise<any> => {
-  return await client.query({
+  const gqlClient = await getOrInitializeClient();
+  return await gqlClient.query({
     query: queryString,
     variables: variables
   });

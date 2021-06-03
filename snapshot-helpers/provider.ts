@@ -1,4 +1,10 @@
-import { RPC_ENDPOINT } from "./config";
 import { JsonRpcProvider } from "@ethersproject/providers";
 
-export const provider = new JsonRpcProvider(RPC_ENDPOINT);
+let provider : JsonRpcProvider;
+
+export async function getProvider() : Promise<JsonRpcProvider> {
+    if(provider == null){
+        provider = new JsonRpcProvider(process.env.MATIC_RPC_URL);
+    }
+    return provider;
+}
