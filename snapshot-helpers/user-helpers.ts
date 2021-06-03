@@ -12,7 +12,7 @@ import { queryGqlClient } from "./gql_client";
     console.log(`Pulling all users from subgraph...`);
     const search = true;
     
-    //timestamps as seconds in the subgraph(JS stores in milliseconds by default)
+    //timestamps are stored as seconds in the subgraph(JS stores in milliseconds by default)
     //must normalize the timestamp here
     const timestampInSeconds = Math.floor(timestamp / 1000);
 
