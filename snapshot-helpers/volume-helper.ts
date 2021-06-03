@@ -1,5 +1,5 @@
 import { batch } from "promises-tho";
-import { queryGqlClient } from "./client";
+import { queryGqlClient } from "./gql_client";
 import { getTradeVolumePerUserQuery} from "./queries"
 
 

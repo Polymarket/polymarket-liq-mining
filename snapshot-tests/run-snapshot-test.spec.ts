@@ -1,12 +1,12 @@
 import { expect } from "chai";
-import fs from "fs";
+import * as fsReader from "fs";
 import {describe, it } from "mocha";
 import { generateVolumeSnapshot } from "../scripts/volume-snapshot";
 
 
 async function getExpectedSnapshotBalances(filePath: string){
     const expectedBalances = JSON.parse(
-        fs.readFileSync(filePath).toString());
+        fsReader.readFileSync(filePath).toString());
     return expectedBalances;
 }
 
@@ -28,13 +28,9 @@ describe('Testing snapshots', function() {
         for(const user of users){
             const actual = snapshotBalances[user];
             const expected = expectedBalances[user];
-            // expect(actual.proxyWallet).to.eq(expected.proxyWallet);
-            // expect(actual.magicWallet).to.eq(expected.magicWallet);
-            // expect(actual.amount).to.eq(expected.amount);
-            console.log(`Actual: ${actual}`);
-            console.log(`Expected: ${expected}`);
+            expect(actual.proxyWallet).to.eq(expected.proxyWallet);
+            expect(actual.magicWallet).to.eq(expected.magicWallet);
+            expect(actual.amount).to.eq(expected.amount);
         }
     });
 });
-
-export {};

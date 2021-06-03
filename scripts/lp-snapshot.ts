@@ -10,35 +10,34 @@ Must be using only our subgraph or other open data. Might need to use our amm-ma
 
 */
 
-import yargs from "yargs";
-import fs from "fs";
+// import yargs from "yargs";
 
-const snapshot: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
+// const snapshot: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
 
-const DEFAULT_TOKEN_SUPPLY = 1000000;
-const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/lp-weighted-";
-
-
-const args = yargs.options({
-    'timestamp': { type: 'number', demandOption: false, default: Date.now()},
-    'supply': { type: 'string', demandOption: false, default: DEFAULT_TOKEN_SUPPLY},
-    'snapshotFilePath': { type: 'string', demandOption: false, default: DEFAULT_SNAPSHOT_FILE_PATH}
-  }).argv;
+// const DEFAULT_TOKEN_SUPPLY = 1000000;
+// const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/lp-weighted-";
 
 
-(async () => {
-    const timestamp = args.timestamp;
-    const supply = args.supply;
-    const snapshotFilePath = args.snapshotFilePath;
+// const args = yargs.options({
+//     'timestamp': { type: 'number', demandOption: false, default: Date.now()},
+//     'supply': { type: 'string', demandOption: false, default: DEFAULT_TOKEN_SUPPLY},
+//     'snapshotFilePath': { type: 'string', demandOption: false, default: DEFAULT_SNAPSHOT_FILE_PATH}
+//   }).argv;
+
+
+// (async () => {
+//     const timestamp = args.timestamp;
+//     const supply = args.supply;
+//     const snapshotFilePath = args.snapshotFilePath;
     
-    console.log(`Generating LP weighted snapshot with timestamp: ${timestamp} and token total supply: ${supply}...`);
+//     console.log(`Generating LP weighted snapshot with timestamp: ${timestamp} and token total supply: ${supply}...`);
     
-    // get all LPs
+//     // get all LPs
      
-    //get liquidity provided by each LP
+//     //get liquidity provided by each LP
 
-    // get total liquidity
+//     // get total liquidity
 
-    //calculate pro rata token distribution by LP    
+//     //calculate pro rata token distribution by LP    
 
-})()
+// })()

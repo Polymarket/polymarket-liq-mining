@@ -1,4 +1,4 @@
-import { ApolloClient, createHttpLink, DefaultOptions, InMemoryCache, DocumentNode, NormalizedCacheObject } from "@apollo/client";
+import { ApolloClient, createHttpLink, DefaultOptions, InMemoryCache, DocumentNode, NormalizedCacheObject } from "@apollo/client/core";
 import fetch from "cross-fetch";
 
 
@@ -39,5 +39,3 @@ export const queryGqlClient = async (queryString: DocumentNode, variables: any):
     variables: variables
   });
 }
-
-export default client;

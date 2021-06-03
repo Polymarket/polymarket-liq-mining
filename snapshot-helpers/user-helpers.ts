@@ -1,5 +1,5 @@
 import { getAllUsersQuery } from "./queries"
-import { queryGqlClient } from "./client";
+import { queryGqlClient } from "./gql_client";
 
 
 /**
@@ -22,7 +22,7 @@ import { queryGqlClient } from "./client";
         const {data} = await queryGqlClient(getAllUsersQuery, 
             {lastId: lastId, timestamp: `${timestampInSeconds}`}
         );
-        
+
         if(data.accounts.length == 0){
             break;
         }
@@ -38,6 +38,3 @@ import { queryGqlClient } from "./client";
    console.log(`Found ${users.length} users!`);
    return users;
 }
-
-
-export {};

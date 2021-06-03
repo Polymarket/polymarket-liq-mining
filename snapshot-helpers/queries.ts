@@ -1,4 +1,4 @@
-import { gql, DocumentNode } from "@apollo/client";
+import { gql } from "@apollo/client";
 
 export const getAllUsersQuery = gql`
     query allAccounts($lastId: String!, $timestamp: BigInt!){
@@ -17,7 +17,7 @@ export const getAllUsersQuery = gql`
     }
 `;
 
-export const userActivityQuery : DocumentNode = gql`
+export const userActivityQuery  = gql`
 query userActivity($user: String!, $timestamp: BigInt!) {
     transactions(
         where: {user: $user, timestamp_lte: $timestamp}
@@ -57,5 +57,3 @@ query totalTradeVolume($lastId: String!, $user: String!, $timestamp: BigInt!){
         tradeAmount
     }
 }`;
-
-export {};

@@ -1,22 +1,8 @@
-import * as yargs from "yargs";
 import * as fs from "fs";
-import * as dotenv from "dotenv";
 import { getTradeVolume, getAllUsers, fetchMagicAddress } from "../snapshot-helpers";
 
 
-dotenv.config();
-
 const snapshotBalances: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
-
-const DEFAULT_TOKEN_SUPPLY = 1000000;
-const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/volume-weighted-";
-
-const args = yargs.options({
-    'timestamp': { type: 'number', demandOption: false, default: Date.now()},
-    'supply': { type: 'string', demandOption: false, default: DEFAULT_TOKEN_SUPPLY},
-    'snapshotFilePath': { type: 'string', demandOption: false, default: DEFAULT_SNAPSHOT_FILE_PATH}
-  }).argv;
-
 
 export async function generateVolumeSnapshot(args: any): Promise<any> {
     const timestamp = args.timestamp;
@@ -64,5 +50,3 @@ async function writeSnapshot(timestamp: number, snapshotFilePath: string, snapsh
     fs.writeFileSync(snapshotFile, JSON.stringify(snapshotBalances));
     console.log(`Complete!`);
 }
-
-generateVolumeSnapshot(args);
