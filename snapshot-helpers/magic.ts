@@ -79,7 +79,7 @@ export const getMagicLinkAddress = async (address: string) : Promise<string> => 
         const transactionReceipt: TransactionReceipt = await getRelayHubReceipt(transactionHash);
         if(transactionReceipt != null){
             for(const log of transactionReceipt.logs) {
-                //First topic is always a hash of the name of the event
+                //First topic is always a hash of the signature of the event
                 const topicHash = log.topics[0];
                 if(topicHash == TXN_RELAY_EVENT_TOPIC_HASH) {
                     const txnRelayedEvent = RElAY_HUB_INTERFACE.parseLog(log);                    

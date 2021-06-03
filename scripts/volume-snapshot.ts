@@ -1,8 +1,7 @@
-import * as fs from "fs";
-import { getTradeVolume, getAllUsers, fetchMagicAddress } from "../snapshot-helpers";
+import { getTradeVolume, getAllUsers, fetchMagicAddress, writeSnapshot } from "../snapshot-helpers";
 
 
-const snapshotBalances: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
+const snapshot: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
 
 export async function generateVolumeSnapshot(args: any): Promise<any> {
     const timestamp = args.timestamp;
@@ -30,23 +29,9 @@ export async function generateVolumeSnapshot(args: any): Promise<any> {
         if(userVolume > 0){
             const airdropAmount = (userVolume / totalTradeVolume) * supply;
             const magicAddress = await fetchMagicAddress(user);
-            snapshotBalances.push({proxyWallet: user, magicWallet: magicAddress, amount: airdropAmount });
+            snapshot.push({proxyWallet: user, magicWallet: magicAddress, amount: airdropAmount });
         }
     }
-    if(snapshotBalances.length > 0){
-        await writeSnapshot(timestamp, snapshotFilePath, snapshotBalances);
-    }
-    return snapshotBalances;
-}
-
-
-async function writeSnapshot(timestamp: number, snapshotFilePath: string, snapshotBalances: any) {
-    const pathComponents = snapshotFilePath.split("/");
-    const dirPath = pathComponents.slice(0, pathComponents.length-1).join("/");
-
-    const snapshotFile = `${snapshotFilePath + timestamp.toString()}.json`;
-    !fs.existsSync(dirPath) && fs.mkdirSync(dirPath);
-    console.log(`Writing snapshot to disk...`);
-    fs.writeFileSync(snapshotFile, JSON.stringify(snapshotBalances));
-    console.log(`Complete!`);
+    await writeSnapshot(timestamp, snapshotFilePath, snapshot);
+    return snapshot;
 }
