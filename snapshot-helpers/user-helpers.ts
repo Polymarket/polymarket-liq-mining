@@ -1,12 +1,13 @@
 import { getAllUsersQuery } from "./queries"
 import { queryGqlClient } from "./gql_client";
+import { EXCLUDED_ACCOUNTS } from "./ban_list";
 
 
 /**
  * Pull all polymarket users from the subgraph 
  * @param timestamp - get all users before this timestamp
  */
- export const getAllUsers = async (timestamp: number) : Promise<string[]> => {
+ export const getAllUsers = async (timestamp: number, excludedAccounts?: string[]) : Promise<string[]> => {
     let lastId = "";
     const users: string[] = [];
     console.log(`Pulling all users from subgraph...`);
@@ -15,12 +16,15 @@ import { queryGqlClient } from "./gql_client";
     //timestamps are stored as seconds in the subgraph(JS stores in milliseconds by default)
     //must normalize the timestamp here
     const timestampInSeconds = Math.floor(timestamp / 1000);
-
+    if(excludedAccounts == null){
+        excludedAccounts = EXCLUDED_ACCOUNTS;
+    }
     while(search) {
         //Subgraph can only pull 1k accounts at a time, 
         //queries the subgraph until all users are pulled
         const {data} = await queryGqlClient(getAllUsersQuery, 
-            {lastId: lastId, timestamp: `${timestampInSeconds}`}
+            {lastId: lastId, timestamp: `${timestampInSeconds}`, 
+            excluded: excludedAccounts}
         );
 
         if(data.accounts.length == 0){

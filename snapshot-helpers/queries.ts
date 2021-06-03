@@ -1,9 +1,9 @@
 import { gql } from "@apollo/client";
 
 export const getAllUsersQuery = gql`
-    query allAccounts($lastId: String!, $timestamp: BigInt!){
+    query allAccounts($lastId: String!, $timestamp: BigInt!, $excluded: [String]){
         accounts(
-            where: {id_gt: $lastId, creationTimestamp_lt: $timestamp}
+            where: {id_gt: $lastId, creationTimestamp_lt: $timestamp, id_not_in: $excluded }
             first: 1000
         ){
             id
