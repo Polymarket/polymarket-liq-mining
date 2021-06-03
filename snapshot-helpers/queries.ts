@@ -47,7 +47,6 @@ query allTransactions($user: String!){
 }
 `;
 
-//TODO: tradeAmount should be scaled by 10 ^ 6
 export const getTradeVolumePerUserQuery = gql`
 query totalTradeVolume($lastId: String!, $user: String!, $timestamp: BigInt!){
     transactions(
@@ -58,3 +57,5 @@ query totalTradeVolume($lastId: String!, $user: String!, $timestamp: BigInt!){
         tradeAmount
     }
 }`;
+
+export {};

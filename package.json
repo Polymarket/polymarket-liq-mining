@@ -38,7 +38,8 @@
     "test:coverage": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" hardhat coverage",
     "test:gas": "cross-env REPORT_GAS=true yarn test",
     "volume-snapshot": "ts-node scripts/volume-snapshot.ts",
-    "lp-snapshot": "ts-node scripts/lp-snapshot.ts"
+    "lp-snapshot": "ts-node scripts/lp-snapshot.ts",
+    "snapshot-tests": "ts-mocha -p ./tsconfig.json ./snapshot-tests/*.spec.ts"
   },
   "lint-staged": {
     "*.ts": [
@@ -89,6 +90,7 @@
     "prettier-plugin-solidity": "^1.0.0-beta.3",
     "solidity-coverage": "^0.7.0",
     "ts-generator": "^0.1.0",
+    "ts-mocha": "^8.0.0",
     "ts-node": "^9.1.0",
     "typechain": "^4.0.0",
     "typescript": "^4.1.0"
@@ -97,7 +99,6 @@
     "@apollo/client": "^3.3.19",
     "cross-fetch": "^3.1.4",
     "graphql": "^15.5.0",
-    "mocha": "^8.4.0",
     "promises-tho": "^1.1.0",
     "react": "^17.0.2",
     "yargs": "^13.3.2"

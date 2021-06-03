@@ -1,5 +1,5 @@
-import yargs from "yargs";
-import fs from "fs";
+import * as yargs from "yargs";
+import * as fs from "fs";
 import * as dotenv from "dotenv";
 import { getTradeVolume, getAllUsers, fetchMagicAddress } from "../snapshot-helpers";
 

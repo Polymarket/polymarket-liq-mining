@@ -38,3 +38,6 @@ import { queryGqlClient } from "./client";
    console.log(`Found ${users.length} users!`);
    return users;
 }
+
+
+export {};
