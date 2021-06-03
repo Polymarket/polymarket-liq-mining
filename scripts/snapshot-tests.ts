@@ -12,15 +12,15 @@ async function getExpectedSnapshotBalances(filePath: string){
 
 describe('Testing snapshots', function() {
 
-    it('Test volume snapshot using timestamp: 1622650767029', async function() {
+    it('Test volume snapshot using timestamp: 1609390800000(Dec 31 2020)', async function() {
         let args: {timestamp: number, supply: number, snapshotFilePath: string};
-        args.timestamp = 1622650767029;
+        args.timestamp = 1609390800000;
         args.supply = 1000000;
         args.snapshotFilePath = "./snapshots/tests/test-volume-weighted-";
 
         const snapshotBalances = await generateVolumeSnapshot(args);
 
-        const expectedFilePath = `./snapshots/tests/volume-weighted-${args.timestamp}.json`;
+        const expectedFilePath = `./snapshots/tests/2020-eoy-volume-weighted-${args.timestamp}.json`;
         const expectedBalances = await getExpectedSnapshotBalances(expectedFilePath);
 
         expect(snapshotBalances.length).to.eq(expectedBalances.length);

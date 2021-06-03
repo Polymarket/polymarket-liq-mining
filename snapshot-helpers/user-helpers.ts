@@ -11,12 +11,16 @@ import { queryGqlClient } from "./client";
     const users: string[] = [];
     console.log(`Pulling all users from subgraph...`);
     const search = true;
+    
+    //timestamps as seconds in the subgraph(JS stores in milliseconds by default)
+    //must normalize the timestamp here
+    const timestampInSeconds = timestamp / 1000;
 
     while(search) {
         //Subgraph can only pull 1k accounts at a time, 
         //queries the subgraph until all users are pulled
         const { data } = await queryGqlClient(getAllUsersQuery, 
-            {lastId: lastId, timestamp: `${timestamp}`}
+            {lastId: lastId, timestamp: `${timestampInSeconds}`}
         );
 
         if(data.accounts.length == 0){
