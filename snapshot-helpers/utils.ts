@@ -1,5 +1,9 @@
 import * as fs from "fs";
 
+export function normalizeTimestamp(timestamp: number) : number {
+    return Math.floor(timestamp / 1000);
+}
+
 export async function writeSnapshot(timestamp: number, snapshotFilePath: string, snapshot: any) {
     if(snapshot.length > 0){
         const pathComponents = snapshotFilePath.split("/");

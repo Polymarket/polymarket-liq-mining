@@ -1,6 +1,7 @@
-import { getAllUsersQuery } from "./queries"
+import { getAllUsersQuery } from "./queries";
 import { queryGqlClient } from "./gql_client";
 import { EXCLUDED_ACCOUNTS } from "./ban_list";
+import { normalizeTimestamp } from "./utils";
 
 
 /**
@@ -13,9 +14,7 @@ import { EXCLUDED_ACCOUNTS } from "./ban_list";
     console.log(`Pulling all users from subgraph...`);
     const search = true;
     
-    //timestamps are stored as seconds in the subgraph(JS stores in milliseconds by default)
-    //must normalize the timestamp here
-    const timestampInSeconds = Math.floor(timestamp / 1000);
+    const timestampInSeconds = normalizeTimestamp(timestamp);
     if(excludedAccounts == null){
         excludedAccounts = EXCLUDED_ACCOUNTS;
     }

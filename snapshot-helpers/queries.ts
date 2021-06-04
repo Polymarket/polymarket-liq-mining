@@ -31,6 +31,16 @@ query userActivity($user: String!, $timestamp: BigInt!) {
     }
 }`;
 
+export const allMarketsQuery = gql`
+query allMarkets($lastId: String!, $timestamp: BigInt!) {
+    fixedProductMarketMakers(
+        where: {id_gt: $lastId, creationTimestamp_lte: $timestamp}
+        first:1000) {
+        id
+    }
+}
+`;
+
 export const allTransactionsPerUserQuery = gql`
 query allTransactions($user: String!){
     transactions(
