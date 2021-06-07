@@ -3,6 +3,7 @@ import * as yargs from "yargs";
 import { generateLpSnapshot  } from "./lp-snapshot";
 import { writeSnapshot } from "../snapshot-helpers";
 
+
 const DEFAULT_TOKEN_SUPPLY = 1000000;
 const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/lp-weighted-";
 

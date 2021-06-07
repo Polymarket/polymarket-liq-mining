@@ -37,6 +37,7 @@ query allMarkets($lastId: String!, $timestamp: BigInt!) {
         where: {id_gt: $lastId, creationTimestamp_lte: $timestamp}
         first:1000) {
         id
+        creationTransactionHash
     }
 }
 `;
@@ -65,5 +66,25 @@ query totalTradeVolume($lastId: String!, $user: String!, $timestamp: BigInt!){
     ){
         id
         tradeAmount
+    }
+}`;
+
+
+export const getFixedProductMarketMakerQuery = gql`
+query fpmm($market: String!, $block: Int!){
+    fixedProductMarketMaker(
+        id: $market
+        block: {number:$block}
+    ){
+        id
+        poolMembers{
+          funder{
+            id
+          }
+          amount
+        }
+        scaledLiquidityParameter
+        outcomeTokenPrices
+        outcomeTokenAmounts
     }
 }`;
