@@ -50,7 +50,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external {
+    ) external override {
         require(!frozen, "MerkleDistributor: Claiming is frozen.");
         require(!isClaimed(index), "MerkleDistributor: Drop already claimed.");
 

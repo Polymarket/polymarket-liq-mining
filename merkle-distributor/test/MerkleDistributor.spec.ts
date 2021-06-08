@@ -470,6 +470,19 @@ describe('MerkleDistributor', () => {
               )
           })
 
+          it('fails on signature for different recipient', async () => {
+              const hexSig = await wallet0._signTypedData(domain, types, {
+                  recipient: wallet0.address,
+                  amount: 100,
+                  week: 0
+              })
+
+              const { v, r, s } = utils.splitSignature(hexSig);
+
+              await expect(distributor.claimFrom(0, 100, proof0, wallet1.address, v, r, s, overrides))
+                  .to.be.revertedWith('MerkleDistributor: Invalid proof.')
+          })
+
           it('fails when frozen', async () => {
             await distributor.freeze()
 
