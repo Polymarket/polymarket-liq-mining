@@ -3,7 +3,10 @@
 This repo contains scripts and tools used to calculate retroactive snapshots
 Volume weighted snapshot script
 
-yarn volume-snapshot --timestamp TIMESTAMP --supply SUPPLY
+`yarn volume-snapshot --timestamp TIMESTAMP --supply SUPPLY`
+
 LP Weighted snapshot script
 
-yarn lp-snapshot --timestamp TIMESTAMP --supply SUPPLY --blockSampleSize SAMPLE
+`yarn lp-snapshot --timestamp TIMESTAMP --supply SUPPLY --blockSampleSize SAMPLE`
+
+Current default is to sample every 1800 blocks, or roughly every hour(assuming 2s block times)
