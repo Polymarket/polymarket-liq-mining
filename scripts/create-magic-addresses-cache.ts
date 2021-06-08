@@ -19,7 +19,7 @@ const proxyAddressToMagicAddressMapping = {};
  * a json file
  */
 
-async function main(){
+async function main(args:any){
     const timestamp = args.timestamp;
     const fileName = args.fileName;
     const users: string[] = await getAllUsers(timestamp);
@@ -33,4 +33,4 @@ async function main(){
     console.log(`Complete!`);
 }
 
-main();
+main(args);

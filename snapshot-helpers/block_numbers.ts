@@ -1,24 +1,42 @@
 import { getProvider } from "./provider"; 
 import { normalizeTimestamp } from "./utils";
- 
-export const getMarketCreationBlockNumber = async (transactionHash: string): Promise<number> => {
+import { queryGqlClient } from "./gql_client"; 
+import { firstLiquidityAddedQuery } from "./queries";
+
+
+export const getMarketLiquidityAddBlockNumber = async (marketAddress: string): Promise<number> => {
+    let blockNumber: number;
     const provider = await getProvider();
-    const txn = await provider.getTransaction(transactionHash);
-    return txn.blockNumber;
+    const txnHash = await getFirstAddedLiquidity(marketAddress);
+    if(txnHash != null){
+        const txn = await provider.getTransaction(txnHash);
+        blockNumber = txn.blockNumber;
+    }
+    return blockNumber;
 }
 
+async function getFirstAddedLiquidity(marketAddress: string) : Promise<string> {
+    const { data } = await queryGqlClient(firstLiquidityAddedQuery, {market: marketAddress});
+    const fpmmFundingAdditions = data.fpmmFundingAdditions;
+    let liquidityAddTxnHash;
+
+    if(fpmmFundingAdditions.length > 0){
+        liquidityAddTxnHash = fpmmFundingAdditions[0].id;
+    }
+    return liquidityAddTxnHash;
+}
 
 /**
- * Get an estimation of a near block number, given a timestamp
+ * Get an estimation of a block number, given a timestamp
  * @param timestamp 
  * @returns 
  */
-export async function convertTimestampToBlockNumber(timestamp: number) {
+export async function convertTimestampToBlockNumber(timestamp: number) : Promise<number> {
     const timestampInSeconds = normalizeTimestamp(timestamp);
 
     const averageBlockTime = 2.1; //polygon avg blocktime
     const lowerLimitStamp = timestampInSeconds;
-    const step = 1000; //
+    const step = 1000;
     
     const provider = await getProvider();
     
@@ -30,39 +48,30 @@ export async function convertTimestampToBlockNumber(timestamp: number) {
     let blockNumber = currentBlockNumber;
     const timestampDiff = block.timestamp - timestampInSeconds;
     
-    //If current block timestamp and given timestamp within 100s of each other, return
-    if(timestampDiff < 100){
+    //If current block timestamp and given timestamp within 50s of each other, return
+    if(timestampDiff < 50){
         return currentBlockNumber;
     }
 
     while(block.timestamp > timestampInSeconds){
-        console.log(`Start while...`);
         const decreaseBlocks = (block.timestamp - timestampInSeconds) / averageBlockTime;
         if(decreaseBlocks < 1){
             break
         }
     
         blockNumber -= Math.floor(decreaseBlocks);
-        block = await provider.getBlock(blockNumber)
-        
-        console.log(`Block: ${blockNumber}`);
-        console.log(`Block.timestamp: ${block.timestamp}`);
-        
+        block = await provider.getBlock(blockNumber) 
         requestsMade += 1
-        console.log(`end while...`)
     }
-    console.log(`Done!`)
 
     //If we undershoot, walk back up the chain till we reach the lowerLimitStamp
     if(lowerLimitStamp && block.timestamp < lowerLimitStamp) {
-        console.log(`Undershooting block...`)
         while(block.timestamp < lowerLimitStamp){
-            blockNumber += step;
+            blockNumber += step; //step size
             block = await provider.getBlock(blockNumber);
             requestsMade += 1;
-            console.log(`In undershooting while, block number: ${blockNumber}`)
         }
     }
-    console.log(`Requests made: ${requestsMade}`);
+    console.log(`Number of requests made to get block number from timestamp: ${requestsMade}`);
     return blockNumber;
 }

@@ -3,19 +3,13 @@ import { queryGqlClient } from "./gql_client";
 import { normalizeTimestamp } from "./utils";
 
 
-export interface Market {
-    marketAddress: string
-    creationTransactionHash: string
-}
-
-
 /**
  * Pull all markets from the subgraph 
  * @param timestamp
  */
- export const getAllMarkets = async (timestamp: number) : Promise<Market[]> => {
+ export const getAllMarkets = async (timestamp: number) : Promise<string[]> => {
     let lastId = "";
-    const markets: Market[] = [];
+    const markets: string[] = [];
     console.log(`Pulling all markets from subgraph...`);
     const search = true;
     
@@ -30,7 +24,7 @@ export interface Market {
         }
 
         for(const fpmm of data.fixedProductMarketMakers){
-            markets.push({marketAddress: fpmm.id, creationTransactionHash: fpmm.creationTransactionHash});
+            markets.push(fpmm.id);
         }
         lastId = data.fixedProductMarketMakers[data.fixedProductMarketMakers.length - 1].id;
    }

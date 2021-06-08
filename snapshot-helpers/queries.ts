@@ -88,3 +88,14 @@ query fpmm($market: String!, $block: Int!){
         outcomeTokenAmounts
     }
 }`;
+
+
+export const firstLiquidityAddedQuery = gql`
+query firstLiquidityAdded($market: String!){
+    fpmmFundingAdditions(
+        first:1
+        where:{fpmm: $market}, orderBy:timestamp
+    ){
+        id
+    }
+}`;

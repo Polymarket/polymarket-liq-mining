@@ -18,7 +18,7 @@ describe('Testing snapshots', function() {
         args.supply = 1000000;
         args.snapshotFilePath = "./snapshots/tests/test-volume-weighted-";
 
-        const snapshotBalances = await generateVolumeSnapshot(args);
+        const snapshotBalances = await generateVolumeSnapshot(args.timestamp, args.supply);
 
         const expectedFilePath = `./snapshot-tests/expected/2020-eoy-volume-weighted-${args.timestamp}.json`;
         const expectedBalances = await getExpectedSnapshotBalances(expectedFilePath);
