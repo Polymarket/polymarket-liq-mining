@@ -34,7 +34,7 @@ export const calculateLiquidityPoints = async(marketAddress: string, block: numb
         }
     }
     return marketLiquidityAtBlock;
-} 
+}
 
 /**
  * Given a market and a block, fetch FPMM details as they existed at that block
@@ -53,7 +53,7 @@ const calculateLiquidityPointsWrapper = async(args: {marketAddress: string, bloc
 }
 
 
-const calculateLiquidityPointsBatched = batch({batchSize: 50}, calculateLiquidityPointsWrapper);
+const calculateLiquidityPointsBatched = batch({batchSize: 75}, calculateLiquidityPointsWrapper);
 
 export const calculateLiquidityAcrossBlocks = async(marketAddress: string, blocks: number[]) : Promise<any> => {
     console.log(`Calculating liquidity for market: ${marketAddress} across ${blocks.length} blocks!`);

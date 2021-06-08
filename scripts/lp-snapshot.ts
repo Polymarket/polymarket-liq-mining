@@ -1,4 +1,4 @@
-import { fetchMagicAddress, getAllMarkets, calculateLiquidityAcrossBlocks, getMarketLiquidityAddBlockNumber, convertTimestampToBlockNumber } from "../snapshot-helpers";
+import { fetchMagicAddress, getAllMarkets, calculateLiquidityAcrossBlocks, getMarketLiquidityAddBlockNumber as getStartBlock, convertTimestampToBlockNumber } from "../snapshot-helpers";
 
 
 /**
@@ -13,7 +13,7 @@ export async function generateLpSnapshot(timestamp: number, supply: number): Pro
     const snapshot: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
     const lpPointsCache = {};
 
-    // get all markets in Poly history
+    // get all markets pre snapshot
     const markets: string[] = await getAllMarkets(timestamp);
 
     const endBlock = await convertTimestampToBlockNumber(timestamp);
@@ -21,16 +21,18 @@ export async function generateLpSnapshot(timestamp: number, supply: number): Pro
     
     //For each market, calculate liquidity from startBlock till endBlock, every blockStepSize
     for(const market of markets){
-        const startBlock = await getMarketLiquidityAddBlockNumber(market);
+        const startBlock = await getStartBlock(market);
 
-        //Ensure that the market occured within the blocks being checkd
+        //Ensure that the market occured within the blocks being checked
         if(startBlock != null && endBlock > startBlock){
             const blocks: number[] = [];
             for(let block = startBlock; block <= endBlock; block+=blockStepSize){
                 blocks.push(block);
             }
 
+            //get liquidity state across many blocks for a market
             const liquidityAcrossBlocks = await calculateLiquidityAcrossBlocks(market, blocks);
+
             for(const liquidityAtBlock of liquidityAcrossBlocks){
                 for(const liquidityProvider of Object.keys(liquidityAtBlock)){
                     if(lpPointsCache[liquidityProvider] == null){
@@ -50,10 +52,10 @@ export async function generateLpSnapshot(timestamp: number, supply: number): Pro
     
     //Populate snapshot
     for(const liquidityProvider of Object.keys(lpPointsCache)){
-        //total liquidity points for lp across blocks
         const liquidityPointsPerLp = lpPointsCache[liquidityProvider];
         const airdropAmount = ( liquidityPointsPerLp / totalLiquidityPoints ) * supply;
         const magicAddress = await fetchMagicAddress(liquidityProvider);
+        
         snapshot.push({ proxyWallet: liquidityProvider, 
                         magicWallet: magicAddress, 
                         amount: airdropAmount
