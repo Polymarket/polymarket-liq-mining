@@ -1,26 +1,28 @@
 import * as dotenv from "dotenv";
 import * as yargs from "yargs";
-import { generateLpSnapshot  } from "./lp-snapshot";
-import { writeSnapshot } from "../snapshot-helpers";
+import { generateLpSnapshot , writeSnapshot } from "../src";
 
 
 const DEFAULT_TOKEN_SUPPLY = 1000000;
 const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/lp-weighted-";
+const DEFAULT_BLOCK_SAMPLE=1800; //Approx every hour with a 2s block time
 
 dotenv.config();
 
 const args = yargs.options({
     'timestamp': { type: 'number', demandOption: false, default: Date.now()},
     'supply': { type: 'string', demandOption: false, default: DEFAULT_TOKEN_SUPPLY},
+    'blockSampleSize': { type: 'number', demandOption: false, default: DEFAULT_BLOCK_SAMPLE},
     'snapshotFilePath': { type: 'string', demandOption: false, default: DEFAULT_SNAPSHOT_FILE_PATH}
   }).argv;
 
 (async (args:any) => {
     const timestamp = args.timestamp;
     const supply = args.supply;
+    const blockSampleSize = args.blockSampleSize;
     const snapshotFilePath = args.snapshotFilePath;
 
-    const snapshot = await generateLpSnapshot(timestamp, supply);
+    const snapshot = await generateLpSnapshot(timestamp, supply, blockSampleSize);
 
     await writeSnapshot(timestamp, snapshotFilePath, snapshot);
 })(args)

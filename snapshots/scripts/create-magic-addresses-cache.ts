@@ -1,6 +1,6 @@
 import fs from "fs";
 import yargs from "yargs";
-import { getAllUsers, getMagicLinkAddress } from "../snapshot-helpers";
+import { getAllUsers, getMagicLinkAddress } from "../src";
 
 
 const DEFAULT_CACHE_NAME = "./proxy-wallet-to-magic-addresses.json";

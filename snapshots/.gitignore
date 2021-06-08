@@ -1,0 +1,22 @@
+# Node
+node_modules/
+
+# Hardhat
+cache/
+artifacts/
+
+# Deployments
+deployments/
+
+# Typechain
+typechain/
+
+# Env
+.env
+
+# Coverage
+coverage/
+coverage.json
+
+# snapshot tests
+snapshots/tests/

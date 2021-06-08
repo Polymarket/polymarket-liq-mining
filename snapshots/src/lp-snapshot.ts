@@ -1,4 +1,4 @@
-import { fetchMagicAddress, getAllMarkets, calculateLiquidityAcrossBlocks, getMarketLiquidityAddBlockNumber as getStartBlock, convertTimestampToBlockNumber } from "../snapshot-helpers";
+import { fetchMagicAddress, getAllMarkets, calculateLiquidityAcrossBlocks, getMarketLiquidityAddBlockNumber as getStartBlock, convertTimestampToBlockNumber } from "../src";
 
 
 /**
@@ -7,7 +7,7 @@ import { fetchMagicAddress, getAllMarkets, calculateLiquidityAcrossBlocks, getMa
  * @param supply 
  * @returns 
  */
-export async function generateLpSnapshot(timestamp: number, supply: number): Promise<any> {
+export async function generateLpSnapshot(timestamp: number, supply: number, blockSampleSize: number): Promise<any> {
     console.log(`Generating lp weighted snapshot with timestamp: ${timestamp} and token total supply: ${supply}...`);
     
     const snapshot: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
@@ -17,16 +17,15 @@ export async function generateLpSnapshot(timestamp: number, supply: number): Pro
     const markets: string[] = await getAllMarkets(timestamp);
 
     const endBlock = await convertTimestampToBlockNumber(timestamp);
-    const blockStepSize = 1800;
     
-    //For each market, calculate liquidity from startBlock till endBlock, every blockStepSize
+    //For each market, calculate liquidity from startBlock till endBlock, every blockSampleSize
     for(const market of markets){
         const startBlock = await getStartBlock(market);
 
         //Ensure that the market occured within the blocks being checked
         if(startBlock != null && endBlock > startBlock){
             const blocks: number[] = [];
-            for(let block = startBlock; block <= endBlock; block+=blockStepSize){
+            for(let block = startBlock; block <= endBlock; block+=blockSampleSize){
                 blocks.push(block);
             }
 

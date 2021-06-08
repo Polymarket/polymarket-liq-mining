@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import * as fsReader from "fs";
 import {describe, it } from "mocha";
-import { generateVolumeSnapshot } from "../scripts/volume-snapshot";
+import { generateVolumeSnapshot } from "../src/volume-snapshot";
 
 
 async function getExpectedSnapshotBalances(filePath: string){
