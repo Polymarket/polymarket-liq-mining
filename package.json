@@ -1,7 +1,7 @@
 {
   "name": "polyDistributor",
-  "version": "1.0.0",
   "description": "Contracts and tools for distributing tokens",
+  "version": "1.0.0",
   "main": "index.js",
   "repository": "https://github.com/Polymarket/polyDistributor",
   "private": true,

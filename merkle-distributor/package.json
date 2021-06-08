@@ -1,6 +1,7 @@
 {
   "name": "merkle-distributor",
   "description": "",
+  "version": "1.0.0",
   "keywords": [
     "hardhat"
   ],
