@@ -6,7 +6,7 @@ import { firstLiquidityAddedQuery } from "./queries";
 
 export const getMarketLiquidityAddBlockNumber = async (marketAddress: string): Promise<number> => {
     let blockNumber: number;
-    const provider = await getProvider();
+    const provider = getProvider();
     const txnHash = await getFirstAddedLiquidity(marketAddress);
     if(txnHash != null){
         const txn = await provider.getTransaction(txnHash);
@@ -38,7 +38,7 @@ export async function convertTimestampToBlockNumber(timestamp: number) : Promise
     const lowerLimitStamp = timestampInSeconds;
     const step = 1000;
     
-    const provider = await getProvider();
+    const provider = getProvider();
     
     //get current block number
     const currentBlockNumber = await provider.getBlockNumber();

@@ -17,14 +17,14 @@ const TXN_RELAY_EVENT_TOPIC_HASH =
     );
 
 async function isEOA(address: string): Promise<boolean> {
-    const provider = await getProvider();
+    const provider = getProvider();
     const codeAtAddress = await provider.getCode(address);
     return codeAtAddress === "0x";
 }
 
 
 async function getRelayHubReceipt(transactionHash: string) : Promise<TransactionReceipt> {
-    const provider = await getProvider();
+    const provider = getProvider();
     const transactionReceipt = await provider.getTransactionReceipt(transactionHash);
     if(transactionReceipt != null &&
         transactionReceipt.to != null && 
