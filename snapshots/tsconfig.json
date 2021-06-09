@@ -5,5 +5,7 @@
     "strict": false,
     "esModuleInterop": true,
     "resolveJsonModule": true
-  }
+  },
+  "include": ["./src/*"],
+  "exclude": ["./tests/"]
 }
