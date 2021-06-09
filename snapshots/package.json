@@ -5,6 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "test" : "",
     "volume-snapshot": "ts-node scripts/run-volume-snapshot.ts",
     "lp-snapshot": "ts-node scripts/run-lp-snapshot.ts"
   },

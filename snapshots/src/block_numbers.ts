@@ -65,7 +65,7 @@ export async function convertTimestampToBlockNumber(timestamp: number) : Promise
     }
 
     //If we undershoot, walk back up the chain till we reach the lowerLimitStamp
-    if(lowerLimitStamp && block.timestamp < lowerLimitStamp) {
+    if(block.timestamp < lowerLimitStamp) {
         while(block.timestamp < lowerLimitStamp){
             blockNumber += step; //step size
             block = await provider.getBlock(blockNumber);
