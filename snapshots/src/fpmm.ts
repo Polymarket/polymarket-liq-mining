@@ -9,7 +9,7 @@ import { queryGqlClient } from "./gql_client";
  * @param block 
  * @returns 
  */
-export const calculateLiquidityPoints = async(marketAddress: string, block: number) : Promise<any> => {
+export const calculateValOfLpPositions = async(marketAddress: string, block: number) : Promise<any> => {
     const fpmm = await getFpmm(marketAddress, block);
     const outcomeTokenPrices = fpmm.outcomeTokenPrices;
     const outcomeTokenAmounts = fpmm.outcomeTokenAmounts;
@@ -20,17 +20,10 @@ export const calculateLiquidityPoints = async(marketAddress: string, block: numb
     if(scaledLiquidityParameter > 0){
         for(const liquidityProvider of fpmm.poolMembers){
             const lpAddress = liquidityProvider.funder.id;
-            const lpRatio = parseInt(liquidityProvider.amount) /
-                            (scaledLiquidityParameter * Math.pow(10, 6));
-            
-            const valueOfLpLiquidity = 
-                //pro rata share of LP's liquidity for 1 side of outcome shares
-                ((lpRatio * outcomeTokenAmounts[0] * outcomeTokenPrices[0]) / Math.pow(10,6));
-                + 
-                //pro rata share of LP's liquidity for the other side of outcome
-                ((lpRatio * outcomeTokenAmounts[1] * outcomeTokenPrices[1]) / Math.pow(10,6));
-            
-            marketLiquidityAtBlock[lpAddress] = valueOfLpLiquidity;
+            const lpRatio = parseInt(liquidityProvider.amount) / (scaledLiquidityParameter * Math.pow(10, 6));
+            const totalPoolValUsd = ((outcomeTokenAmounts[0] * outcomeTokenPrices[0]) + (outcomeTokenAmounts[1] * outcomeTokenPrices[1])) / Math.pow(10,6);
+            const lpPoolValUsd = lpRatio * totalPoolValUsd;
+            marketLiquidityAtBlock[lpAddress] = lpPoolValUsd;
         }
     }
     return marketLiquidityAtBlock;
@@ -48,19 +41,18 @@ export const getFpmm = async (marketAddress: string, block: number) : Promise<an
     return data.fixedProductMarketMaker;
 }
 
-const calculateLiquidityPointsWrapper = async(args: {marketAddress: string, block: number}) : Promise<any> => {
-    return await calculateLiquidityPoints(args.marketAddress, args.block);
+const calculateValOfLpPositionsWrapper = async(args: {marketAddress: string, block: number}) : Promise<any> => {
+    return await calculateValOfLpPositions(args.marketAddress, args.block);
 }
 
 
-const calculateLiquidityPointsBatched = batch({batchSize: 75}, calculateLiquidityPointsWrapper);
+const calculateValOfLpPositionsBatched = batch({batchSize: 75}, calculateValOfLpPositionsWrapper);
 
-export const calculateLiquidityAcrossBlocks = async(marketAddress: string, blocks: number[]) : Promise<any> => {
-    console.log(`Calculating liquidity for market: ${marketAddress} across ${blocks.length} blocks!`);
+export const calculateValOfLpPositionsAcrossBlocks = async(marketAddress: string, blocks: number[]) : Promise<any> => {
+    console.log(`Calculating value of LP positions for market: ${marketAddress} across ${blocks.length} blocks!`);
     const args: {marketAddress: string, block: number}[] = [];
     for(const block of blocks){
         args.push({marketAddress:marketAddress, block: block});
     }
-    const liquidityPointsList = await calculateLiquidityPointsBatched(args);
-    return liquidityPointsList;
+    return await calculateValOfLpPositionsBatched(args);
 }

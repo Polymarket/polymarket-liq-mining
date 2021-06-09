@@ -1,4 +1,4 @@
-import { fetchMagicAddress, getAllMarkets, calculateLiquidityAcrossBlocks, getMarketLiquidityAddBlockNumber as getStartBlock, convertTimestampToBlockNumber } from "../src";
+import { fetchMagicAddress, getAllMarkets, calculateValOfLpPositionsAcrossBlocks, getStartBlock, convertTimestampToBlockNumber } from "../src";
 
 
 /**
@@ -30,7 +30,7 @@ export async function generateLpSnapshot(timestamp: number, supply: number, bloc
             }
 
             //get liquidity state across many blocks for a market
-            const liquidityAcrossBlocks = await calculateLiquidityAcrossBlocks(market, blocks);
+            const liquidityAcrossBlocks = await calculateValOfLpPositionsAcrossBlocks(market, blocks);
 
             for(const liquidityAtBlock of liquidityAcrossBlocks){
                 for(const liquidityProvider of Object.keys(liquidityAtBlock)){

@@ -4,7 +4,7 @@ import { queryGqlClient } from "./gql_client";
 import { firstLiquidityAddedQuery } from "./queries";
 
 
-export const getMarketLiquidityAddBlockNumber = async (marketAddress: string): Promise<number> => {
+export const getStartBlock = async (marketAddress: string): Promise<number> => {
     let blockNumber: number;
     const provider = getProvider();
     const txnHash = await getFirstAddedLiquidity(marketAddress);
