@@ -1,9 +1,10 @@
 import { expect } from 'chai';
-import { calcLpPositions } from "../src/fpmm";
+import { calcLpPositions, FixedProductMarketMaker } from "../src/fpmm";
 
 
 describe('FPMM Tests', () => {
-    let mockFpmm;
+    let mockFpmm: FixedProductMarketMaker;
+
     before("Mock FPMM", async function() {
         mockFpmm = {
             id: '0x012fbf9a6320ac4b244cac49e391e901932ac7b4',
@@ -34,4 +35,6 @@ describe('FPMM Tests', () => {
             expect(actualLpValueInPool).to.eq(expectedLpValueInPool);
         }
     })
+
+    
 })
