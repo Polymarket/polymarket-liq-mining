@@ -36,9 +36,7 @@
     "arbitrum:export": "hardhat --network arbitrum export --export exports/arbitrum.json",
     "test": "cross-env TS_NODE_TRANSPILE_ONLY=1 hardhat test",
     "test:coverage": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" hardhat coverage",
-    "test:gas": "cross-env REPORT_GAS=true yarn test",
-    "volume-snapshot": "ts-node scripts/run-volume-snapshot.ts",
-    "lp-snapshot": "ts-node scripts/run-lp-snapshot.ts"
+    "test:gas": "cross-env REPORT_GAS=true yarn test"
   },
   "lint-staged": {
     "*.ts": [
