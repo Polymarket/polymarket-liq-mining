@@ -59,7 +59,6 @@ export const getFpmm = async (marketAddress: string, block: number) : Promise<Fi
     const { data } = await queryGqlClient(getFixedProductMarketMakerQuery, 
         {market: marketAddress, block: block}
     );
-
     return data.fixedProductMarketMaker;
 }
 

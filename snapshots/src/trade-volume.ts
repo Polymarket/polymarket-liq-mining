@@ -1,5 +1,5 @@
 import { batch } from "promises-tho";
-import * as gClient from "./gql_client";
+import { queryGqlClient } from "./gql_client";
 import * as queries from "./queries";
 
 
@@ -17,7 +17,7 @@ const getTradeVolumePerUser = async (address: string, timestamp: number) : Promi
     let tradeVolume = 0;
     const search = true;
     while(search) {
-        const { data } = await gClient.queryGqlClient(queries.getTradeVolumePerUserQuery, 
+        const { data } = await queryGqlClient(queries.getTradeVolumePerUserQuery, 
             {lastId: lastId, user: address, timestamp: `${timestamp}`}
         );
 

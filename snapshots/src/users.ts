@@ -1,5 +1,5 @@
 import * as queries from "./queries";
-import * as gql_client from "./gql_client";
+import {queryGqlClient} from "./gql_client";
 import { EXCLUDED_ACCOUNTS } from "./ban_list";
 import { normalizeTimestamp } from "./utils";
 
@@ -21,7 +21,7 @@ import { normalizeTimestamp } from "./utils";
     while(search) {
         //Subgraph can only pull 1k accounts at a time, 
         //queries the subgraph until all users are pulled
-        const { data } = await gql_client.queryGqlClient(queries.getAllUsersQuery, 
+        const { data } = await queryGqlClient(queries.getAllUsersQuery, 
             {lastId: lastId, timestamp: `${timestampInSeconds}`, 
             excluded: excludedAccounts}
         );
