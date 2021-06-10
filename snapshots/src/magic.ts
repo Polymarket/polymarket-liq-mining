@@ -1,6 +1,6 @@
 import { queryGqlClient } from "./gql_client";
 import { getProvider } from "./provider";
-import { allTransactionsPerUserQuery } from "./queries"
+import * as queries from "./queries"
 import { TransactionReceipt } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import { TxnRelayedEventAbiFragment } from "./relayHubAbi";
@@ -37,7 +37,7 @@ async function getRelayHubReceipt(transactionHash: string) : Promise<Transaction
 async function getTransactionHashes(address: string): Promise<string[]> {
     const transactionHashes = [];
 
-    const { data } = await queryGqlClient(allTransactionsPerUserQuery, 
+    const { data } = await queryGqlClient(queries.allTransactionsPerUserQuery, 
         {user: address});
     
     data.transactions.map(el=> transactionHashes.push(el.id));

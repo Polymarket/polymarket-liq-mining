@@ -3,6 +3,41 @@ import { getFixedProductMarketMakerQuery } from "./queries";
 import { queryGqlClient } from "./gql_client";
 
 
+export interface FixedProductMarketMaker {
+    id: string,
+    poolMembers: {funder: {id: string}, amount:number}[],
+    scaledLiquidityParameter: number,
+    totalSupply: number,
+    outcomeTokenPrices: number[],
+    outcomeTokenAmounts: number[]
+}
+
+
+/**
+ * Calculates LP positions, given a fixed product market maker
+ * @param fpmm 
+ * @returns 
+ */
+export async function calcLpPositions(fpmm: FixedProductMarketMaker) : Promise<any> {
+    const outcomeTokenPrices = fpmm.outcomeTokenPrices;
+    const outcomeTokenAmounts = fpmm.outcomeTokenAmounts;
+    const scaledLiquidityParameter = fpmm.scaledLiquidityParameter;
+    const totalSupply = fpmm.totalSupply;
+    
+    const lpLiquidityAtBlock = {};
+    
+    if(scaledLiquidityParameter > 0){
+        for(const liquidityProvider of fpmm.poolMembers){
+            const lpAddress = liquidityProvider.funder.id;
+            const lpRatio = liquidityProvider.amount / totalSupply;
+            const totalPoolValUsd = ((outcomeTokenAmounts[0] * outcomeTokenPrices[0]) + (outcomeTokenAmounts[1] * outcomeTokenPrices[1])) / Math.pow(10,6);
+            const lpPoolValUsd = lpRatio * totalPoolValUsd;
+            lpLiquidityAtBlock[lpAddress] = lpPoolValUsd;
+        }
+    }
+    return lpLiquidityAtBlock;
+}
+
 /**
  * Calculate liquidity for each LP at a market, at a block
  * @param marketAddress 
@@ -10,34 +45,21 @@ import { queryGqlClient } from "./gql_client";
  * @returns 
  */
 export const calculateValOfLpPositions = async(marketAddress: string, block: number) : Promise<any> => {
-    const fpmm = await getFpmm(marketAddress, block);
-    const outcomeTokenPrices = fpmm.outcomeTokenPrices;
-    const outcomeTokenAmounts = fpmm.outcomeTokenAmounts;
-    const scaledLiquidityParameter = fpmm.scaledLiquidityParameter;
-    
-    const marketLiquidityAtBlock = {};
-    
-    if(scaledLiquidityParameter > 0){
-        for(const liquidityProvider of fpmm.poolMembers){
-            const lpAddress = liquidityProvider.funder.id;
-            const lpRatio = parseInt(liquidityProvider.amount) / (scaledLiquidityParameter * Math.pow(10, 6));
-            const totalPoolValUsd = ((outcomeTokenAmounts[0] * outcomeTokenPrices[0]) + (outcomeTokenAmounts[1] * outcomeTokenPrices[1])) / Math.pow(10,6);
-            const lpPoolValUsd = lpRatio * totalPoolValUsd;
-            marketLiquidityAtBlock[lpAddress] = lpPoolValUsd;
-        }
-    }
-    return marketLiquidityAtBlock;
+    const fpmm: FixedProductMarketMaker = await getFpmm(marketAddress, block);
+    return await calcLpPositions(fpmm);
 }
+
 
 /**
  * Given a market and a block, fetch FPMM details as they existed at that block
  * @param marketAddress 
  * @param block 
  */
-export const getFpmm = async (marketAddress: string, block: number) : Promise<any> => {
+export const getFpmm = async (marketAddress: string, block: number) : Promise<FixedProductMarketMaker> => {
     const { data } = await queryGqlClient(getFixedProductMarketMakerQuery, 
         {market: marketAddress, block: block}
     );
+
     return data.fixedProductMarketMaker;
 }
 

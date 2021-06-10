@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test" : "",
+    "test": "mocha -r ts-node/register tests/*.spec.ts",
     "volume-snapshot": "ts-node scripts/run-volume-snapshot.ts",
     "lp-snapshot": "ts-node scripts/run-lp-snapshot.ts"
   },

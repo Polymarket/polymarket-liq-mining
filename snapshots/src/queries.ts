@@ -86,6 +86,7 @@ query fpmm($market: String!, $block: Int!){
         scaledLiquidityParameter
         outcomeTokenPrices
         outcomeTokenAmounts
+        totalSupply
     }
 }`;
 

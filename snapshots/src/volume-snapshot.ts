@@ -1,5 +1,6 @@
-import { getTradeVolume, getAllUsers, fetchMagicAddress } from "../src";
-
+import { getTradeVolume } from "./trade-volume";
+import { getAllUsers } from "./users";
+import { fetchMagicAddress } from "./magic";
 
 const snapshot: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
 

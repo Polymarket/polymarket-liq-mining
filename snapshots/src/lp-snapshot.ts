@@ -1,4 +1,7 @@
-import { fetchMagicAddress, getAllMarkets, calculateValOfLpPositionsAcrossBlocks, getStartBlock, convertTimestampToBlockNumber } from "../src";
+import { getAllMarkets } from "./markets";
+import { fetchMagicAddress } from "./magic";
+import { calculateValOfLpPositionsAcrossBlocks } from "./fpmm";
+import { getStartBlock, convertTimestampToBlockNumber} from "./block_numbers";
 
 
 /**

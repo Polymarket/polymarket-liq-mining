@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
 import * as yargs from "yargs";
-import { generateVolumeSnapshot , writeSnapshot  } from "../src";
+import { generateVolumeSnapshot } from "../src/volume-snapshot";
+import { writeSnapshot } from "../src/utils";
 
 const DEFAULT_TOKEN_SUPPLY = 1000000;
 const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/volume-weighted-";

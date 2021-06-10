@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
 import * as yargs from "yargs";
-import { generateLpSnapshot , writeSnapshot } from "../src";
+import { generateLpSnapshot } from "../src/lp-snapshot";
+import { writeSnapshot } from "../src/utils"
 
 
 const DEFAULT_TOKEN_SUPPLY = 1000000;

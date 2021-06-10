@@ -1,10 +1,14 @@
 {
   "compilerOptions": {
+    "lib": ["es6"],
     "target": "es2017",
     "module": "commonjs",
     "strict": false,
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "types": [ "node", "mocha", "chai" ]
   },
   "include": ["./src/*"],
   "exclude": ["./tests/"]
