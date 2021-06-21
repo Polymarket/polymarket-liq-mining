@@ -10,5 +10,9 @@
   "solidity.packageDefaultDependenciesContractsDirectory": "",
   "solidity.enabledAsYouTypeCompilationErrorCheck": true,
   "solidity.validationDelay": 1500,
-  "solidity.packageDefaultDependenciesDirectory": "node_modules"
+  "solidity.packageDefaultDependenciesDirectory": "node_modules",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "eslint.validate": ["typescript"]
 }
