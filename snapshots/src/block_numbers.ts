@@ -1,13 +1,24 @@
 import { getProvider } from "./provider"; 
 import { normalizeTimestamp } from "./utils";
 import { queryGqlClient } from "./gql_client"; 
-import { firstLiquidityAddedQuery } from "./queries";
+import { firstLiquidityAddedQuery, marketResolutionTxnQuery } from "./queries";
 
 
 export const getStartBlock = async (marketAddress: string): Promise<number> => {
     let blockNumber: number;
     const provider = getProvider();
     const txnHash = await getFirstAddedLiquidity(marketAddress);
+    if(txnHash != null){
+        const txn = await provider.getTransaction(txnHash);
+        blockNumber = txn.blockNumber;
+    }
+    return blockNumber;
+}
+
+export async function getEndBlock(marketAddress: string): Promise<number> {
+    let blockNumber: number;
+    const provider = getProvider();
+    const txnHash = await getMarketResolutionTransaction(marketAddress);
     if(txnHash != null){
         const txn = await provider.getTransaction(txnHash);
         blockNumber = txn.blockNumber;
@@ -25,6 +36,18 @@ async function getFirstAddedLiquidity(marketAddress: string) : Promise<string> {
     }
     return liquidityAddTxnHash;
 }
+
+async function getMarketResolutionTransaction(marketAddress: string) : Promise<string> {
+    const { data } = await queryGqlClient(marketResolutionTxnQuery, {market: marketAddress});
+    const resolutionConditions = data.fixedProductMarketMaker.conditions;
+    let resolutionHash: string;
+
+    if(resolutionConditions.length > 0){
+        resolutionHash = resolutionConditions[0].resolutionHash;
+    }
+    return resolutionHash;
+}
+
 
 /**
  * Get an estimation of a block number, given a timestamp

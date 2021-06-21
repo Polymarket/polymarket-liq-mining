@@ -7,6 +7,9 @@ Volume weighted snapshot script
 
 LP Weighted snapshot script
 
-`yarn lp-snapshot --timestamp TIMESTAMP --supply SUPPLY --blockSampleSize SAMPLE`
+`yarn lp-snapshot --timestamp TIMESTAMP --supply SUPPLY`
 
-Current default is to sample every 1800 blocks, or roughly every hour(assuming 2s block times)
+
+Fees Snapshot
+
+`yarn fees-snapshot --startTimestamp START_TIMESTAMP --endTimestamp END_TIMESTAMP

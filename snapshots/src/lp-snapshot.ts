@@ -1,7 +1,7 @@
 import { getAllMarkets } from "./markets";
 import { fetchMagicAddress } from "./magic";
 import { calculateValOfLpPositionsAcrossBlocks } from "./fpmm";
-import { getStartBlock, convertTimestampToBlockNumber} from "./block_numbers";
+import { getStartBlock, getEndBlock, convertTimestampToBlockNumber} from "./block_numbers";
 
 
 /**
@@ -19,11 +19,16 @@ export async function generateLpSnapshot(timestamp: number, supply: number, bloc
     // get all markets pre snapshot
     const markets: string[] = await getAllMarkets(timestamp);
 
-    const endBlock = await convertTimestampToBlockNumber(timestamp);
+    let endBlock = await convertTimestampToBlockNumber(timestamp);
     
     //For each market, calculate liquidity from startBlock till endBlock, every blockSampleSize
     for(const market of markets){
         const startBlock = await getStartBlock(market);
+        const marketEndBlock = await getEndBlock(market);
+        if(marketEndBlock != null){
+            console.log(`Found market end block: ${marketEndBlock}`);
+            endBlock = marketEndBlock;
+        }
 
         //Ensure that the market occured within the blocks being checked
         if(startBlock != null && endBlock > startBlock){

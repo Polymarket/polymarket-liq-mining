@@ -24,6 +24,6 @@ const args = yargs.options({
     const snapshotFilePath = args.snapshotFilePath;
 
     const snapshot = await generateLpSnapshot(timestamp, supply, blockSampleSize);
-
-    await writeSnapshot(timestamp, snapshotFilePath, snapshot);
+    const snapshotFileName = `${snapshotFilePath + timestamp.toString()}.json`;
+    await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
 })(args)

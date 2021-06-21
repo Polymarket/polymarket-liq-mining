@@ -69,6 +69,17 @@ query totalTradeVolume($lastId: String!, $user: String!, $timestamp: BigInt!){
     }
 }`;
 
+export const getFeesPaidPerUserQuery = gql`
+query totalTradeVolume($lastId: String!, $user: String!, $startTimestamp: BigInt!, $endTimestamp: BigInt!){
+    transactions(
+        where: {user: $user, id_gt: $lastId, timestamp_lt: $endTimestamp, timestamp_gt: $startTimestamp}
+        first: 1000
+    ){
+        id
+        feeAmount
+    }
+}`;
+
 
 export const getFixedProductMarketMakerQuery = gql`
 query fpmm($market: String!, $block: Int!){
@@ -98,5 +109,14 @@ query firstLiquidityAdded($market: String!){
         where:{fpmm: $market}, orderBy:timestamp
     ){
         id
+    }
+}`;
+
+
+export const marketResolutionTxnQuery = gql`query marketResolution($market: String!){
+    fixedProductMarketMaker(id: $market){
+        conditions{
+            resolutionHash
+        }
     }
 }`;
