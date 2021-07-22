@@ -466,7 +466,7 @@ describe('MerkleDistributor', () => {
                       overrides
                   )
               ).to.be.revertedWith(
-                "MerkleDistributor::claimFrom: invalid signature"
+                "ECDSA: invalid signature 's' value"
               )
           })
 
