@@ -3,6 +3,7 @@ pragma solidity 0.6.9;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 import "./interfaces/IMerkleDistributor.sol";
 import "./Ownable.sol";
 
@@ -62,8 +63,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         ));
         bytes32 structHash = keccak256(abi.encode(CLAIM_TYPEHASH, recipient, amount, week));
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-        address signatory = ecrecover(digest, v, r, s);
-        require(signatory != address(0), "MerkleDistributor::claimFrom: invalid signature");
+        address signatory = ECDSA.recover(digest, v, r, s);
 
         _claim(index, signatory, recipient, amount, merkleProof);
     }
