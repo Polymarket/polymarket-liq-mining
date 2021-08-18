@@ -16,7 +16,7 @@ interface IMerkleDistributor {
     // Claim the given amount of the token to the given address. Reverts if the inputs are invalid.
     function claim(uint256 index, address account, uint256 amount, bytes32[] calldata merkleProof) external;
     // Claim the given amount of token to the recipient address given a signature from air drop recipient.
-    function claimFrom(
+    function claimTo(
         uint256 index,
         uint256 amount,
         bytes32[] calldata merkleProof,
