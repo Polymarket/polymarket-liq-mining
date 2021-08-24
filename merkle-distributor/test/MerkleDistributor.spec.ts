@@ -374,7 +374,7 @@ describe('MerkleDistributor', () => {
     })
   })
 
-  describe('#claimFrom', () => {
+  describe('#claimTo', () => {
       let domain: { name: string; chainId: number; verifyingContract: string; };
       let proof0
 
@@ -416,7 +416,7 @@ describe('MerkleDistributor', () => {
             });
             const { v: v0, r: r0, s: s0 } = utils.splitSignature(hexSig0);
 
-            await expect(distributor.claimFrom(0, 100, proof0, wallet0.address, v0, r0, s0, overrides))
+            await expect(distributor.claimTo(0, 100, proof0, wallet0.address, v0, r0, s0, overrides))
               .to.emit(distributor, 'Claimed')
               .withArgs(0, 100, wallet0.address, wallet0.address, 0)
 
@@ -429,7 +429,7 @@ describe('MerkleDistributor', () => {
             const { v: v1, r: r1, s: s1 } = utils.splitSignature(hexSig1);
 
             const proof1 = tree.getProof(1, wallet1.address, BigNumber.from(101))
-            await expect(distributor.claimFrom(1, 101, proof1, wallet1.address, v1, r1, s1, overrides))
+            await expect(distributor.claimTo(1, 101, proof1, wallet1.address, v1, r1, s1, overrides))
               .to.emit(distributor, 'Claimed')
               .withArgs(1, 101, wallet1.address, wallet1.address, 0)
 
@@ -451,15 +451,15 @@ describe('MerkleDistributor', () => {
                   index: 0,
               });
               const { v: v0, r: r0, s: s0 } = utils.splitSignature(hexSig0);
-              await distributor.claimFrom(0, 100, proof0, wallet0.address, v0, r0, s0, overrides)
-              await expect(distributor.claimFrom(0, 100, proof0, wallet0.address, v0, r0, s0, overrides)).to.be.revertedWith(
+              await distributor.claimTo(0, 100, proof0, wallet0.address, v0, r0, s0, overrides)
+              await expect(distributor.claimTo(0, 100, proof0, wallet0.address, v0, r0, s0, overrides)).to.be.revertedWith(
                 'MerkleDistributor: Drop already claimed.'
               )
           })
 
           it('fails on incorrect signature', async () => {
               await expect(
-                  distributor.claimFrom(
+                  distributor.claimTo(
                       0,
                       100,
                       proof0,
@@ -484,7 +484,7 @@ describe('MerkleDistributor', () => {
 
               const { v, r, s } = utils.splitSignature(hexSig);
 
-              await expect(distributor.claimFrom(0, 100, proof0, wallet1.address, v, r, s, overrides))
+              await expect(distributor.claimTo(0, 100, proof0, wallet1.address, v, r, s, overrides))
                   .to.be.revertedWith('MerkleDistributor: Invalid proof.')
           })
 
@@ -499,7 +499,7 @@ describe('MerkleDistributor', () => {
             });
             const { v: v0, r: r0, s: s0 } = utils.splitSignature(hexSig0);
 
-            await expect(distributor.claimFrom(0, 100, proof0, wallet0.address, v0, r0, s0, overrides))
+            await expect(distributor.claimTo(0, 100, proof0, wallet0.address, v0, r0, s0, overrides))
               .to.be.revertedWith('MerkleDistributor: Claiming is frozen.')
           })
       })

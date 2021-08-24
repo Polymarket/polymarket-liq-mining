@@ -44,7 +44,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         _claim(index, account, account, amount, merkleProof);
     }
 
-    function claimFrom(
+    function claimTo(
         uint256 index,
         uint256 amount,
         bytes32[] calldata merkleProof,
