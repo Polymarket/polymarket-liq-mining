@@ -30,6 +30,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
     );
 
     constructor(address token_, bytes32 merkleRoot_) public {
+        require(token_ != address(0), "MerkleDistributor: invalid token");
         token = token_;
         merkleRoot = merkleRoot_;
         week = 0;
