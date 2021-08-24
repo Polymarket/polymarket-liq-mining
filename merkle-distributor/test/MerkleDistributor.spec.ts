@@ -383,6 +383,7 @@ describe('MerkleDistributor', () => {
               { name: 'recipient', type: 'address' },
               { name: 'amount', type: 'uint256' },
               { name: 'week', type: 'uint32' },
+              { name: 'index', type: 'uint256'},
           ]
       }
 
@@ -410,7 +411,8 @@ describe('MerkleDistributor', () => {
             const hexSig0 = await wallet0._signTypedData(domain, types, {
                 recipient: wallet0.address,
                 amount: 100,
-                week: 0
+                week: 0,
+                index: 0
             });
             const { v: v0, r: r0, s: s0 } = utils.splitSignature(hexSig0);
 
@@ -421,7 +423,8 @@ describe('MerkleDistributor', () => {
             const hexSig1 = await wallet1._signTypedData(domain, types, {
                 recipient: wallet1.address,
                 amount: 101,
-                week: 0
+                week: 0,
+                index: 1,
             });
             const { v: v1, r: r1, s: s1 } = utils.splitSignature(hexSig1);
 
@@ -444,7 +447,8 @@ describe('MerkleDistributor', () => {
               const hexSig0 = await wallet0._signTypedData(domain, types, {
                   recipient: wallet0.address,
                   amount: 100,
-                  week: 0
+                  week: 0,
+                  index: 0,
               });
               const { v: v0, r: r0, s: s0 } = utils.splitSignature(hexSig0);
               await distributor.claimFrom(0, 100, proof0, wallet0.address, v0, r0, s0, overrides)
@@ -474,7 +478,8 @@ describe('MerkleDistributor', () => {
               const hexSig = await wallet0._signTypedData(domain, types, {
                   recipient: wallet0.address,
                   amount: 100,
-                  week: 0
+                  week: 0,
+                  index: 0,
               })
 
               const { v, r, s } = utils.splitSignature(hexSig);
@@ -489,7 +494,8 @@ describe('MerkleDistributor', () => {
             const hexSig0 = await wallet0._signTypedData(domain, types, {
                 recipient: wallet0.address,
                 amount: 100,
-                week: 0
+                week: 0,
+                index: 0,
             });
             const { v: v0, r: r0, s: s0 } = utils.splitSignature(hexSig0);
 

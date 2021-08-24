@@ -26,7 +26,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
 
     // The EIP-712 typehash for the claim id struct
     bytes32 public constant CLAIM_TYPEHASH = keccak256(
-        "Claim(address recipient,uint256 amount,uint32 week)"
+        "Claim(address recipient,uint256 amount,uint32 week,uint256 index)"
     );
 
     constructor(address token_, bytes32 merkleRoot_) public {
@@ -61,7 +61,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
             getChainIdInternal(),
             address(this)
         ));
-        bytes32 structHash = keccak256(abi.encode(CLAIM_TYPEHASH, recipient, amount, week));
+        bytes32 structHash = keccak256(abi.encode(CLAIM_TYPEHASH, recipient, amount, week, index));
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
         address signatory = ECDSA.recover(digest, v, r, s);
 
