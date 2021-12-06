@@ -1,5 +1,5 @@
 {
-  "name": "polyDistributor",
+  "name": "polymarket-liq-mining",
   "description": "Contracts and tools for distributing tokens",
   "version": "1.0.0",
   "main": "index.js",
