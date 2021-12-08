@@ -17,7 +17,7 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
     // This is a packed array of booleans.
     mapping(uint256 => mapping(uint256 => uint256)) private claimedBitMap;
 
-	// Track total claimed for receiver addresses. for informational purposes only
+	// Total claimed for receiver addresses. for informational purposes only
     mapping(address => uint256) public totalClaimed;
 
     string public constant NAME = "PolyMarket Distributor";
