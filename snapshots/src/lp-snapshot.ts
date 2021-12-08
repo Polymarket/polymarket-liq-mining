@@ -9,13 +9,15 @@ import {
 } from "./block_numbers";
 // import { getProvider } from "./provider";
 import {
-//   sumLiquidity,
-//   makeLpMap,
-//   makeLpPointsMap,
+  //   sumLiquidity,
+  //   makeLpMap,
+  //   makeLpPointsMap,
   updateTokensPerBlockReward,
   updateTokensPerEpochReward,
 } from "./lp-helpers";
 // import { getCurrentBlock } from "./block_numbers";
+import { getStartAndEndBlock } from "./lp-helpers";
+import { fetchMagicAddress } from "./magic";
 
 export interface LpSnapshot {
   magicWallet: string | null;
@@ -26,9 +28,9 @@ export interface ReturnSnapshot extends LpSnapshot {
   proxyWallet: string;
 }
 
-enum LpCalculation {
-  MarketEnd = "marketEnd",
-  EpochEnd = "epochEnd",
+export enum LpCalculation {
+  PerEpoch = "perEpoch",
+  PerBlock = "perBlock",
 }
 
 /**
@@ -44,7 +46,8 @@ export async function generateLpSnapshot(
   map: { [key: string]: boolean },
   startTimestamp: number,
   perBlockReward: number
-): Promise<ReturnSnapshot[]> {
+  // ): Promise<ReturnSnapshot[]> {
+) {
   console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
   let userTokensPerEpoch: { [proxyWallet: string]: number } = {};
@@ -66,34 +69,45 @@ export async function generateLpSnapshot(
     const marketEndBlock = await getEndBlock(market);
     // console.log('marketEndBlock before', marketEndBlock)
 
+    const {
+      howToCalculate,
+      startBlock,
+      endBlock: eb,
+    } = getStartAndEndBlock({
+      epochStartBlock,
+      epochEndBlock,
+      marketStartBlock,
+      marketEndBlock,
+    });
+
+    const endBlock = !eb ? await getCurrentBlockNumber() : eb;
     // console.log('marketEndBlock after', marketEndBlock)
 
     // only count blocks in epoch, or start counting when the market starts
-    const startBlock =
-      epochStartBlock >= marketStartBlock ? epochStartBlock : marketStartBlock;
+    // const startBlock = epochStartBlock >= marketStartBlock ? epochStartBlock : marketStartBlock;
     // console.log('startBlock', startBlock)
 
     // only count blocks in epoch, or count blocks til the market ended
     // const endBlock = epochEndBlock <= marketEndBlock ? epochEndBlock : marketEndBlock;
-    let endBlock;
-    let howToCalculate: LpCalculation;
+    // let endBlock;
+    // let howToCalculate: LpCalculation;
 
-    if (epochEndBlock <= marketEndBlock) {
-      endBlock = epochEndBlock;
-      howToCalculate = LpCalculation.EpochEnd;
-      console.log("endBlock is epoch end block!");
-      // todo - give LP's X amount per block
-    } else {
-      if (!marketEndBlock) {
-        // get current block in case market has not ended and epoch end is in the future
-        endBlock = await getCurrentBlockNumber();
-        console.log("endBlock is current block!");
-      } else {
-        endBlock = marketEndBlock;
-        console.log("endBlock is market end block!");
-      }
-      howToCalculate = LpCalculation.MarketEnd;
-    }
+    // if (epochEndBlock <= marketEndBlock) {
+    //   endBlock = epochEndBlock;
+    //   howToCalculate = LpCalculation.perBlock;
+    //   console.log("endBlock is epoch end block!");
+    //   // todo - give LP's X amount per block
+    // } else {
+    //   if (!marketEndBlock) {
+    //     // get current block in case market has not ended and epoch end is in the future
+    //     endBlock =
+    //     console.log("endBlock is current block!");
+    //   } else {
+    //     endBlock = marketEndBlock;
+    //     console.log("endBlock is market end block!");
+    //   }
+    //   howToCalculate = LpCalculation.PerEpoch;
+    // }
 
     //Ensure that the market occured within the blocks being checked
     if (startBlock !== null && endBlock > startBlock) {
@@ -105,11 +119,15 @@ export async function generateLpSnapshot(
       ) {
         blocks.push(block);
       }
-      console.log("endBlock", endBlock);
-      console.log(
-        "END OF EPOCH BLOCK NUMBER IS IN BLOCKS",
-        blocks.includes(endBlock)
-      );
+
+      const sortedBlocks = blocks.sort();
+      const isSubgraphBehind =
+        endBlock - sortedBlocks[blocks.length - 1] > blockSampleSize;
+      console.log("SUBGRAPH IS BEHIND: ", isSubgraphBehind);
+
+      //   if (!blocks.includes(endBlock) && !isSubgraphBehind) {
+      // blocks.push(endBlock);
+      //   }
 
       //get liquidity state across many blocks for a market
       const liquidityAcrossBlocks = await calculateValOfLpPositionsAcrossBlocks(
@@ -117,7 +135,7 @@ export async function generateLpSnapshot(
         blocks
       );
 
-      if (howToCalculate === LpCalculation.EpochEnd) {
+      if (howToCalculate === LpCalculation.PerBlock) {
         userTokensPerEpoch = updateTokensPerBlockReward(
           userTokensPerEpoch,
           liquidityAcrossBlocks,
@@ -126,7 +144,7 @@ export async function generateLpSnapshot(
         console.log("in perBlock");
       }
 
-      if (howToCalculate === LpCalculation.MarketEnd) {
+      if (howToCalculate === LpCalculation.PerEpoch) {
         userTokensPerEpoch = updateTokensPerEpochReward(
           userTokensPerEpoch,
           liquidityAcrossBlocks,
@@ -136,17 +154,15 @@ export async function generateLpSnapshot(
       }
     }
 
-    // todo - map this and add magicWallet
-    // const magicWallet = await fetchMagicAddress(liquidityProvider);
-
-    // return Object.keys(userTokensPerEpoch).map((liquidityProvider) => {
-    //   // console.log('liquidityProvider', liquidityProvider)
-    //   // console.log('userTokensPerEpoch[liquidityProvider]', userTokensPerEpoch[liquidityProvider])
-    //   return {
-    //     proxyWallet: liquidityProvider,
-    //     amount: userTokensPerEpoch[liquidityProvider].amount,
-    //     magicWallet: userTokensPerEpoch[liquidityProvider].magicWallet,
-    //   };
-    // });
+    return Promise.all(
+      Object.keys(userTokensPerEpoch).map(async (liquidityProvider) => {
+        const magicWallet = await fetchMagicAddress(liquidityProvider);
+        return {
+          proxyWallet: liquidityProvider,
+          amount: userTokensPerEpoch[liquidityProvider],
+          magicWallet: magicWallet,
+        };
+      })
+    );
   }
 }

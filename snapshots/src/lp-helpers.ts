@@ -129,7 +129,7 @@ export const getStartAndEndBlock = ({
     throw new Error("The market and epoch have not started!");
   }
 
-//   // the market has not started!
+  // the market has not started!
   if (!marketStartBlock) {
     throw new Error("The market has not started!");
   }
@@ -156,7 +156,7 @@ export const getStartAndEndBlock = ({
   if (!epochEndBlock && !marketEndBlock) {
     // get current block in case market has not ended and epoch end is in the future
     endBlock = null;
-    howToCalculate = LpCalculation.MarketEnd;
+    howToCalculate = LpCalculation.PerEpoch;
   }
 
   // epoch ended before market or epoch ended and market is still live
@@ -165,7 +165,7 @@ export const getStartAndEndBlock = ({
     (epochEndBlock && !marketEndBlock)
   ) {
     endBlock = epochEndBlock;
-    howToCalculate = LpCalculation.EpochEnd;
+    howToCalculate = LpCalculation.PerBlock;
   }
 
   // market ended before epoch or market ended and epoch has not finished
@@ -174,7 +174,7 @@ export const getStartAndEndBlock = ({
     (!epochEndBlock && marketEndBlock)
   ) {
     endBlock = marketEndBlock;
-    howToCalculate = LpCalculation.MarketEnd;
+    howToCalculate = LpCalculation.PerEpoch;
   }
 
   return {
