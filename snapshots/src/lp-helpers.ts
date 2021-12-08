@@ -47,11 +47,8 @@ export const updateTokensPerBlockReward = (
   perBlockReward: number
 ): MapOfLpCount => {
   const map = { ...userTokensPerEpoch };
-  console.log("map", map);
   for (const liquidityAtBlock of liquidityAcrossBlocks) {
-    console.log("liquidityAtBlock", liquidityAtBlock);
     const totalLiquidity = sumLiquidity(liquidityAtBlock);
-    console.log("totalLiquidity", totalLiquidity);
     for (const liquidityProvider of Object.keys(liquidityAtBlock)) {
       if (!map[liquidityProvider]) {
         map[liquidityProvider] = 0;
@@ -59,11 +56,9 @@ export const updateTokensPerBlockReward = (
 
       const portionOfBlockReward =
         liquidityAtBlock[liquidityProvider] / totalLiquidity;
-      console.log("portionOfBlockReward", portionOfBlockReward);
 
       const newAmount =
         map[liquidityProvider] + portionOfBlockReward * perBlockReward;
-      console.log("newAmount", newAmount);
 
       map[liquidityProvider] = newAmount;
     }
