@@ -1,19 +1,28 @@
 import { getAllMarkets } from "./markets";
-import { fetchMagicAddress } from "./magic";
+// import { fetchMagicAddress } from "./magic";
 import { calculateValOfLpPositionsAcrossBlocks } from "./fpmm";
 import {
   getStartBlock,
   getEndBlock,
   convertTimestampToBlockNumber,
+  getCurrentBlockNumber,
 } from "./block_numbers";
-import { getProvider } from "./provider";
+// import { getProvider } from "./provider";
+import {
+//   sumLiquidity,
+//   makeLpMap,
+//   makeLpPointsMap,
+  updateTokensPerBlockReward,
+  updateTokensPerEpochReward,
+} from "./lp-helpers";
+// import { getCurrentBlock } from "./block_numbers";
 
-interface LpSnapshot {
+export interface LpSnapshot {
   magicWallet: string | null;
   amount: number;
 }
 
-interface ReturnSnapshot extends LpSnapshot {
+export interface ReturnSnapshot extends LpSnapshot {
   proxyWallet: string;
 }
 
@@ -38,14 +47,7 @@ export async function generateLpSnapshot(
 ): Promise<ReturnSnapshot[]> {
   console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
-  //   const userTokensPerEpoch: {
-  //     [proxyWallet: string]: {
-  // 		magicWallet: string | null,
-  // 		amount: number
-  // 	};
-  //   } = {};
-
-  const userTokensPerEpoch: { [proxyWallet: string]: LpSnapshot } = {};
+  let userTokensPerEpoch: { [proxyWallet: string]: number } = {};
   // get all markets pre snapshot
   const allMarkets: string[] = await getAllMarkets(endTimestamp);
   // only care about incentivized markets
@@ -83,11 +85,8 @@ export async function generateLpSnapshot(
       // todo - give LP's X amount per block
     } else {
       if (!marketEndBlock) {
-        const provider = getProvider();
-        //get current block number
-        const currentBlockNumber = await provider.getBlockNumber();
         // get current block in case market has not ended and epoch end is in the future
-        endBlock = currentBlockNumber;
+        endBlock = await getCurrentBlockNumber();
         console.log("endBlock is current block!");
       } else {
         endBlock = marketEndBlock;
@@ -109,12 +108,7 @@ export async function generateLpSnapshot(
       console.log("endBlock", endBlock);
       console.log(
         "END OF EPOCH BLOCK NUMBER IS IN BLOCKS",
-        blocks.includes(endBlock) || blocks.some((block) => block > endBlock)
-      );
-
-      console.log(
-        "END OF EPOCH BLOCK NUMBER IS LESS THAN SOME BLOCKS",
-        blocks.some((block) => block > endBlock)
+        blocks.includes(endBlock)
       );
 
       //get liquidity state across many blocks for a market
@@ -124,90 +118,35 @@ export async function generateLpSnapshot(
       );
 
       if (howToCalculate === LpCalculation.EpochEnd) {
-        for (const liquidityAtBlock of liquidityAcrossBlocks) {
-          const liquidityProviders = Object.keys(liquidityAtBlock);
-          const totalBlockLiquidity = liquidityProviders.reduce((acc, key) => {
-            return (acc += liquidityAtBlock[key]);
-          }, 0);
-
-          for (const liquidityProvider of Object.keys(liquidityAtBlock)) {
-            if (!userTokensPerEpoch[liquidityProvider]) {
-              userTokensPerEpoch[liquidityProvider] = {
-                amount: 0,
-                magicWallet: null,
-              };
-            }
-
-            const magicWallet = await fetchMagicAddress(liquidityProvider);
-
-            const portionOfBlockReward =
-              liquidityAtBlock[liquidityProvider] / totalBlockLiquidity;
-
-            const newAmount =
-              userTokensPerEpoch[liquidityProvider].amount +
-              portionOfBlockReward * perBlockReward;
-
-            userTokensPerEpoch[liquidityProvider] = {
-              amount: newAmount,
-              magicWallet: magicWallet,
-            };
-          }
-        }
+        userTokensPerEpoch = updateTokensPerBlockReward(
+          userTokensPerEpoch,
+          liquidityAcrossBlocks,
+          perBlockReward
+        );
         console.log("in perBlock");
       }
 
       if (howToCalculate === LpCalculation.MarketEnd) {
-        const marketLpPoints = {};
-
-        for (const liquidityAtBlock of liquidityAcrossBlocks) {
-          for (const liquidityProvider of Object.keys(liquidityAtBlock)) {
-            if (marketLpPoints[liquidityProvider] == null) {
-              marketLpPoints[liquidityProvider] = 0;
-            }
-            marketLpPoints[liquidityProvider] =
-              marketLpPoints[liquidityProvider] +
-              liquidityAtBlock[liquidityProvider];
-          }
-        }
-
-        const allLiquidity: number[] = Object.values(marketLpPoints);
-        const totalLiquidityPoints = allLiquidity.reduce((acc, current) => {
-          return acc + current;
-        }, 0);
-
-        for (const liquidityProvider of Object.keys(marketLpPoints)) {
-          if (!userTokensPerEpoch[liquidityProvider]) {
-            userTokensPerEpoch[liquidityProvider] = {
-              amount: 0,
-              magicWallet: null,
-            };
-          }
-          const liquidityPointsPerLp = marketLpPoints[liquidityProvider];
-
-          const rewardForMarket =
-            (liquidityPointsPerLp / totalLiquidityPoints) *
-            supplyOfTokenForEpoch;
-
-          const magicWallet = await fetchMagicAddress(liquidityProvider);
-
-          userTokensPerEpoch[liquidityProvider] = {
-            amount:
-              userTokensPerEpoch[liquidityProvider].amount + rewardForMarket,
-            magicWallet: magicWallet,
-          };
-        }
+        userTokensPerEpoch = updateTokensPerEpochReward(
+          userTokensPerEpoch,
+          liquidityAcrossBlocks,
+          supplyOfTokenForEpoch
+        );
         console.log("in supplyDivBlocks");
       }
     }
 
-    return Object.keys(userTokensPerEpoch).map((liquidityProvider) => {
-      // console.log('liquidityProvider', liquidityProvider)
-      // console.log('userTokensPerEpoch[liquidityProvider]', userTokensPerEpoch[liquidityProvider])
-      return {
-        proxyWallet: liquidityProvider,
-        amount: userTokensPerEpoch[liquidityProvider].amount,
-        magicWallet: userTokensPerEpoch[liquidityProvider].magicWallet,
-      };
-    });
+    // todo - map this and add magicWallet
+    // const magicWallet = await fetchMagicAddress(liquidityProvider);
+
+    // return Object.keys(userTokensPerEpoch).map((liquidityProvider) => {
+    //   // console.log('liquidityProvider', liquidityProvider)
+    //   // console.log('userTokensPerEpoch[liquidityProvider]', userTokensPerEpoch[liquidityProvider])
+    //   return {
+    //     proxyWallet: liquidityProvider,
+    //     amount: userTokensPerEpoch[liquidityProvider].amount,
+    //     magicWallet: userTokensPerEpoch[liquidityProvider].magicWallet,
+    //   };
+    // });
   }
 }
