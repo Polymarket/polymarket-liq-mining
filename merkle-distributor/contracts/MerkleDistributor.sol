@@ -17,6 +17,9 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
     // This is a packed array of booleans.
     mapping(uint256 => mapping(uint256 => uint256)) private claimedBitMap;
 
+	// Track total claimed for receiver addresses. for informational purposes only
+    mapping(address => uint256) public totalClaimed;
+
     string public constant NAME = "PolyMarket Distributor";
 
     // The EIP-712 typehash for the contract's domain
@@ -104,6 +107,8 @@ contract MerkleDistributor is IMerkleDistributor, Ownable {
         // Mark it claimed and send the token.
         _setClaimed(index);
         require(IERC20(token).transfer(tokenReceiver, amount), "MerkleDistributor: Transfer failed.");
+
+		totalClaimed[airdropRecipient] += amount;
 
         emit Claimed(index, amount, airdropRecipient, tokenReceiver, week);
     }
