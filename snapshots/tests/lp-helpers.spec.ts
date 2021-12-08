@@ -1,9 +1,11 @@
 import {
+  IStartAndEndBlock,
   updateTokensPerBlockReward,
   updateTokensPerEpochReward,
 } from "../src/lp-helpers";
 
 import { expect } from "chai";
+import { getStartAndEndBlock } from "../src/lp-helpers";
 
 describe("updateTokens on a PerBlockReward", () => {
   let initialState;
@@ -100,4 +102,86 @@ describe("updateTokens on a PerEpochReward", () => {
   });
 });
 
-// todo - test block logic
+const mockState = {
+  epochStartBlock: 21000000,
+  marketStartBlock: 21400000,
+  marketEndBlock: 21600000,
+  epochEndBlock: 21900000,
+};
+
+describe("calculate correct start and end blocks", () => {
+  let initialState: IStartAndEndBlock = mockState;
+  // 22291274
+  beforeEach(() => {
+    initialState = { ...mockState };
+  });
+
+  // STARTS
+  it("if the epoch starts after the market, start block is epoch block", async () => {
+    initialState.epochStartBlock = 21500000;
+    const { startBlock } = getStartAndEndBlock(initialState);
+    expect(startBlock).to.eq(initialState.epochStartBlock);
+  });
+
+  it("if the epoch starts before the market, start block is market block", async () => {
+    const { startBlock } = getStartAndEndBlock(initialState);
+    expect(startBlock).to.eq(initialState.marketStartBlock);
+  });
+
+  it("if the market started and the epoch has not started, start block is market", async () => {
+    initialState.epochStartBlock = null;
+    const { startBlock } = getStartAndEndBlock(initialState);
+    expect(startBlock).to.eq(initialState.marketStartBlock);
+  });
+
+  // ERRORS
+
+  it("if there are no start dates, it errors", async () => {
+    initialState.epochStartBlock = null;
+    initialState.marketStartBlock = null;
+	expect(() => getStartAndEndBlock(initialState)).to.throw(); 
+  });
+
+  it("if there is no market start date, it errors", async () => {
+    initialState.marketStartBlock = null;
+	expect(() => getStartAndEndBlock(initialState)).to.throw(); 
+  });
+
+  // ENDS
+
+  it("if the market ends before the epoch, end block is market block", async () => {
+    const { endBlock } = getStartAndEndBlock(initialState);
+    expect(endBlock).to.eq(initialState.marketEndBlock);
+  });
+
+  it("if the epoch ends before the market, end block is epoch block", async () => {
+    initialState.epochEndBlock = 21500000;
+    const { endBlock } = getStartAndEndBlock(initialState);
+    expect(endBlock).to.eq(initialState.epochEndBlock);
+  });
+
+  it("if the market ends and the epoch has not ended, end block is market block", async () => {
+    initialState.epochEndBlock = null;
+    const { endBlock } = getStartAndEndBlock(initialState);
+    expect(endBlock).to.eq(initialState.marketEndBlock);
+  });
+
+  it("if the epoch ends and the market has not resolved, end block is epoch block", async () => {
+    initialState.marketEndBlock = null;
+    const { endBlock } = getStartAndEndBlock(initialState);
+    expect(endBlock).to.eq(initialState.epochEndBlock);
+  });
+
+  it("if the epoch has not ended and the market has not resolved, end block is null", async () => {
+    initialState.epochEndBlock = null;
+    initialState.marketEndBlock = null;
+    const { endBlock } = getStartAndEndBlock(initialState);
+    expect(endBlock).to.eq(null);
+  });
+
+  it("if the epoch ends and the market has not resolved, end block is epoch block", async () => {
+    initialState.marketEndBlock = null;
+    const { endBlock } = getStartAndEndBlock(initialState);
+    expect(endBlock).to.eq(initialState.epochEndBlock);
+  });
+});
