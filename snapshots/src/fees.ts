@@ -2,6 +2,7 @@ import * as queries from "./queries";
 import { queryGqlClient } from "./gql_client";
 // import { EXCLUDED_ACCOUNTS } from "./ban_list";
 import { normalizeTimestamp } from "./utils";
+import { UserAmount } from "./interfaces";
 
 /**
  * Pull all transactions from the subgraph in the last epoch
@@ -11,7 +12,7 @@ import { normalizeTimestamp } from "./utils";
 export const getAllFeesInEpoch = async (
   startTimestamp: number,
   endTimestamp: number
-): Promise<{ feeAmount: number; userId: string }[]> => {
+): Promise<UserAmount[]> => {
   let lastId = "";
   const search = true;
   const startTimestampInSeconds = normalizeTimestamp(startTimestamp);
@@ -40,8 +41,8 @@ export const getAllFeesInEpoch = async (
         account.user.id
       ) {
         usersWithTransactions.push({
-          userId: account.user.id,
-          feeAmount: account.feeAmount,
+          user: account.user.id,
+          amount: account.feeAmount,
         });
       }
     }

@@ -1,10 +1,11 @@
-import { getFees } from "./trade-volume";
-import { getAllUsers } from "./users";
-import { fetchMagicAddress } from "./magic";
+// import { fetchMagicAddress } from "./magic";
 import { getAllFeesInEpoch } from "./fees";
-import { sumValues } from "./helpers";
-
-const SCALE_FACTOR = Math.pow(10, 6);
+import {
+  sumValues,
+  makePointsMap,
+  makePayoutsMap,
+  cleanUserAmounts,
+} from "./helpers";
 
 export async function generateFeesSnapshot(
   startTimestamp: number,
@@ -16,35 +17,16 @@ export async function generateFeesSnapshot(
   );
 
   // get all users
-  const fees: { feeAmount: number; userId: string }[] = await getAllFeesInEpoch(
-    startTimestamp,
-    endTimestamp
-  );
+  const fees = await getAllFeesInEpoch(startTimestamp, endTimestamp);
+  console.log("fees", fees);
+  const cleanedUserAmounts = cleanUserAmounts(fees);
 
-  const userFeeMap = fees.reduce<{ [userId: string]: number }>((acc, tx) => {
-    const userId = tx.userId.toLowerCase();
-    if (!acc[userId]) {
-      acc[userId] = 0;
-    }
-    const feeAmountNum =
-      typeof tx.feeAmount === "number" ? tx.feeAmount : parseInt(tx.feeAmount);
-    const scaledNum = feeAmountNum / SCALE_FACTOR;
+  const pointsMap = makePointsMap(cleanedUserAmounts);
+//   console.log("pointsMap", pointsMap);
+  const feeSum = sumValues(pointsMap);
+//   console.log("feeSum", feeSum);
+  const payoutMap = makePayoutsMap(pointsMap, feeSum, totalSupply);
+//   console.log("payoutMap", payoutMap);
 
-    acc[userId] += scaledNum;
-    return acc;
-  }, {});
-
-  const feeSum = sumValues(userFeeMap);
-  console.log('feeSum', feeSum)
-
-  const feePointsMap = Object.keys(userFeeMap).reduce((acc, liquidityProvider) => {
-    if (!acc[liquidityProvider]) {
-      acc[liquidityProvider] = 0;
-    }
-	const percentOfTotalFees = userFeeMap[liquidityProvider] / feeSum;
-    acc[liquidityProvider] = percentOfTotalFees / totalSupply
-    return acc;
-  }, {});
-
-  return feePointsMap;
+  return payoutMap;
 }

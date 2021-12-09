@@ -1,7 +1,10 @@
 // GENERAL HELPERS
 
-import { MapOfCount } from "./interfaces";
+import { MapOfCount, UserAmount } from "./interfaces";
 import { fetchMagicAddress } from "./magic";
+
+// VARIABLES
+export const SCALE_FACTOR = Math.pow(10, 6);
 
 /**
  * Sums liquidity of a given block
@@ -33,6 +36,42 @@ export const createStringMap = (
     }, {});
 };
 
+export const cleanUserAmounts = (userAmounts: UserAmount[]): UserAmount[] => {
+  return userAmounts.map(({ user, amount }) => {
+    return {
+      user: user.toLowerCase(),
+      amount:
+        typeof amount === "number"
+          ? amount / SCALE_FACTOR
+          : parseInt(amount) / SCALE_FACTOR,
+    };
+  });
+};
+
+export const makePointsMap = (userAmounts: UserAmount[]): MapOfCount => {
+  return userAmounts.reduce<MapOfCount>((acc, curr) => {
+    if (!acc[curr.user]) {
+      acc[curr.user] = 0;
+    }
+    acc[curr.user] += curr.amount;
+    return acc;
+  }, {});
+};
+
+export const makePayoutsMap = (
+  pointsMap: MapOfCount,
+  totalPoints: number,
+  supply: number
+): MapOfCount => {
+  return Object.keys(pointsMap).reduce((acc, user) => {
+    if (!acc[user]) {
+      acc[user] = 0;
+    }
+    const percentOfTotalFees = pointsMap[user] / totalPoints;
+    acc[user] = percentOfTotalFees / supply;
+    return acc;
+  }, {});
+};
 
 export const addEoaToUserMap = async (map: {
   [userAddres: string]: number;
