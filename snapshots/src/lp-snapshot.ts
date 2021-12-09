@@ -95,6 +95,9 @@ export async function generateLpSnapshot(
       );
 
       if (howToCalculate === LpCalculation.PerBlock) {
+        console.log(
+          `calculating liquidity per block with a per block reward of ${perBlockReward} tokens`
+        );
         userTokensPerEpoch = updateTokensPerBlockReward(
           userTokensPerEpoch,
           liquidityAcrossBlocks,
@@ -103,6 +106,9 @@ export async function generateLpSnapshot(
       }
 
       if (howToCalculate === LpCalculation.PerEpoch) {
+        console.log(
+          `calculating liquidity per epoch with a total supply of ${supplyOfTokenForEpoch} tokens`
+        );
         userTokensPerEpoch = updateTokensPerEpochReward(
           userTokensPerEpoch,
           liquidityAcrossBlocks,
@@ -111,7 +117,7 @@ export async function generateLpSnapshot(
       }
     }
 
-	// Return an array with address, EOA and amount
+    // Return an array with address, EOA and amount
     return Promise.all(
       Object.keys(userTokensPerEpoch).map(async (liquidityProvider) => {
         const magicWallet = await fetchMagicAddress(liquidityProvider);
