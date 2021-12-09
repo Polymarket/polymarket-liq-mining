@@ -35,7 +35,7 @@ const args = yargs.options({
     endTimestamp,
     supply
   );
-  console.log("snapshot", snapshot);
+
   const snapshotFileName = `${
     snapshotFilePath +
     "-from-" +

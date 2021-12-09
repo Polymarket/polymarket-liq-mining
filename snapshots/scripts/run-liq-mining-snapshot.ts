@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 import * as yargs from "yargs";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 // import { writeSnapshot } from "../src/utils";
-import { EIGHT_DAYS_AGO } from '../src/helpers';
+import { EIGHT_DAYS_AGO, ONE_DAY_AGO } from '../src/helpers';
 import {
   parseBalanceMap,
   OldFormat,
@@ -21,8 +21,8 @@ import { writeSnapshot } from "../src/utils";
 const DEFAULT_PER_BLOCK_TOKEN_SUPPLY = 2;
 const DEFAULT_TOKEN_SUPPLY = 1000000;
 const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/liq-mining-";
-const DEFAULT_BLOCK_SAMPLE = 1800; //Approx every hour with a 2s block time
-// const DEFAULT_BLOCK_SAMPLE = 30; // Approx every min with a 2s block time
+// const DEFAULT_BLOCK_SAMPLE = 1800; //Approx every hour with a 2s block time
+const DEFAULT_BLOCK_SAMPLE = 30; // Approx every min with a 2s block time
 // const DEFAULT_BLOCK_SAMPLE = 1; // Every block
 
 dotenv.config();
@@ -31,12 +31,13 @@ const args = yargs.options({
   endTimestamp: {
     type: "number",
     demandOption: false,
-	default: TWO_DAYS_AGO
-  }, // 1 day,
+	default: ONE_DAY_AGO
+  }, 
   startTimestamp: {
     type: "number",
     demandOption: false,
-	default: EIGHT_DAYS_AGO
+	default: TWO_DAYS_AGO
+	// default: EIGHT_DAYS_AGO
   },
   feePerBlock: { type: "number", demandOption: false, default: 1 },
   snapshotFilePath: {
@@ -78,7 +79,7 @@ const args = yargs.options({
   const supply = args.supply;
   const blockSampleSize = args.blockSampleSize;
   const perBlockReward = args.perBlockReward;
-//   const snapshotFilePath = args.snapshotFilePath;
+  const snapshotFilePath = args.snapshotFilePath;
 
   const incentivizedMarketsMap = createStringMap(args.incentivizedMarketMakerAddresses);
 
@@ -91,6 +92,7 @@ const args = yargs.options({
     startTimestamp,
     perBlockReward
   );
+  console.log("liqMap", liqMap);
 
   const feeMap = await generateFeesSnapshot(
     ReturnType.Map,
@@ -98,6 +100,7 @@ const args = yargs.options({
     endTimestamp,
     supply
   );
+  console.log("feeMap", feeMap);
 
   // todo - get previous claim snapshot
 //   const prevMap 
@@ -113,8 +116,9 @@ const args = yargs.options({
 //   const snapshot = await addEoaToUserPayoutMap(totalUserMap);
   // todo - what to do with null magic wallets?
 
-  const merkleInfo: MerkleDistributorInfo = parseBalanceMap(totalUserMap);
-  console.log('merkleInfo', merkleInfo)
+//   const merkleInfo: MerkleDistributorInfo = parseBalanceMap(totalUserMap);
+  // todo save this
+//   console.log('merkleInfo', merkleInfo)
 
 //   const snapshotFileName = `${snapshotFilePath + Date.now().toString()}.json`;
 //   await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);

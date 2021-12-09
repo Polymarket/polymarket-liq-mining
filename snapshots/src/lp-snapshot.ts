@@ -11,10 +11,8 @@ import {
   updateTokensPerEpochReward,
 } from "./lp-helpers";
 import { getStartAndEndBlock } from "./lp-helpers";
-import { MapOfCount, ReturnSnapshot, ReturnType } from './interfaces';
+import { MapOfCount, ReturnSnapshot, ReturnType } from "./interfaces";
 import { addEoaToUserPayoutMap } from "./helpers";
-
-
 
 export enum LpCalculation {
   PerEpoch = "perEpoch",
@@ -28,7 +26,7 @@ export enum LpCalculation {
  * @returns
  */
 export async function generateLpSnapshot(
-	returnType: ReturnType,
+  returnType: ReturnType,
   endTimestamp: number,
   supplyOfTokenForEpoch: number,
   blockSampleSize: number,
@@ -111,11 +109,10 @@ export async function generateLpSnapshot(
         );
       }
     }
-
-	if (returnType === ReturnType.Map) {
-		return userTokensPerEpoch
-	}
-
-	return addEoaToUserPayoutMap(userTokensPerEpoch)
   }
+  if (returnType === ReturnType.Map) {
+    return userTokensPerEpoch;
+  }
+
+  return addEoaToUserPayoutMap(userTokensPerEpoch);
 }
