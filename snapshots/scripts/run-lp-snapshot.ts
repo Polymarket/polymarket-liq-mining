@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 import * as yargs from "yargs";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 // import { writeSnapshot } from "../src/utils";
-import { createStringMap } from "../src/create_string_map";
+import { createStringMap } from '../src/helpers';
 
 const DEFAULT_PER_BLOCK_TOKEN_SUPPLY = 2;
 const DEFAULT_TOKEN_SUPPLY = 1000000;

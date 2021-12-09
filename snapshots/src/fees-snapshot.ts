@@ -2,7 +2,7 @@ import { getFees } from "./trade-volume";
 import { getAllUsers } from "./users";
 import { fetchMagicAddress } from "./magic";
 import { getAllFeesInEpoch } from "./fees";
-import { sumValues } from "./lp-helpers";
+import { sumValues } from "./helpers";
 
 const SCALE_FACTOR = Math.pow(10, 6);
 
