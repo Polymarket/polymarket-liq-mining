@@ -1,18 +1,17 @@
 import { sumValues } from "./helpers";
+import { MapOfCount } from "./interfaces";
 import { LpCalculation } from "./lp-snapshot";
-import { fetchMagicAddress } from "./magic";
-export type MapOfLpCount = { [address: string]: number };
 
 
 /**
  * Takes an array of liquidity across blocks
  * Returns a map of total liquidity for each address map across all blocks
  * @param liquidityAcrossBlocks
- * @returns mapOfLpCount
+ * @returns MapOfCount
  */
 export const makeLpPointsMap = (
-  liquidityAcrossBlocks: MapOfLpCount[]
-): MapOfLpCount => {
+  liquidityAcrossBlocks: MapOfCount[]
+): MapOfCount => {
   const map = {};
   for (const liquidityAtBlock of liquidityAcrossBlocks) {
     for (const liquidityProvider of Object.keys(liquidityAtBlock)) {
@@ -32,13 +31,13 @@ export const makeLpPointsMap = (
  * @param userTokensPerEpoch
  * @param liquidityAcrossBlocks
  * @param perBlockReward
- * @returns mapOfLpCount
+ * @returns MapOfCount
  */
 export const updateTokensPerBlockReward = (
-  userTokensPerEpoch: MapOfLpCount | Record<string, never>,
-  liquidityAcrossBlocks: MapOfLpCount[],
+  userTokensPerEpoch: MapOfCount | Record<string, never>,
+  liquidityAcrossBlocks: MapOfCount[],
   perBlockReward: number
-): MapOfLpCount => {
+): MapOfCount => {
   const map = { ...userTokensPerEpoch };
   for (const liquidityAtBlock of liquidityAcrossBlocks) {
     const totalLiquidity = sumValues(liquidityAtBlock);
@@ -65,13 +64,13 @@ export const updateTokensPerBlockReward = (
  * @param userTokensPerEpoch
  * @param liquidityAcrossBlocks
  * @param supplyOfTokenForEpoch
- * @returns mapOfLpCount
+ * @returns MapOfCount
  */
 export const updateTokensPerEpochReward = (
-  userTokensPerEpoch: MapOfLpCount | Record<string, never>,
-  liquidityAcrossBlocks: MapOfLpCount[],
+  userTokensPerEpoch: MapOfCount | Record<string, never>,
+  liquidityAcrossBlocks: MapOfCount[],
   supplyOfTokenForEpoch: number
-): MapOfLpCount => {
+): MapOfCount => {
   const map = { ...userTokensPerEpoch };
   const marketLpPoints = makeLpPointsMap(liquidityAcrossBlocks);
   const totalLiquidityPoints = sumValues(marketLpPoints);

@@ -1,5 +1,6 @@
 // GENERAL HELPERS
 
+import { MapOfCount } from "./interfaces";
 import { fetchMagicAddress } from "./magic";
 
 /**
@@ -7,13 +8,18 @@ import { fetchMagicAddress } from "./magic";
  * @param block
  * @returns number
  */
-export const sumValues = (block: MapOfLpCount): number => {
+export const sumValues = (block: MapOfCount): number => {
   const allLiquidity: number[] = Object.values(block);
   return allLiquidity.reduce((acc, current) => {
     return acc + current;
   }, 0);
 };
 
+/**
+ * Creates a map of userAddress => true
+ * @param arrayOfStrings
+ * @returns map
+ */
 export const createStringMap = (
   arrayOfStrings: string[]
 ): { [key: string]: boolean } => {
