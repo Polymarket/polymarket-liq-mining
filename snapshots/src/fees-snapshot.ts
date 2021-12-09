@@ -16,8 +16,13 @@ export async function generateFeesSnapshot(
   totalSupply: number
 ): Promise<ReturnSnapshot[] | MapOfCount> {
   console.log(
-    `Generating fees snapshot from timestamp ${startTimestamp} to ${endTimestamp}: `
+    `Generating fees snapshot from timestamp ${new Date(startTimestamp).toString()} to ${new Date(endTimestamp).toString()}: `
   );
+
+  console.log(
+    `Total Token Supply for Fees: ${totalSupply} tokens`
+  );
+
   const fees = await getAllFeesInEpoch(startTimestamp, endTimestamp);
   const cleanedUserAmounts = cleanUserAmounts(fees);
   const pointsMap = makePointsMap(cleanedUserAmounts);

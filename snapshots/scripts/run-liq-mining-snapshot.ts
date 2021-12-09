@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 import * as yargs from "yargs";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 // import { writeSnapshot } from "../src/utils";
+import { EIGHT_DAYS_AGO } from '../src/helpers';
 import {
   parseBalanceMap,
   OldFormat,
@@ -11,6 +12,7 @@ import {
   combineMaps,
   createStringMap,
   addEoaToUserPayoutMap,
+  TWO_DAYS_AGO,
 } from "../src/helpers";
 import { generateFeesSnapshot } from "../src/fees-snapshot";
 import { ReturnType, MapOfCount  } from "../src/interfaces";
@@ -29,14 +31,12 @@ const args = yargs.options({
   endTimestamp: {
     type: "number",
     demandOption: false,
-    // default: Date.now() - 86400000, // 1 day
-    default: Date.now() - 172800000, // 2 day
+	default: TWO_DAYS_AGO
   }, // 1 day,
   startTimestamp: {
     type: "number",
     demandOption: false,
-    // default: Date.now() -  172800000, // 2 day
-    default: Date.now() - 691200000, // 8 days
+	default: EIGHT_DAYS_AGO
   },
   feePerBlock: { type: "number", demandOption: false, default: 1 },
   snapshotFilePath: {
@@ -80,14 +80,14 @@ const args = yargs.options({
   const perBlockReward = args.perBlockReward;
 //   const snapshotFilePath = args.snapshotFilePath;
 
-  const map = createStringMap(args.incentivizedMarketMakerAddresses);
+  const incentivizedMarketsMap = createStringMap(args.incentivizedMarketMakerAddresses);
 
   const liqMap = await generateLpSnapshot(
     ReturnType.Map,
     endTimestamp,
     supply,
     blockSampleSize,
-    map,
+    incentivizedMarketsMap,
     startTimestamp,
     perBlockReward
   );
