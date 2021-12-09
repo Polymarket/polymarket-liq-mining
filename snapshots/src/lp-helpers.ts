@@ -1,17 +1,8 @@
 import { LpCalculation } from "./lp-snapshot";
+import { fetchMagicAddress } from "./magic";
 export type MapOfLpCount = { [address: string]: number };
 
-/**
- * Sums liquidity of a given block
- * @param block
- * @returns number
- */
-export const sumLiquidity = (block: MapOfLpCount): number => {
-  const allLiquidity: number[] = Object.values(block);
-  return allLiquidity.reduce((acc, current) => {
-    return acc + current;
-  }, 0);
-};
+
 
 /**
  * Takes an array of liquidity across blocks
@@ -25,7 +16,7 @@ export const makeLpPointsMap = (
   const map = {};
   for (const liquidityAtBlock of liquidityAcrossBlocks) {
     for (const liquidityProvider of Object.keys(liquidityAtBlock)) {
-      if (map[liquidityProvider] == null) {
+      if (!map[liquidityProvider]) {
         map[liquidityProvider] = 0;
       }
       map[liquidityProvider] =
@@ -50,7 +41,7 @@ export const updateTokensPerBlockReward = (
 ): MapOfLpCount => {
   const map = { ...userTokensPerEpoch };
   for (const liquidityAtBlock of liquidityAcrossBlocks) {
-    const totalLiquidity = sumLiquidity(liquidityAtBlock);
+    const totalLiquidity = sumValues(liquidityAtBlock);
     for (const liquidityProvider of Object.keys(liquidityAtBlock)) {
       if (!map[liquidityProvider]) {
         map[liquidityProvider] = 0;
@@ -83,7 +74,7 @@ export const updateTokensPerEpochReward = (
 ): MapOfLpCount => {
   const map = { ...userTokensPerEpoch };
   const marketLpPoints = makeLpPointsMap(liquidityAcrossBlocks);
-  const totalLiquidityPoints = sumLiquidity(marketLpPoints);
+  const totalLiquidityPoints = sumValues(marketLpPoints);
   for (const liquidityProvider of Object.keys(marketLpPoints)) {
     if (!map[liquidityProvider]) {
       map[liquidityProvider] = 0;
@@ -183,3 +174,31 @@ export const getStartAndEndBlock = ({
     endBlock,
   };
 };
+
+// TODO - BREAK THESE OUT INTO CLEANERS
+
+/**
+ * Sums liquidity of a given block
+ * @param block
+ * @returns number
+ */
+export const sumValues = (block: MapOfLpCount): number => {
+  const allLiquidity: number[] = Object.values(block);
+  return allLiquidity.reduce((acc, current) => {
+    return acc + current;
+  }, 0);
+};
+
+export const addEoaToUserMap = async (map: {[userAddres:string]: number}) => {
+  // Return an array with address, EOA and amount
+  return Promise.all(
+    Object.keys(map).map(async (userAddress) => {
+      const magicWallet = await fetchMagicAddress(userAddress);
+      return {
+        proxyWallet: userAddress,
+        amount: map[userAddress],
+        magicWallet: magicWallet,
+      };
+    })
+  );
+}

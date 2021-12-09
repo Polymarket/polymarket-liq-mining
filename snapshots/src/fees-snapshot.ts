@@ -1,27 +1,50 @@
 import { getFees } from "./trade-volume";
 import { getAllUsers } from "./users";
 import { fetchMagicAddress } from "./magic";
+import { getAllFeesInEpoch } from "./fees";
+import { sumValues } from "./lp-helpers";
 
-const snapshot: { proxyWallet: string, magicWallet: string; feesPaid: number }[] = [];
+const SCALE_FACTOR = Math.pow(10, 6);
 
+export async function generateFeesSnapshot(
+  startTimestamp: number,
+  endTimestamp: number,
+  totalSupply: number
+): Promise<any> {
+  console.log(
+    `Generating fees snapshot from timestamp ${startTimestamp} to ${endTimestamp}: `
+  );
 
-export async function generateFeesSnapshot(startTimestamp: number, endTimestamp: number): Promise<any> {
-    console.log(`Generating fees snapshot from timestamp ${startTimestamp} to ${endTimestamp}: `);
-    
-    // get all users
-    const users: string[] = await getAllUsers(endTimestamp); 
-    
-    //get fees paid per user at the timestamp
-    console.log(`Fetching fees paid per user at snapshot...`);
-    const feesPaid = await getFees(users, startTimestamp, endTimestamp);
+  // get all users
+  const fees: { feeAmount: number; userId: string }[] = await getAllFeesInEpoch(
+    startTimestamp,
+    endTimestamp
+  );
 
-    for(const userIndex in users){
-        const user = users[userIndex];
-        const userFeesPaid = feesPaid[userIndex];
-        if(userFeesPaid > 0){
-            const magicAddress = await fetchMagicAddress(user);
-            snapshot.push({proxyWallet: user, magicWallet: magicAddress, feesPaid: userFeesPaid });
-        }
+  const userFeeMap = fees.reduce<{ [userId: string]: number }>((acc, tx) => {
+    const userId = tx.userId.toLowerCase();
+    if (!acc[userId]) {
+      acc[userId] = 0;
     }
-    return snapshot;
+    const feeAmountNum =
+      typeof tx.feeAmount === "number" ? tx.feeAmount : parseInt(tx.feeAmount);
+    const scaledNum = feeAmountNum / SCALE_FACTOR;
+
+    acc[userId] += scaledNum;
+    return acc;
+  }, {});
+
+  const feeSum = sumValues(userFeeMap);
+  console.log('feeSum', feeSum)
+
+  const feePointsMap = Object.keys(userFeeMap).reduce((acc, liquidityProvider) => {
+    if (!acc[liquidityProvider]) {
+      acc[liquidityProvider] = 0;
+    }
+	const percentOfTotalFees = userFeeMap[liquidityProvider] / feeSum;
+    acc[liquidityProvider] = percentOfTotalFees / totalSupply
+    return acc;
+  }, {});
+
+  return feePointsMap;
 }
