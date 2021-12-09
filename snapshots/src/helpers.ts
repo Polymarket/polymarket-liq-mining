@@ -73,6 +73,19 @@ export const makePayoutsMap = (
   }, {});
 };
 
+export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
+  const newMap = {};
+  for (const oldMap of arrayOfMaps) {
+    for (const user of Object.keys(oldMap)) {
+      if (!newMap[user]) {
+        newMap[user] = 0;
+      }
+      newMap[user] = newMap[user] + oldMap[user];
+    }
+  }
+  return newMap;
+} 
+
 export const addEoaToUserPayoutMap = async (map: MapOfCount): Promise<ReturnSnapshot[]> => {
   // Return an array with address, EOA and amount
   return Promise.all(

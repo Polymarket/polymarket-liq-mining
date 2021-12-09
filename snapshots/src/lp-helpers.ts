@@ -1,29 +1,8 @@
-import { sumValues } from "./helpers";
+import { sumValues, combineMaps } from './helpers';
 import { MapOfCount } from "./interfaces";
 import { LpCalculation } from "./lp-snapshot";
 
 
-/**
- * Takes an array of liquidity across blocks
- * Returns a map of total liquidity for each address map across all blocks
- * @param liquidityAcrossBlocks
- * @returns MapOfCount
- */
-export const makeLpPointsMap = (
-  liquidityAcrossBlocks: MapOfCount[]
-): MapOfCount => {
-  const map = {};
-  for (const liquidityAtBlock of liquidityAcrossBlocks) {
-    for (const liquidityProvider of Object.keys(liquidityAtBlock)) {
-      if (!map[liquidityProvider]) {
-        map[liquidityProvider] = 0;
-      }
-      map[liquidityProvider] =
-        map[liquidityProvider] + liquidityAtBlock[liquidityProvider];
-    }
-  }
-  return map;
-};
 
 /**
  * Iterates over blocks and updates the userTokensPerEpoch map
@@ -72,7 +51,7 @@ export const updateTokensPerEpochReward = (
   supplyOfTokenForEpoch: number
 ): MapOfCount => {
   const map = { ...userTokensPerEpoch };
-  const marketLpPoints = makeLpPointsMap(liquidityAcrossBlocks);
+  const marketLpPoints = combineMaps(liquidityAcrossBlocks); 
   const totalLiquidityPoints = sumValues(marketLpPoints);
   for (const liquidityProvider of Object.keys(marketLpPoints)) {
     if (!map[liquidityProvider]) {

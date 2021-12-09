@@ -8,7 +8,8 @@
     "test": "mocha -r ts-node/register tests/*.spec.ts",
     "volume-snapshot": "ts-node scripts/run-volume-snapshot.ts",
     "lp-snapshot": "ts-node scripts/run-lp-snapshot.ts",
-    "fees-snapshot": "ts-node scripts/run-fees-snapshot.ts"
+    "fees-snapshot": "ts-node scripts/run-fees-snapshot.ts",
+    "liq-mining-snapshot": "ts-node scripts/run-liq-mining-snapshot.ts"
   },
   "lint-staged": {
     "*.ts": [
