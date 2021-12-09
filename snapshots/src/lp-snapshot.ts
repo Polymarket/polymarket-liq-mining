@@ -11,16 +11,10 @@ import {
   updateTokensPerEpochReward,
 } from "./lp-helpers";
 import { getStartAndEndBlock } from "./lp-helpers";
-import { fetchMagicAddress } from "./magic";
+import { MapOfCount, ReturnSnapshot, ReturnType } from './interfaces';
+import { addEoaToUserPayoutMap } from "./helpers";
 
-export interface LpSnapshot {
-  magicWallet: string | null;
-  amount: number;
-}
 
-export interface ReturnSnapshot extends LpSnapshot {
-  proxyWallet: string;
-}
 
 export enum LpCalculation {
   PerEpoch = "perEpoch",
@@ -34,13 +28,14 @@ export enum LpCalculation {
  * @returns
  */
 export async function generateLpSnapshot(
+	returnType: ReturnType,
   endTimestamp: number,
   supplyOfTokenForEpoch: number,
   blockSampleSize: number,
   map: { [key: string]: boolean },
   startTimestamp: number,
   perBlockReward: number
-): Promise<ReturnSnapshot[]> {
+): Promise<ReturnSnapshot[] | MapOfCount> {
   console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
   let userTokensPerEpoch: { [proxyWallet: string]: number } = {};
@@ -117,16 +112,10 @@ export async function generateLpSnapshot(
       }
     }
 
-    // Return an array with address, EOA and amount
-    return Promise.all(
-      Object.keys(userTokensPerEpoch).map(async (liquidityProvider) => {
-        const magicWallet = await fetchMagicAddress(liquidityProvider);
-        return {
-          proxyWallet: liquidityProvider,
-          amount: userTokensPerEpoch[liquidityProvider],
-          magicWallet: magicWallet,
-        };
-      })
-    );
+	if (returnType === ReturnType.Map) {
+		return userTokensPerEpoch
+	}
+
+	return addEoaToUserPayoutMap(userTokensPerEpoch)
   }
 }

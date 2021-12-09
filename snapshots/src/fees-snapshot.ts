@@ -1,32 +1,30 @@
 // import { fetchMagicAddress } from "./magic";
 import { getAllFeesInEpoch } from "./fees";
+import { MapOfCount, ReturnSnapshot, ReturnType } from "./interfaces";
 import {
   sumValues,
   makePointsMap,
   makePayoutsMap,
   cleanUserAmounts,
+  addEoaToUserPayoutMap,
 } from "./helpers";
 
 export async function generateFeesSnapshot(
+  returnType: ReturnType,
   startTimestamp: number,
   endTimestamp: number,
   totalSupply: number
-): Promise<any> {
+): Promise<ReturnSnapshot[] | MapOfCount> {
   console.log(
     `Generating fees snapshot from timestamp ${startTimestamp} to ${endTimestamp}: `
   );
-
-  // get all users
   const fees = await getAllFeesInEpoch(startTimestamp, endTimestamp);
-  console.log("fees", fees);
   const cleanedUserAmounts = cleanUserAmounts(fees);
-
   const pointsMap = makePointsMap(cleanedUserAmounts);
-//   console.log("pointsMap", pointsMap);
   const feeSum = sumValues(pointsMap);
-//   console.log("feeSum", feeSum);
   const payoutMap = makePayoutsMap(pointsMap, feeSum, totalSupply);
-//   console.log("payoutMap", payoutMap);
-
-  return payoutMap;
+  if (returnType === ReturnType.Map) {
+    return payoutMap;
+  }
+  return addEoaToUserPayoutMap(payoutMap);
 }

@@ -1,6 +1,6 @@
 // GENERAL HELPERS
 
-import { MapOfCount, UserAmount } from "./interfaces";
+import { MapOfCount, ReturnSnapshot, UserAmount } from "./interfaces";
 import { fetchMagicAddress } from "./magic";
 
 // VARIABLES
@@ -73,9 +73,7 @@ export const makePayoutsMap = (
   }, {});
 };
 
-export const addEoaToUserMap = async (map: {
-  [userAddres: string]: number;
-}) => {
+export const addEoaToUserPayoutMap = async (map: MapOfCount): Promise<ReturnSnapshot[]> => {
   // Return an array with address, EOA and amount
   return Promise.all(
     Object.keys(map).map(async (userAddress) => {
