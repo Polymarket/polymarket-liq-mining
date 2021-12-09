@@ -15,7 +15,7 @@ import { MapOfCount, ReturnSnapshot, ReturnType } from "./interfaces";
 import { addEoaToUserPayoutMap } from "./helpers";
 
 export enum LpCalculation {
-  PerEpoch = "perEpoch",
+  TotalSupply = "totalSupply",
   PerBlock = "perBlock",
 }
 
@@ -98,7 +98,7 @@ export async function generateLpSnapshot(
         );
       }
 
-      if (howToCalculate === LpCalculation.PerEpoch) {
+      if (howToCalculate === LpCalculation.TotalSupply) {
         console.log(
           `calculating liquidity per epoch with a total supply of ${supplyOfTokenForEpoch} tokens`
         );

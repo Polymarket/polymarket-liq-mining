@@ -6,6 +6,7 @@ import {
 
 import { expect } from "chai";
 import { getStartAndEndBlock } from "../src/lp-helpers";
+import { LpCalculation } from '../src/lp-snapshot';
 
 describe("updateTokens on a PerBlockReward", () => {
   let initialState;
@@ -109,6 +110,10 @@ const mockState = {
   epochEndBlock: 21900000,
 };
 
+
+// - if the END BLOCK is the END OF MARKET => TOTAL SUPPLY CALCULATION
+// - if the END BLOCK is the END OF EPOCH => PER BLOCK CALCULATION 
+
 describe("calculate correct start and end blocks", () => {
   let initialState: IStartAndEndBlock = mockState;
   // 22291274
@@ -150,26 +155,30 @@ describe("calculate correct start and end blocks", () => {
   // ENDS
 
   it("if the market ends before the epoch, end block is market block", async () => {
-    const { endBlock } = getStartAndEndBlock(initialState);
+    const { howToCalculate, endBlock } = getStartAndEndBlock(initialState);
     expect(endBlock).to.eq(initialState.marketEndBlock);
+	expect(howToCalculate).to.eq(LpCalculation.TotalSupply)
   });
 
   it("if the epoch ends before the market, end block is epoch block", async () => {
     initialState.epochEndBlock = 21500000;
-    const { endBlock } = getStartAndEndBlock(initialState);
+    const { howToCalculate, endBlock } = getStartAndEndBlock(initialState);
     expect(endBlock).to.eq(initialState.epochEndBlock);
+	expect(howToCalculate).to.eq(LpCalculation.PerBlock)
   });
 
   it("if the market ends and the epoch has not ended, end block is market block", async () => {
     initialState.epochEndBlock = null;
-    const { endBlock } = getStartAndEndBlock(initialState);
+    const { howToCalculate, endBlock } = getStartAndEndBlock(initialState);
     expect(endBlock).to.eq(initialState.marketEndBlock);
+	expect(howToCalculate).to.eq(LpCalculation.TotalSupply)
   });
 
   it("if the epoch ends and the market has not resolved, end block is epoch block", async () => {
     initialState.marketEndBlock = null;
-    const { endBlock } = getStartAndEndBlock(initialState);
+    const { howToCalculate, endBlock } = getStartAndEndBlock(initialState);
     expect(endBlock).to.eq(initialState.epochEndBlock);
+	expect(howToCalculate).to.eq(LpCalculation.PerBlock)
   });
 
   it("if the epoch has not ended and the market has not resolved, end block is null", async () => {
@@ -181,7 +190,8 @@ describe("calculate correct start and end blocks", () => {
 
   it("if the epoch ends and the market has not resolved, end block is epoch block", async () => {
     initialState.marketEndBlock = null;
-    const { endBlock } = getStartAndEndBlock(initialState);
+    const { howToCalculate, endBlock } = getStartAndEndBlock(initialState);
     expect(endBlock).to.eq(initialState.epochEndBlock);
+	expect(howToCalculate).to.eq(LpCalculation.PerBlock)
   });
 });

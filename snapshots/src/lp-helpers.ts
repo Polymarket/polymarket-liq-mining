@@ -125,7 +125,7 @@ export const getStartAndEndBlock = ({
   if (!epochEndBlock && !marketEndBlock) {
     // get current block in case market has not ended and epoch end is in the future
     endBlock = null;
-    howToCalculate = LpCalculation.PerEpoch;
+    howToCalculate = LpCalculation.TotalSupply;
   }
 
   // epoch ended before market or epoch ended and market is still live
@@ -143,7 +143,7 @@ export const getStartAndEndBlock = ({
     (!epochEndBlock && marketEndBlock)
   ) {
     endBlock = marketEndBlock;
-    howToCalculate = LpCalculation.PerEpoch;
+    howToCalculate = LpCalculation.TotalSupply;
   }
 
   return {
