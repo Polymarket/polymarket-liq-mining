@@ -7,7 +7,7 @@ const { isAddress, getAddress } = utils
 // It is completely sufficient for recreating the entire merkle tree.
 // Anyone can verify that all air drops are included in the tree,
 // and the tree has no additional distributions.
-interface MerkleDistributorInfo {
+export interface MerkleDistributorInfo {
   merkleRoot: string
   tokenTotal: string
   claims: {
@@ -22,7 +22,7 @@ interface MerkleDistributorInfo {
   }
 }
 
-type OldFormat = { [account: string]: number | string }
+export type OldFormat = { [account: string]: number | string }
 type NewFormat = { address: string; earnings: string; reasons: string }
 
 export function parseBalanceMap(balances: OldFormat | NewFormat[]): MerkleDistributorInfo {

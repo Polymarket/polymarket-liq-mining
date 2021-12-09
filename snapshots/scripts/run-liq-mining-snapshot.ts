@@ -2,13 +2,23 @@ import * as dotenv from "dotenv";
 import * as yargs from "yargs";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 // import { writeSnapshot } from "../src/utils";
-import { combineMaps, createStringMap } from "../src/helpers";
+import {
+  parseBalanceMap,
+  OldFormat,
+  MerkleDistributorInfo,
+} from "../../merkle-distributor/src/parse-balance-map";
+import {
+  combineMaps,
+  createStringMap,
+  addEoaToUserPayoutMap,
+} from "../src/helpers";
 import { generateFeesSnapshot } from "../src/fees-snapshot";
-import { ReturnType, MapOfCount } from '../src/interfaces';
+import { ReturnType, MapOfCount  } from "../src/interfaces";
+import { writeSnapshot } from "../src/utils";
 
 const DEFAULT_PER_BLOCK_TOKEN_SUPPLY = 2;
 const DEFAULT_TOKEN_SUPPLY = 1000000;
-const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/lp-weighted-";
+const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/liq-mining-";
 const DEFAULT_BLOCK_SAMPLE = 1800; //Approx every hour with a 2s block time
 // const DEFAULT_BLOCK_SAMPLE = 30; // Approx every min with a 2s block time
 // const DEFAULT_BLOCK_SAMPLE = 1; // Every block
@@ -68,7 +78,7 @@ const args = yargs.options({
   const supply = args.supply;
   const blockSampleSize = args.blockSampleSize;
   const perBlockReward = args.perBlockReward;
-  //   const snapshotFilePath = args.snapshotFilePath;
+//   const snapshotFilePath = args.snapshotFilePath;
 
   const map = createStringMap(args.incentivizedMarketMakerAddresses);
 
@@ -90,14 +100,22 @@ const args = yargs.options({
   );
 
   // todo - get previous claim snapshot
+//   const prevMap 
 
-// combine maps
+  const totalUserMap = combineMaps([
+    liqMap as MapOfCount,
+    feeMap as MapOfCount,
+    // prevMap as MapOfCount
+  ]);
+  console.log("totalUserMap", totalUserMap);
 
-const totalUserMap = combineMaps([liqMap as MapOfCount, feeMap as MapOfCount])
-console.log('totalUserMap', totalUserMap)
+  // add EOA (magic)
+//   const snapshot = await addEoaToUserPayoutMap(totalUserMap);
+  // todo - what to do with null magic wallets?
 
-  // add EOA
+  const merkleInfo: MerkleDistributorInfo = parseBalanceMap(totalUserMap);
+  console.log('merkleInfo', merkleInfo)
 
-  //   const snapshotFileName = `${snapshotFilePath + timestamp.toString()}.json`;
-  // await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
+//   const snapshotFileName = `${snapshotFilePath + Date.now().toString()}.json`;
+//   await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
 })(args);
