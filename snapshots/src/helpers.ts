@@ -5,6 +5,11 @@ import { fetchMagicAddress } from "./magic";
 
 // VARIABLES
 export const SCALE_FACTOR = Math.pow(10, 6);
+const now = Date.now();
+export const ONE_DAY_AGO = now - 86400000;
+export const TWO_DAYS_AGO = now - 172800000;
+export const FOUR_DAYS_AGO = now - 345600000;
+export const EIGHT_DAYS_AGO = now - 691200000;
 
 /**
  * Sums liquidity of a given block
@@ -68,7 +73,7 @@ export const makePayoutsMap = (
       acc[user] = 0;
     }
     const percentOfTotalFees = pointsMap[user] / totalPoints;
-    acc[user] = percentOfTotalFees / supply;
+    acc[user] = percentOfTotalFees * supply;
     return acc;
   }, {});
 };
@@ -84,9 +89,11 @@ export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
     }
   }
   return newMap;
-} 
+};
 
-export const addEoaToUserPayoutMap = async (map: MapOfCount): Promise<ReturnSnapshot[]> => {
+export const addEoaToUserPayoutMap = async (
+  map: MapOfCount
+): Promise<ReturnSnapshot[]> => {
   // Return an array with address, EOA and amount
   return Promise.all(
     Object.keys(map).map(async (userAddress) => {
