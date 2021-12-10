@@ -53,10 +53,17 @@ async function getTransactionHashes(address: string): Promise<string[]> {
   return transactionHashes;
 }
 
-const magicAddressCacheName = "proxy-wallet-to-magic-addresses.json";
-const magicAddressCache = JSON.parse(
-  fs.readFileSync(magicAddressCacheName).toString()
-);
+const magicAddressCacheName = "./proxy-wallet-to-magic-addresses.json";
+
+function getMagicCache() {
+  return JSON.parse(fs.readFileSync(magicAddressCacheName).toString());
+}
+
+export function writeToMagicCache(newCache: { [key: string]: string }): void {
+  fs.writeFileSync(magicAddressCacheName, JSON.stringify(newCache));
+}
+
+export const magicAddressCache = getMagicCache();
 
 /**
  * Gets the corresponding magic link address for a proxy wallet address
@@ -72,7 +79,6 @@ export const fetchMagicAddress = async (address: string): Promise<string> => {
   }
   return magicAddress;
 };
-
 
 /**
  * Gets the corresponding magic link address for a proxy wallet
