@@ -1,8 +1,6 @@
-import { sumValues, combineMaps } from './helpers';
+import { sumValues, combineMaps, makePayoutsMap } from "./helpers";
 import { MapOfCount } from "./interfaces";
 import { LpCalculation } from "./lp-snapshot";
-
-
 
 /**
  * Iterates over blocks and updates the userTokensPerEpoch map
@@ -17,24 +15,17 @@ export const updateTokensPerBlockReward = (
   liquidityAcrossBlocks: MapOfCount[],
   perBlockReward: number
 ): MapOfCount => {
-  const map = { ...userTokensPerEpoch };
+  let updatedMap = {...userTokensPerEpoch};
   for (const liquidityAtBlock of liquidityAcrossBlocks) {
-    const totalLiquidity = sumValues(liquidityAtBlock);
-    for (const liquidityProvider of Object.keys(liquidityAtBlock)) {
-      if (!map[liquidityProvider]) {
-        map[liquidityProvider] = 0;
-      }
-
-      const portionOfBlockReward =
-        liquidityAtBlock[liquidityProvider] / totalLiquidity;
-
-      const newAmount =
-        map[liquidityProvider] + portionOfBlockReward * perBlockReward;
-
-      map[liquidityProvider] = newAmount;
-    }
+    const sumOfBlockLiquidity = sumValues(liquidityAtBlock);
+    const blockPoints = makePayoutsMap(
+      liquidityAtBlock,
+      sumOfBlockLiquidity,
+      perBlockReward
+    );
+    updatedMap = combineMaps([blockPoints, updatedMap]);
   }
-  return map;
+  return updatedMap;
 };
 
 /**
@@ -50,21 +41,14 @@ export const updateTokensPerEpochReward = (
   liquidityAcrossBlocks: MapOfCount[],
   supplyOfTokenForEpoch: number
 ): MapOfCount => {
-  const map = { ...userTokensPerEpoch };
-  const marketLpPoints = combineMaps(liquidityAcrossBlocks); 
-  const totalLiquidityPoints = sumValues(marketLpPoints);
-  for (const liquidityProvider of Object.keys(marketLpPoints)) {
-    if (!map[liquidityProvider]) {
-      map[liquidityProvider] = 0;
-    }
-    const liquidityPointsPerLp = marketLpPoints[liquidityProvider];
-
-    const rewardForMarket =
-      (liquidityPointsPerLp / totalLiquidityPoints) * supplyOfTokenForEpoch;
-
-    map[liquidityProvider] = map[liquidityProvider] + rewardForMarket;
-  }
-  return map;
+  const liquidityOfAllBlocks = combineMaps(liquidityAcrossBlocks);
+  const totalLiquidity = sumValues(liquidityOfAllBlocks);
+  const lpMap = makePayoutsMap(
+    liquidityOfAllBlocks,
+    totalLiquidity,
+    supplyOfTokenForEpoch
+  );
+  return combineMaps([lpMap, userTokensPerEpoch]);
 };
 
 export interface IStartAndEndBlock {
@@ -93,7 +77,7 @@ export const getStartAndEndBlock = ({
   startBlock: number;
   endBlock: number | null;
 } => {
-	// 
+  //
   if (!epochStartBlock && !marketStartBlock) {
     throw new Error("The market and epoch have not started!");
   }
@@ -105,7 +89,7 @@ export const getStartAndEndBlock = ({
 
   let startBlock;
 
-  // epoch started after market 
+  // epoch started after market
   if (epochStartBlock && epochStartBlock >= marketStartBlock) {
     startBlock = epochStartBlock;
   }
@@ -152,4 +136,3 @@ export const getStartAndEndBlock = ({
     endBlock,
   };
 };
-
