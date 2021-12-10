@@ -1,4 +1,3 @@
-// import { fetchMagicAddress } from "./magic";
 import { getAllFeesInEpoch } from "./fees";
 import { MapOfCount, ReturnSnapshot, ReturnType } from "./interfaces";
 import {
