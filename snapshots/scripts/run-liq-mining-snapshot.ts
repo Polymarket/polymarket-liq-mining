@@ -3,7 +3,13 @@ import * as yargs from "yargs";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 // import { writeSnapshot } from "../src/utils";
 import { BigNumber } from "ethers";
-import { cleanNumber, DECIMALS, EIGHT_DAYS_AGO, ONE_DAY_AGO } from "../src/helpers";
+import {
+  cleanNumber,
+  DECIMALS,
+  EIGHT_DAYS_AGO,
+  ONE_DAY_AGO,
+  normalizeMapAmounts,
+} from "../src/helpers";
 import {
   parseBalanceMap,
   OldFormat,
@@ -20,12 +26,12 @@ import { generateFeesSnapshot } from "../src/fees-snapshot";
 import { ReturnType, MapOfCount } from "../src/interfaces";
 import { writeSnapshot } from "../src/utils";
 
-const DEFAULT_PER_BLOCK_TOKEN_SUPPLY = 2;
 const DEFAULT_TOKEN_SUPPLY = 1000000;
 const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/liq-mining-";
 // const DEFAULT_BLOCK_SAMPLE = 1800; //Approx every hour with a 2s block time
-const DEFAULT_BLOCK_SAMPLE = 30; // Approx every min with a 2s block time
 // const DEFAULT_BLOCK_SAMPLE = 1; // Every block
+const DEFAULT_BLOCK_SAMPLE = 30; // Approx every min with a 2s block time
+const DEFAULT_PER_BLOCK_TOKEN_SUPPLY = 60; // divide supply / sample to get per block amount
 
 dotenv.config();
 
@@ -52,11 +58,11 @@ const args = yargs.options({
     demandOption: false,
     default: [
       //   "0x932b2aC1799D4353d802Ddc27eb6DBC952e24b36", // Will Ethereum reach $5000 by the end of ?"
-        "0xBC12a7269EC807690793C86c81241eDCA8F2E3D0", // Will Coinbase’s NFT marketplace launch before 2022?
-      //   "0x476238B6Ef1B0f065E97cffA22277cc2788852B7", // "will-there-be-nfl-scorigami-in-december-2021",
-        // "0x9E2d4470d3D599BB349d7457513dDD7379780dB0", // "will-the-omicron-variant-be-marked-as-a-variant-of-high-consequence-by-the-cdc-before-2022",
-        // "0x6474406F81b5C32D80eb1B3545b2B22a85B73AD3", // "will-uniswap-be-live-on-polygon-before-2022",
-    //   "0x1e6C49e7E776E6F76d31E6D6FCb5dD367F7B59dD", // nfl-will-the-bills-beat-the-patriots-by-more-than-4pt5-points-in-their-d
+      "0xBC12a7269EC807690793C86c81241eDCA8F2E3D0", // Will Coinbase’s NFT marketplace launch before 2022?
+      "0x476238B6Ef1B0f065E97cffA22277cc2788852B7", // "will-there-be-nfl-scorigami-in-december-2021",
+      // "0x9E2d4470d3D599BB349d7457513dDD7379780dB0", // "will-the-omicron-variant-be-marked-as-a-variant-of-high-consequence-by-the-cdc-before-2022",
+      // "0x6474406F81b5C32D80eb1B3545b2B22a85B73AD3", // "will-uniswap-be-live-on-polygon-before-2022",
+      //   "0x1e6C49e7E776E6F76d31E6D6FCb5dD367F7B59dD", // nfl-will-the-bills-beat-the-patriots-by-more-than-4pt5-points-in-their-d
     ],
   },
   supply: {
@@ -82,7 +88,7 @@ const args = yargs.options({
   const supply = args.supply;
   const blockSampleSize = args.blockSampleSize;
   const perBlockReward = args.perBlockReward;
-//   const snapshotFilePath = args.snapshotFilePath;
+  const snapshotFilePath = args.snapshotFilePath;
 
   const incentivizedMarketsMap = createStringMap(
     args.incentivizedMarketMakerAddresses
@@ -97,7 +103,7 @@ const args = yargs.options({
     startTimestamp,
     perBlockReward
   );
-//   console.log("liqMap", liqMap);
+  console.log("liqMap", liqMap);
 
   const feeMap = await generateFeesSnapshot(
     ReturnType.Map,
@@ -105,35 +111,33 @@ const args = yargs.options({
     endTimestamp,
     supply
   );
-  //   console.log("feeMap", feeMap);
+  console.log("feeMap", feeMap);
 
   // todo - get previous claim snapshot
-  //   const prevMap
-
   const totalUserMap = combineMaps([
     liqMap as MapOfCount,
     feeMap as MapOfCount,
-    // prevMap as MapOfCount
   ]);
-  console.log("totalUserMap", totalUserMap);
 
-    const toParse: OldFormat = Object.keys(totalUserMap).reduce((acc, curr) => {
-		if (!acc[curr]) {
-			acc[curr] = cleanNumber(totalUserMap[curr])
-		}
-		return acc;
-	}, {})
-	console.log('toParse', toParse)
-  const merkleInfo: MerkleDistributorInfo = parseBalanceMap(toParse);
-  console.log('merkleInfo', merkleInfo)
+  console.log("totalUserMap", totalUserMap);
+  const normalizedUserMap = normalizeMapAmounts(totalUserMap);
 
   // add EOA (magic)
-    // const snapshot = await addEoaToUserPayoutMap(totalUserMap);
+  const snapshot = await addEoaToUserPayoutMap(normalizedUserMap);
+
+  // todo - we need to map this again to {[magic: string]: normalizedValue}?
   // todo - what to do with null magic wallet addresses?
+  //   const normalizedMagicMap = snapshot.reduce((acc, curr) => {
+  //     if (!acc[curr.magicWallet]) {
+  //       // todo - what to do with null magic wallet addresses?
+  //       acc[curr.magicWallet] = curr.amount;
+  //     }
+  //     return acc;
+  //   }, {});
 
-    // const snapshotFileName = `${snapshotFilePath + Date.now().toString()}.json`;
-    // await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
+  const merkleInfo: MerkleDistributorInfo = parseBalanceMap(normalizedUserMap);
+  console.log("merkleInfo", merkleInfo);
+
+  const snapshotFileName = `${snapshotFilePath + Date.now().toString()}.json`;
+  await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
 })(args);
-
-
-

@@ -1,11 +1,11 @@
 // GENERAL HELPERS
 
-import { MapOfCount, ReturnSnapshot, UserAmount } from "./interfaces";
+import { MapOfCount, UserAmount } from "./interfaces";
 import { fetchMagicAddress } from "./magic";
 
 // VARIABLES
 export const SCALE_FACTOR = Math.pow(10, 6);
-export const DECIMALS = 6
+export const DECIMALS = 6;
 
 const now = Date.now();
 export const ONE_DAY_AGO = now - 86400000;
@@ -93,20 +93,31 @@ export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
   return newMap;
 };
 
-export const addEoaToUserPayoutMap = async (
-  map: MapOfCount
-): Promise<ReturnSnapshot[]> => {
+export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
+  [account: string]: T;
+}): Promise<{ proxyWallet: string; magicWallet: string; amount: T }[]> => {
   // Return an array with address, EOA and amount
   return Promise.all(
     Object.keys(map).map(async (userAddress) => {
       const magicWallet = await fetchMagicAddress(userAddress);
       return {
         proxyWallet: userAddress,
-        amount: map[userAddress],
+        amount: map[userAddress] as T,
         magicWallet: magicWallet,
       };
     })
   );
+};
+
+export const normalizeMapAmounts = (
+  map: MapOfCount
+): { [account: string]: string } => {
+  return Object.keys(map).reduce((acc, curr) => {
+    if (!acc[curr]) {
+      acc[curr] = cleanNumber(map[curr]);
+    }
+    return acc;
+  }, {});
 };
 
 export const cleanNumber = (number: number): string => {
