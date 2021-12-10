@@ -73,7 +73,7 @@ const args = yargs.options({
   const map = createStringMap(args.incentivizedMarketMakerAddresses);
 
   const snapshot = await generateLpSnapshot(
-    ReturnType.Eoa,
+    ReturnType.Snapshot,
     endTimestamp,
     supply,
     blockSampleSize,

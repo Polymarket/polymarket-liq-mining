@@ -30,7 +30,7 @@ const args = yargs.options({
   const supply = args.supply;
 
   const snapshot = await generateFeesSnapshot(
-    ReturnType.Eoa,
+    ReturnType.Snapshot,
     startTimestamp,
     endTimestamp,
     supply

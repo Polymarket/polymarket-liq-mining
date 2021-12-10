@@ -7,7 +7,7 @@ export interface UserAmount {
 
 export enum ReturnType {
   Map = "map",
-  Eoa = "eoa",
+  Snapshot = "snapshot",
 }
 
 export interface LpSnapshot {
