@@ -5,6 +5,8 @@ import { fetchMagicAddress } from "./magic";
 
 // VARIABLES
 export const SCALE_FACTOR = Math.pow(10, 6);
+export const DECIMALS = 6
+
 const now = Date.now();
 export const ONE_DAY_AGO = now - 86400000;
 export const TWO_DAYS_AGO = now - 172800000;
@@ -105,4 +107,15 @@ export const addEoaToUserPayoutMap = async (
       };
     })
   );
+};
+
+export const cleanNumber = (number: number): string => {
+  const string = number.toString();
+  const [int, dec] = string.split(".");
+  const minDecimals = dec.padEnd(DECIMALS, "0");
+  const onlyDecimals = minDecimals.slice(0, DECIMALS);
+  if (int === "0") {
+    return onlyDecimals;
+  }
+  return `${int}${onlyDecimals}`;
 };

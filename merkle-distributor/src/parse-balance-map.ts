@@ -23,7 +23,7 @@ export interface MerkleDistributorInfo {
 }
 
 export type OldFormat = { [account: string]: number | string }
-type NewFormat = { address: string; earnings: string; reasons: string }
+export type NewFormat = { address: string; earnings: string; reasons: string }
 
 export function parseBalanceMap(balances: OldFormat | NewFormat[]): MerkleDistributorInfo {
   // if balances are in an old format, process them
@@ -36,6 +36,7 @@ export function parseBalanceMap(balances: OldFormat | NewFormat[]): MerkleDistri
           reasons: '',
         })
       )
+
 
   const dataByAddress = balancesInNewFormat.reduce<{
     [address: string]: { amount: BigNumber; flags?: { [flag: string]: boolean } }
