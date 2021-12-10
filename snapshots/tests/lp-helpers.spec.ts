@@ -7,8 +7,6 @@ import {
 import { expect } from "chai";
 import { getStartAndEndBlock } from "../src/lp-helpers";
 import { LpCalculation } from "../src/lp-snapshot";
-import { appendFile } from "fs";
-import { ApolloError } from "@apollo/client";
 
 describe("updateTokens on a PerBlockReward", () => {
   let initialState;
