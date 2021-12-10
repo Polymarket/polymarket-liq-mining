@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 import * as yargs from "yargs";
 import { generateLpSnapshot } from "../src/lp-snapshot";
-// import { writeSnapshot } from "../src/utils";
+import { writeSnapshot } from "../src/utils";
 import { createStringMap } from "../src/helpers";
 import { ReturnType } from "../src/interfaces";
 
@@ -68,7 +68,7 @@ const args = yargs.options({
   const supply = args.supply;
   const blockSampleSize = args.blockSampleSize;
   const perBlockReward = args.perBlockReward;
-  //   const snapshotFilePath = args.snapshotFilePath;
+  const snapshotFilePath = args.snapshotFilePath;
 
   const map = createStringMap(args.incentivizedMarketMakerAddresses);
 
@@ -83,6 +83,6 @@ const args = yargs.options({
   );
   console.log("snapshot outside", snapshot);
 
-  //   const snapshotFileName = `${snapshotFilePath + timestamp.toString()}.json`;
-  // await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
+  const snapshotFileName = `${snapshotFilePath + endTimestamp.toString()}.json`;
+  await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
 })(args);
