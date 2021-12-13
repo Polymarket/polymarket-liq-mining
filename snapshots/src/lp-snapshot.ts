@@ -89,7 +89,7 @@ export async function generateLpSnapshot(
 
       if (howToCalculate === LpCalculation.PerBlock) {
         console.log(
-          `calculating liquidity per block with a per block reward of ${perBlockReward} tokens`
+          `Calculating liquidity per block with a per block reward of ${perBlockReward/blockSampleSize} tokens`
         );
         userTokensPerEpoch = updateTokensPerBlockReward(
           userTokensPerEpoch,
@@ -100,7 +100,7 @@ export async function generateLpSnapshot(
 
       if (howToCalculate === LpCalculation.TotalSupply) {
         console.log(
-          `calculating liquidity per epoch with a total supply of ${supplyOfTokenForEpoch} tokens`
+          `Calculating liquidity per epoch with a total supply of ${supplyOfTokenForEpoch} tokens`
         );
         userTokensPerEpoch = updateTokensPerEpochReward(
           userTokensPerEpoch,

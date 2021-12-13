@@ -26,26 +26,48 @@ const args = yargs.options({
 
 (async (args: any) => {
   const timestamp = args.timestamp;
-  console.log(`Pulling all users`);
   const oldCache = magicAddressCache;
-  const oldLength = Object.keys(oldCache).length;
-  console.log("Pulling old cache, length:", `${oldLength} users`);
+  const cachedAddresses = Object.keys(oldCache);
+  console.log("Cached addresses length:", `${cachedAddresses.length} users`);
   const newCache = { ...oldCache };
   const users: string[] = await getAllUsers(timestamp);
 
-  console.log(`Pulling all addresses`);
+  let count = 1;
   for (const user of users) {
-    if (!newCache[user] || newCache[user] === null) {
+    console.log("User - ", user);
+    const userLc = user.toLowerCase();
+    if (!newCache[userLc]) {
+      console.log("cache[user] - ", newCache[userLc]);
       try {
-        const magicAddress = await getMagicLinkAddress(user);
-        newCache[user] = magicAddress;
+        const magicAddress = await getMagicLinkAddress(userLc);
+        if (magicAddress) {
+          const magicLc = magicAddress.toLowerCase();
+          console.log("magicAddress exists -", magicLc);
+          newCache[userLc] = magicLc;
+          count++;
+          console.log(
+            "Saved! number of magic addresses saved this session:",
+            count
+          );
+          if (count % 100 === 0) {
+            console.log("Saving magic cache!");
+            writeToMagicCache(newCache);
+          }
+        } else {
+          console.log("magicAddress does not exist", magicAddress);
+        }
       } catch (error) {
+        console.error(error);
         console.log(
-          `Error! Found ${Object.keys(newCache).length - oldLength} new addresses`
+          `Error! Found ${
+            Object.keys(newCache).length - cachedAddresses.length
+          } new addresses`
         );
         writeToMagicCache(newCache);
-		break;
+        break;
       }
+    } else {
+      console.log("Cache hit! - ", newCache[userLc]);
     }
   }
 

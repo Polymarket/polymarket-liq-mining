@@ -5,7 +5,7 @@ import { TransactionReceipt } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import { TxnRelayedEventAbiFragment } from "./relayHubAbi";
 import * as fs from "fs";
-import { batch } from "promises-tho";
+// import { batch } from "promises-tho";
 
 const RELAY_HUB_ADDRESS = "0xD216153c06E857cD7f72665E0aF1d7D82172F494";
 const RElAY_HUB_INTERFACE = new ethers.utils.Interface(
@@ -56,11 +56,23 @@ async function getTransactionHashes(address: string): Promise<string[]> {
 const magicAddressCacheName = "./proxy-wallet-to-magic-addresses.json";
 
 function getMagicCache() {
-  return JSON.parse(fs.readFileSync(magicAddressCacheName).toString());
+  let magicAddressCache;
+  try {
+    magicAddressCache = JSON.parse(
+      fs.readFileSync(magicAddressCacheName).toString()
+    );
+  } catch (error) {
+    magicAddressCache = {};
+  }
+  return magicAddressCache;
 }
 
 export function writeToMagicCache(newCache: { [key: string]: string }): void {
-  fs.writeFileSync(magicAddressCacheName, JSON.stringify(newCache));
+  try {
+    fs.writeFileSync(magicAddressCacheName, JSON.stringify(newCache));
+  } catch (error) {
+    console.log("writeToMagicCache error", error);
+  }
 }
 
 export const magicAddressCache = getMagicCache();
@@ -73,9 +85,22 @@ export const magicAddressCache = getMagicCache();
  * @returns
  */
 export const fetchMagicAddress = async (address: string): Promise<string> => {
-  let magicAddress = magicAddressCache[address];
-  if (magicAddress == null) {
-    magicAddress = await getMagicLinkAddress(address);
+  const addressLc = address.toLowerCase();
+  let magicAddress = magicAddressCache[addressLc];
+  console.log("MagicAddress in cache - ", magicAddress);
+  if (!magicAddress) {
+    try {
+      magicAddress = await getMagicLinkAddress(addressLc);
+      if (magicAddress) {
+        console.log(
+          "Updating magic cache in fetchMagicAddress! " + magicAddress
+        );
+        writeToMagicCache({ ...magicAddressCache, [addressLc]: magicAddress });
+      }
+    } catch (error) {
+		console.log('fetchMagicAddress error', error)
+      return magicAddress;
+    }
   }
   return magicAddress;
 };

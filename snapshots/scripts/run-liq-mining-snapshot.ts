@@ -27,7 +27,9 @@ import { ReturnType, MapOfCount } from "../src/interfaces";
 import { writeSnapshot } from "../src/utils";
 
 const DEFAULT_TOKEN_SUPPLY = 1000000;
-const DEFAULT_SNAPSHOT_FILE_PATH = "./snapshots/liq-mining-";
+const now = Date.now();
+const DEFAULT_SNAPSHOT_FILE_PATH = `./snapshots/${now}-liq-mining`;
+const DEFAULT_MERKLE_FILE_PATH = `./snapshots/${now}-merkle-root`;
 // const DEFAULT_BLOCK_SAMPLE = 1800; //Approx every hour with a 2s block time
 // const DEFAULT_BLOCK_SAMPLE = 1; // Every block
 const DEFAULT_BLOCK_SAMPLE = 30; // Approx every min with a 2s block time
@@ -52,6 +54,11 @@ const args = yargs.options({
     type: "string",
     demandOption: false,
     default: DEFAULT_SNAPSHOT_FILE_PATH,
+  },
+  merkleRootFilePath: {
+    type: "string",
+    demandOption: false,
+    default: DEFAULT_MERKLE_FILE_PATH,
   },
   incentivizedMarketMakerAddresses: {
     type: "array",
@@ -89,6 +96,7 @@ const args = yargs.options({
   const blockSampleSize = args.blockSampleSize;
   const perBlockReward = args.perBlockReward;
   const snapshotFilePath = args.snapshotFilePath;
+  const merkleRootFilePath = args.merkleRootFilePath;
 
   const incentivizedMarketsMap = createStringMap(
     args.incentivizedMarketMakerAddresses
@@ -121,12 +129,16 @@ const args = yargs.options({
 
   console.log("totalUserMap", totalUserMap);
   const normalizedUserMap = normalizeMapAmounts(totalUserMap);
+  const merkleInfo: MerkleDistributorInfo = parseBalanceMap(normalizedUserMap);
+  console.log("merkleInfo", merkleInfo);
+  const merkleRootFileName = `${merkleRootFilePath}.json`;
+  await writeSnapshot(merkleRootFileName, merkleRootFilePath, merkleInfo);
 
   // add EOA (magic)
   const snapshot = await addEoaToUserPayoutMap(normalizedUserMap);
 
-  // todo - we need to map this again to {[magic: string]: normalizedValue}?
   // todo - what to do with null magic wallet addresses?
+  // todo - we need to map this again to {[magic: string]: normalizedValue}?
   //   const normalizedMagicMap = snapshot.reduce((acc, curr) => {
   //     if (!acc[curr.magicWallet]) {
   //       // todo - what to do with null magic wallet addresses?
@@ -134,10 +146,7 @@ const args = yargs.options({
   //     }
   //     return acc;
   //   }, {});
-
-  const merkleInfo: MerkleDistributorInfo = parseBalanceMap(normalizedUserMap);
-  console.log("merkleInfo", merkleInfo);
-
-  const snapshotFileName = `${snapshotFilePath + Date.now().toString()}.json`;
+  console.log("snapshot", snapshot);
+  const snapshotFileName = `${snapshotFilePath}.json`;
   await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
 })(args);
