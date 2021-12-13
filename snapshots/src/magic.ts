@@ -5,6 +5,7 @@ import { TransactionReceipt } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import { TxnRelayedEventAbiFragment } from "./relayHubAbi";
 import * as fs from "fs";
+import { ReturnSnapshot } from "./interfaces";
 // import { batch } from "promises-tho";
 
 const RELAY_HUB_ADDRESS = "0xD216153c06E857cD7f72665E0aF1d7D82172F494";
@@ -67,6 +68,23 @@ function getMagicCache() {
   return magicAddressCache;
 }
 
+export const updateMagicCacheFromSnapshot = (snapshot: {magicWallet: string | null, proxyWallet: string}[]):void => {
+  const newCache = snapshot.reduce((acc, curr) => {
+    if (!acc[curr.proxyWallet] && curr.magicWallet) {
+      acc[curr.proxyWallet] = curr.magicWallet;
+    }
+    return acc;
+  }, {});
+  batchUpdateMagicCache(newCache);
+};
+
+export const batchUpdateMagicCache = (newCache: { [key: string]: string }): void => {
+  const oldCache = getMagicCache();
+  console.log(`Batch updating magic cache of ${Object.keys(oldCache).length} magic addresses with ${Object.keys(oldCache).length} new magic addresses`)
+  const magicCache = { ...oldCache, ...newCache };
+  writeToMagicCache(magicCache);
+};
+
 export function writeToMagicCache(newCache: { [key: string]: string }): void {
   try {
     fs.writeFileSync(magicAddressCacheName, JSON.stringify(newCache));
@@ -85,20 +103,19 @@ export const magicAddressCache = getMagicCache();
  * @returns
  */
 export const fetchMagicAddress = async (address: string): Promise<string> => {
-  const addressLc = address.toLowerCase();
-  let magicAddress = magicAddressCache[addressLc];
+  let magicAddress = magicAddressCache[address];
   console.log("MagicAddress in cache - ", magicAddress);
   if (!magicAddress) {
     try {
-      magicAddress = await getMagicLinkAddress(addressLc);
+      magicAddress = await getMagicLinkAddress(address);
       if (magicAddress) {
         console.log(
           "Updating magic cache in fetchMagicAddress! " + magicAddress
         );
-        writeToMagicCache({ ...magicAddressCache, [addressLc]: magicAddress });
+        writeToMagicCache({ ...magicAddressCache, [address]: magicAddress });
       }
     } catch (error) {
-		console.log('fetchMagicAddress error', error)
+      console.log("fetchMagicAddress error", error);
       return magicAddress;
     }
   }
@@ -135,19 +152,3 @@ export const getMagicLinkAddress = async (address: string): Promise<string> => {
   }
   return null;
 };
-
-// const getMagicAddressWrapper = async (arg: {
-//   address: string;
-// }): Promise<string> => {
-//   return await fetchMagicAddress(arg.address);
-// };
-
-// export const getMagicAddressBatched = batch(
-//   { batchSize: 100 },
-//   getMagicAddressWrapper
-// );
-
-//   const x = await getMagicAddressBatched(
-//     Object.keys(totalUserMap).map((user) => ({ address: user }))
-//   );
-//   console.log("x", x);

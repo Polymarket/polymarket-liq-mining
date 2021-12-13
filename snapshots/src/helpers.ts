@@ -1,7 +1,7 @@
 // GENERAL HELPERS
 
 import { MapOfCount, UserAmount } from "./interfaces";
-import { fetchMagicAddress } from "./magic";
+import { getMagicLinkAddress } from "./magic";
 
 // VARIABLES
 export const SCALE_FACTOR = Math.pow(10, 6);
@@ -34,7 +34,6 @@ export const createStringMap = (
   arrayOfStrings: string[]
 ): { [key: string]: boolean } => {
   return arrayOfStrings
-    .map((addr) => addr.toLowerCase())
     .reduce((acc, curr) => {
       if (!acc[curr]) {
         acc[curr] = true;
@@ -46,7 +45,7 @@ export const createStringMap = (
 export const cleanUserAmounts = (userAmounts: UserAmount[]): UserAmount[] => {
   return userAmounts.map(({ user, amount }) => {
     return {
-      user: user.toLowerCase(),
+      user,
       amount:
         typeof amount === "number"
           ? amount / SCALE_FACTOR
@@ -99,7 +98,7 @@ export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
   // Return an array with address, EOA and amount
   return Promise.all(
     Object.keys(map).map(async (userAddress) => {
-      const magicWallet = await fetchMagicAddress(userAddress);
+      const magicWallet = await getMagicLinkAddress(userAddress);
       return {
         proxyWallet: userAddress,
         amount: map[userAddress] as T,

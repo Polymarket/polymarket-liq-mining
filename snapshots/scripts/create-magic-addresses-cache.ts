@@ -35,15 +35,13 @@ const args = yargs.options({
   let count = 1;
   for (const user of users) {
     console.log("User - ", user);
-    const userLc = user.toLowerCase();
-    if (!newCache[userLc]) {
-      console.log("cache[user] - ", newCache[userLc]);
+    if (!newCache[user]) {
+      console.log("cache[user] - ", newCache[user]);
       try {
-        const magicAddress = await getMagicLinkAddress(userLc);
+        const magicAddress = await getMagicLinkAddress(user);
         if (magicAddress) {
-          const magicLc = magicAddress.toLowerCase();
-          console.log("magicAddress exists -", magicLc);
-          newCache[userLc] = magicLc;
+          console.log("magicAddress exists -", magicAddress);
+          newCache[user] = magicAddress;
           count++;
           console.log(
             "Saved! number of magic addresses saved this session:",
@@ -67,7 +65,7 @@ const args = yargs.options({
         break;
       }
     } else {
-      console.log("Cache hit! - ", newCache[userLc]);
+      console.log("Cache hit! - ", newCache[user]);
     }
   }
 

@@ -2,18 +2,16 @@ import * as dotenv from "dotenv";
 import * as yargs from "yargs";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 // import { writeSnapshot } from "../src/utils";
-import { BigNumber } from "ethers";
 import {
-  cleanNumber,
-  DECIMALS,
-  EIGHT_DAYS_AGO,
+  updateMagicCacheFromSnapshot,
+} from "../src/magic";
+import * as fs from "fs";
+import {
   ONE_DAY_AGO,
   normalizeMapAmounts,
 } from "../src/helpers";
 import {
   parseBalanceMap,
-  OldFormat,
-  NewFormat,
   MerkleDistributorInfo,
 } from "../../merkle-distributor/src/parse-balance-map";
 import {
@@ -132,10 +130,11 @@ const args = yargs.options({
   const merkleInfo: MerkleDistributorInfo = parseBalanceMap(normalizedUserMap);
   console.log("merkleInfo", merkleInfo);
   const merkleRootFileName = `${merkleRootFilePath}.json`;
-  await writeSnapshot(merkleRootFileName, merkleRootFilePath, merkleInfo);
-
-  // add EOA (magic)
-  const snapshot = await addEoaToUserPayoutMap(normalizedUserMap);
+  try {
+    fs.writeFileSync(merkleRootFileName, JSON.stringify(merkleInfo));
+  } catch (error) {
+    console.log("write merkle snapshot", error);
+  }
 
   // todo - what to do with null magic wallet addresses?
   // todo - we need to map this again to {[magic: string]: normalizedValue}?
@@ -146,7 +145,15 @@ const args = yargs.options({
   //     }
   //     return acc;
   //   }, {});
-  console.log("snapshot", snapshot);
-  const snapshotFileName = `${snapshotFilePath}.json`;
-  await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
+
+  // add EOA (magic)
+  try {
+    const snapshot = await addEoaToUserPayoutMap(normalizedUserMap);
+    console.log("snapshot", snapshot);
+    const snapshotFileName = `${snapshotFilePath}.json`;
+    await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
+    updateMagicCacheFromSnapshot(snapshot); 
+  } catch (error) {
+    console.log("write snapshot", error);
+  }
 })(args);

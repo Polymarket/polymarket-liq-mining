@@ -70,7 +70,7 @@ const args = yargs.options({
   const perBlockReward = args.perBlockReward;
   const snapshotFilePath = args.snapshotFilePath;
 
-  const map = createStringMap(args.incentivizedMarketMakerAddresses);
+  const map = createStringMap(args.incentivizedMarketMakerAddresses.map(addr => addr.toLowerCase()));
 
   const snapshot = await generateLpSnapshot(
     ReturnType.Snapshot,
