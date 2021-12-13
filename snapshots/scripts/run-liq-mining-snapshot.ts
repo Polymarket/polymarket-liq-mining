@@ -2,14 +2,9 @@ import * as dotenv from "dotenv";
 import * as yargs from "yargs";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 // import { writeSnapshot } from "../src/utils";
-import {
-  updateMagicCacheFromSnapshot,
-} from "../src/magic";
+import { updateMagicCacheFromSnapshot } from "../src/magic";
 import * as fs from "fs";
-import {
-  ONE_DAY_AGO,
-  normalizeMapAmounts,
-} from "../src/helpers";
+import { ONE_DAY_AGO, normalizeMapAmounts } from "../src/helpers";
 import {
   parseBalanceMap,
   MerkleDistributorInfo,
@@ -62,12 +57,12 @@ const args = yargs.options({
     type: "array",
     demandOption: false,
     default: [
-      //   "0x932b2aC1799D4353d802Ddc27eb6DBC952e24b36", // Will Ethereum reach $5000 by the end of ?"
+      "0x932b2aC1799D4353d802Ddc27eb6DBC952e24b36", // Will Ethereum reach $5000 by the end of ?"
       "0xBC12a7269EC807690793C86c81241eDCA8F2E3D0", // Will Coinbase’s NFT marketplace launch before 2022?
       "0x476238B6Ef1B0f065E97cffA22277cc2788852B7", // "will-there-be-nfl-scorigami-in-december-2021",
-      // "0x9E2d4470d3D599BB349d7457513dDD7379780dB0", // "will-the-omicron-variant-be-marked-as-a-variant-of-high-consequence-by-the-cdc-before-2022",
-      // "0x6474406F81b5C32D80eb1B3545b2B22a85B73AD3", // "will-uniswap-be-live-on-polygon-before-2022",
-      //   "0x1e6C49e7E776E6F76d31E6D6FCb5dD367F7B59dD", // nfl-will-the-bills-beat-the-patriots-by-more-than-4pt5-points-in-their-d
+      "0x9E2d4470d3D599BB349d7457513dDD7379780dB0", // "will-the-omicron-variant-be-marked-as-a-variant-of-high-consequence-by-the-cdc-before-2022",
+      "0x6474406F81b5C32D80eb1B3545b2B22a85B73AD3", // "will-uniswap-be-live-on-polygon-before-2022",
+      "0x1e6C49e7E776E6F76d31E6D6FCb5dD367F7B59dD", // nfl-will-the-bills-beat-the-patriots-by-more-than-4pt5-points-in-their-d
     ],
   },
   supply: {
@@ -97,7 +92,7 @@ const args = yargs.options({
   const merkleRootFilePath = args.merkleRootFilePath;
 
   const incentivizedMarketsMap = createStringMap(
-    args.incentivizedMarketMakerAddresses
+    args.incentivizedMarketMakerAddresses.map(addr => addr.toLowerCase())
   );
 
   const liqMap = await generateLpSnapshot(
@@ -152,7 +147,7 @@ const args = yargs.options({
     console.log("snapshot", snapshot);
     const snapshotFileName = `${snapshotFilePath}.json`;
     await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
-    updateMagicCacheFromSnapshot(snapshot); 
+    updateMagicCacheFromSnapshot(snapshot);
   } catch (error) {
     console.log("write snapshot", error);
   }
