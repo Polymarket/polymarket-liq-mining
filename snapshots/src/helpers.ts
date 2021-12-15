@@ -119,7 +119,7 @@ export const normalizeMapAmounts = (
   }, {});
 };
 
-export const normalizeMapAmountsNewFormat = (map: MapOfCount): NewFormat[] => {
+export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
   return Object.keys(map).reduce((acc, curr) => {
     acc.push({
       address: curr,

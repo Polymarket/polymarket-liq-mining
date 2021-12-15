@@ -2,9 +2,9 @@ import * as dotenv from "dotenv";
 import * as yargs from "yargs";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 // import { writeSnapshot } from "../src/utils";
-import { updateMagicCacheFromSnapshot } from "../src/magic";
+// import { updateMagicCacheFromSnapshot } from "../src/magic";
 import * as fs from "fs";
-import { ONE_DAY_AGO, normalizeMapAmounts } from "../src/helpers";
+import { ONE_DAY_AGO, normalizeMapAmounts, addEoaToUserPayoutMap, normalizeEarningsFewFormat } from '../src/helpers';
 import {
   parseBalanceMap,
   MerkleDistributorInfo,
@@ -12,12 +12,13 @@ import {
 import {
   combineMaps,
   createStringMap,
-  addEoaToUserPayoutMap,
+//   addEoaToUserPayoutMap,
   TWO_DAYS_AGO,
 } from "../src/helpers";
 import { generateFeesSnapshot } from "../src/fees-snapshot";
 import { ReturnType, MapOfCount } from "../src/interfaces";
-import { writeSnapshot } from "../src/utils";
+import { updateMagicCacheFromSnapshot } from "../src/magic";
+// import { writeSnapshot } from "../src/utils";
 
 const DEFAULT_TOKEN_SUPPLY = 1000000;
 const DEFAULT_FILE_PATH = `./snapshots/week`;
@@ -41,11 +42,6 @@ const args = yargs.options({
     // default: EIGHT_DAYS_AGO,
   },
   feePerBlock: { type: "number", demandOption: false, default: 1 },
-//   snapshotFilePath: {
-//     type: "string",
-//     demandOption: false,
-//     default: DEFAULT_FILE_PATH,
-//   },
   baseFilePath: {
     type: "string",
     demandOption: false,
@@ -92,7 +88,7 @@ const args = yargs.options({
   const supply = args.supply;
   const blockSampleSize = args.blockSampleSize;
   const perBlockReward = args.perBlockReward;
-  const baseFilePath = args.baseFilePath
+  const baseFilePath = args.baseFilePath;
 
   const incentivizedMarketsMap = createStringMap(
     args.incentivizedMarketMakerAddresses.map((addr) => addr.toLowerCase())
@@ -117,8 +113,6 @@ const args = yargs.options({
   );
   console.log("feeMap", feeMap);
 
-  // todo - get previous claim snapshot
-  // from strapi or locally saved...
   const totalUserMap = combineMaps([
     liqMap as MapOfCount,
     feeMap as MapOfCount,
@@ -126,35 +120,26 @@ const args = yargs.options({
 
   console.log("totalUserMap", totalUserMap);
   const normalizedUserMap = normalizeMapAmounts(totalUserMap);
-  const merkleInfo: MerkleDistributorInfo = parseBalanceMap(normalizedUserMap);
+  
+  // todo - we need to figure out if it's using our proxy (magic, metamask) 
+  // or if they're interacting directly with the contract
+  // then add the correct payout address
+
+  const snapshot = await addEoaToUserPayoutMap(normalizedUserMap);
+  updateMagicCacheFromSnapshot(snapshot);
+
+  // todo - get previous claimed merkle info and update and add any unclaimed values
+  // then recalculate the tree
+
+  const normalizedEarnings  = normalizeEarningsFewFormat(totalUserMap)
+  const merkleInfo: MerkleDistributorInfo = parseBalanceMap(normalizedEarnings);
   console.log("merkleInfo", merkleInfo);
 
+  // do we use `now` every time? or over write with just the week number?
   const merkleRootFileName = `${baseFilePath}-${WEEK_NUMBER}-merkle-${now}.json`;
   try {
     fs.writeFileSync(merkleRootFileName, JSON.stringify(merkleInfo));
   } catch (error) {
     console.log("write merkle snapshot", error);
-  }
-
-  // todo - what to do with null magic wallet addresses?
-  // todo - we need to map this again to {[magic: string]: normalizedValue}?
-  //   const normalizedMagicMap = snapshot.reduce((acc, curr) => {
-  //     if (!acc[curr.magicWallet]) {
-  //       // todo - what to do with null magic wallet addresses?
-  //       acc[curr.magicWallet] = curr.amount;
-  //     }
-  //     return acc;
-  //   }, {});
-
-  // add EOA (magic)
-  try {
-    const snapshot = await addEoaToUserPayoutMap(normalizedUserMap);
-    console.log("snapshot", snapshot);
-	const snapshotFilePath = `${baseFilePath}-${WEEK_NUMBER}-snapshot-${now}`
-    const snapshotFileName = `${snapshotFilePath}.json`;
-    await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
-    updateMagicCacheFromSnapshot(snapshot);
-  } catch (error) {
-    console.log("write snapshot", error);
   }
 })(args);

@@ -11,8 +11,7 @@ import {
 } from "../src/parse-balance-map";
 import { DistributorSdk } from "../../sdk/distributorSdk";
 import {
-  normalizeMapAmounts,
-  normalizeMapAmountsNewFormat,
+  normalizeEarningsFewFormat,
 } from "../../snapshots/src/helpers";
 // import { getSignerFromWallet } from "./helpers";
 import { NewFormat } from "../src/parse-balance-map";
@@ -53,7 +52,7 @@ describe.only("Distributor SDK", () => {
     // SignerWithAddress
     const aliceSignerWithAddress = await ethers.getNamedSigner("alice");
     const mockMap = createMockAmounts(wallets.slice(1));
-    payouts = normalizeMapAmountsNewFormat(mockMap);
+    payouts = normalizeEarningsFewFormat(mockMap);
     merkleInfo = parseBalanceMap(payouts);
 
     token = await deployContract(
