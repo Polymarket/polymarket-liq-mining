@@ -1,0 +1,29 @@
+{
+  "name": "@polymarket/distributor-v0-sdk",
+  "version": "1.0.0",
+  "description": "SDK to simplify common interactions with the Polymarket Merkle Distributor",
+  "author": "Matt Walker <matt@polymarket.com>",
+  "license": "MIT",
+  "contributors": [
+    {
+      "name": "Matt Walker",
+      "url": "https://github.com/mttwlkr"
+    }
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@ethersproject/providers": "^5.4.4",
+    "ethers": "^5.4.5"
+  }
+}

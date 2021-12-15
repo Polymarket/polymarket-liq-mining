@@ -68,7 +68,9 @@ const config: HardhatUserConfig = {
       saveDeployments: true,
       tags: ["test", "local"],
       blockGasLimit: 12450000,
-      accounts: { mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn' }
+      accounts: {
+        mnemonic: "horn horn horn horn horn horn horn horn horn horn horn horn",
+      },
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`,
@@ -103,7 +105,7 @@ const config: HardhatUserConfig = {
       tags: ["staging"],
     },
     moonbase: {
-      url: 'https://rpc.testnet.moonbeam.network',
+      url: "https://rpc.testnet.moonbeam.network",
       accounts,
       chainId: 1287,
       live: true,
@@ -111,7 +113,7 @@ const config: HardhatUserConfig = {
       tags: ["staging"],
     },
     arbitrum: {
-      url: 'https://kovan3.arbitrum.io/rpc',
+      url: "https://kovan3.arbitrum.io/rpc",
       accounts,
       chainId: 79377087078960,
       live: true,
@@ -161,7 +163,7 @@ const config: HardhatUserConfig = {
       live: true,
       saveDeployments: true,
       tags: ["staging"],
-    }
+    },
   },
   solidity: {
     compilers: [
@@ -173,8 +175,8 @@ const config: HardhatUserConfig = {
             runs: 200,
           },
         },
-      }
-    ]
+      },
+    ],
   },
   watcher: {
     compile: {
