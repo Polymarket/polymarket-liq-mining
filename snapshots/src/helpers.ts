@@ -2,6 +2,7 @@
 
 import { MapOfCount, UserAmount } from "./interfaces";
 import { getMagicLinkAddress } from "./magic";
+import { NewFormat } from "../../merkle-distributor/src/parse-balance-map";
 
 // VARIABLES
 export const SCALE_FACTOR = Math.pow(10, 6);
@@ -33,13 +34,12 @@ export const sumValues = (block: MapOfCount): number => {
 export const createStringMap = (
   arrayOfStrings: string[]
 ): { [key: string]: boolean } => {
-  return arrayOfStrings
-    .reduce((acc, curr) => {
-      if (!acc[curr]) {
-        acc[curr] = true;
-      }
-      return acc;
-    }, {});
+  return arrayOfStrings.reduce((acc, curr) => {
+    if (!acc[curr]) {
+      acc[curr] = true;
+    }
+    return acc;
+  }, {});
 };
 
 export const cleanUserAmounts = (userAmounts: UserAmount[]): UserAmount[] => {
@@ -119,13 +119,22 @@ export const normalizeMapAmounts = (
   }, {});
 };
 
+export const normalizeMapAmountsNewFormat = (map: MapOfCount): NewFormat[] => {
+  return Object.keys(map).reduce((acc, curr) => {
+    acc.push({
+      address: curr,
+      earnings: cleanNumber(map[curr]),
+      reasons: "",
+    });
+    return acc;
+  }, []);
+};
+
 export const cleanNumber = (number: number): string => {
   const string = number.toString();
   const [int, dec] = string.split(".");
   const minDecimals = dec.padEnd(DECIMALS, "0");
   const onlyDecimals = minDecimals.slice(0, DECIMALS);
-  if (int === "0") {
-    return onlyDecimals;
-  }
-  return `${int}${onlyDecimals}`;
+  const newNum = int === "0" ? onlyDecimals : `${int}${onlyDecimals}`;
+  return `0x${parseInt(newNum).toString(16)}`;
 };

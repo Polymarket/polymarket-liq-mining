@@ -1,7 +1,13 @@
-// import { Transaction, CallType } from "./types";
+import { Transaction, CallType } from './types';
 // import MerkleDistributorAbi from './abi/MerkleDistributor.json'
 // import { defaultAbiCoder, Interface } from "@ethersproject/abi";
 // import { BigNumberish } from "@ethersproject/bignumber";
+
+import { defaultAbiCoder, Interface } from "@ethersproject/abi";
+import { BigNumberish } from "@ethersproject/bignumber";
+import MerkleDistributorAbi from './abi/MerkleDistributor.json'
+// import { MerkleDistributor } from "../merkle-distributor/typechain";
+// import { MerkleDistributor } from "../merkle-distributor/typechain";
 
 // // IS CLAIMED
 
@@ -27,40 +33,43 @@
 //   };
 // };
 
-// // CLAIM
+// CLAIM
 
-// const encodeClaim = (
-//   index: BigNumberish,
-//   account: string,
-//   amount: BigNumberish,
-//   merkleProof: string[]
-// ): string =>
-//   new Interface(MerkleDistributorAbi).encodeFunctionData(
-//     "claim(uint256,address,uint256,bytes32[])",
-//     [
-//       defaultAbiCoder.encode(["uint256"], [index]),
-//       account,
-//       defaultAbiCoder.encode(["uint256"], [amount]),
-//       merkleProof,
-//     ]
-//   );
+const encodeClaim = (
+  index: BigNumberish,
+  account: string,
+  amount: BigNumberish,
+  merkleProof: string[]
+): string =>
+  new Interface(MerkleDistributorAbi).encodeFunctionData(
+    "claim(uint256,address,uint256,bytes32[])",
+    [
+      defaultAbiCoder.encode(["uint256"], [index]),
+      account,
+      defaultAbiCoder.encode(["uint256"], [amount]),
+      merkleProof,
+    ]
+  );
 
-// /**
-//  * @notice
-//  * @param merkleDistributorAddress - merkle distributor to check claimIndex
-//  * @param claimIndex - claim index to check
-//  */
-// export const claim = (
-//   merkleDistributorAddress: string,
-//   claimIndex: BigNumberish,
-//   account: string,
-//   amount: BigNumberish,
-//   merkleProof: string[]
-// ): Transaction => {
-//   return {
-//     to: merkleDistributorAddress,
-//     typeCode: CallType.Call,
-//     data: encodeClaim(claimIndex, account, amount, merkleProof),
-//     value: "0",
-//   };
-// };
+/**
+ * @notice
+ * @param merkleDistributorAddress - merkle distributor to check claimIndex
+ * @param claimIndex - claim index to check
+ */
+export const claim = (
+  merkleDistributorAddress: string,
+  claimIndex: BigNumberish,
+  account: string,
+  amount: BigNumberish,
+  merkleProof: string[]
+): Transaction => {
+	const encoded = encodeClaim(claimIndex, account, amount, merkleProof)
+	const decoded = new Interface(MerkleDistributorAbi).decodeFunctionData(
+    "claim(uint256,address,uint256,bytes32[])", encoded
+  );
+  return {
+    to: merkleDistributorAddress,
+    data: encodeClaim(claimIndex, account, amount, merkleProof),
+    value: "0x0",
+  };
+};

@@ -4,12 +4,12 @@ type RegistryContracts = {
 };
 
 export const MAINNET_CONTRACTS: RegistryContracts = {
-  distributor: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  distributor: "",
 //   usdc: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
 };
 
 export const MUMBAI_CONTRACTS: RegistryContracts = {
-  distributor: "0x584d1077cf60122C038c5305eDfE4FCDC8fcD879",
+  distributor: "",
 //   usdc: "0x40fa79E4Cab51e11F935760BCFdA90662d418D74",
 };
 
