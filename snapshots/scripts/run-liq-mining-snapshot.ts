@@ -20,9 +20,7 @@ import { ReturnType, MapOfCount } from "../src/interfaces";
 import { writeSnapshot } from "../src/utils";
 
 const DEFAULT_TOKEN_SUPPLY = 1000000;
-const now = Date.now();
-const DEFAULT_SNAPSHOT_FILE_PATH = `./snapshots/${now}-liq-mining`;
-const DEFAULT_MERKLE_FILE_PATH = `./snapshots/${now}-merkle-root`;
+const DEFAULT_FILE_PATH = `./snapshots/week`;
 // const DEFAULT_BLOCK_SAMPLE = 1800; //Approx every hour with a 2s block time
 // const DEFAULT_BLOCK_SAMPLE = 1; // Every block
 const DEFAULT_BLOCK_SAMPLE = 30; // Approx every min with a 2s block time
@@ -43,15 +41,15 @@ const args = yargs.options({
     // default: EIGHT_DAYS_AGO,
   },
   feePerBlock: { type: "number", demandOption: false, default: 1 },
-  snapshotFilePath: {
+//   snapshotFilePath: {
+//     type: "string",
+//     demandOption: false,
+//     default: DEFAULT_FILE_PATH,
+//   },
+  baseFilePath: {
     type: "string",
     demandOption: false,
-    default: DEFAULT_SNAPSHOT_FILE_PATH,
-  },
-  merkleRootFilePath: {
-    type: "string",
-    demandOption: false,
-    default: DEFAULT_MERKLE_FILE_PATH,
+    default: DEFAULT_FILE_PATH,
   },
   incentivizedMarketMakerAddresses: {
     type: "array",
@@ -83,16 +81,21 @@ const args = yargs.options({
 }).argv;
 
 (async (args: any) => {
+  // todo
+  const WEEK_NUMBER = 1;
+  const now = Date.now();
+  // fetchFromStrapi(week)
+  // returns all market maker addresses ids, timestamps, supply
+
   const endTimestamp = args.endTimestamp;
   const startTimestamp = args.startTimestamp;
   const supply = args.supply;
   const blockSampleSize = args.blockSampleSize;
   const perBlockReward = args.perBlockReward;
-  const snapshotFilePath = args.snapshotFilePath;
-  const merkleRootFilePath = args.merkleRootFilePath;
+  const baseFilePath = args.baseFilePath
 
   const incentivizedMarketsMap = createStringMap(
-    args.incentivizedMarketMakerAddresses.map(addr => addr.toLowerCase())
+    args.incentivizedMarketMakerAddresses.map((addr) => addr.toLowerCase())
   );
 
   const liqMap = await generateLpSnapshot(
@@ -115,6 +118,7 @@ const args = yargs.options({
   console.log("feeMap", feeMap);
 
   // todo - get previous claim snapshot
+  // from strapi or locally saved...
   const totalUserMap = combineMaps([
     liqMap as MapOfCount,
     feeMap as MapOfCount,
@@ -124,7 +128,8 @@ const args = yargs.options({
   const normalizedUserMap = normalizeMapAmounts(totalUserMap);
   const merkleInfo: MerkleDistributorInfo = parseBalanceMap(normalizedUserMap);
   console.log("merkleInfo", merkleInfo);
-  const merkleRootFileName = `${merkleRootFilePath}.json`;
+
+  const merkleRootFileName = `${baseFilePath}-${WEEK_NUMBER}-merkle-${now}.json`;
   try {
     fs.writeFileSync(merkleRootFileName, JSON.stringify(merkleInfo));
   } catch (error) {
@@ -145,6 +150,7 @@ const args = yargs.options({
   try {
     const snapshot = await addEoaToUserPayoutMap(normalizedUserMap);
     console.log("snapshot", snapshot);
+	const snapshotFilePath = `${baseFilePath}-${WEEK_NUMBER}-snapshot-${now}`
     const snapshotFileName = `${snapshotFilePath}.json`;
     await writeSnapshot(snapshotFileName, snapshotFilePath, snapshot);
     updateMagicCacheFromSnapshot(snapshot);
