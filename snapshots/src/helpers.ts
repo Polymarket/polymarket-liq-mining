@@ -23,7 +23,7 @@ export const EIGHT_DAYS_AGO = now - 691200000;
 /**
  * Sums liquidity of a given block
  * @param block
- * @returns number
+ * @returns the sum of all block values 
  */
 export const sumValues = (block: MapOfCount): number => {
   const allLiquidity: number[] = Object.values(block);
@@ -33,14 +33,14 @@ export const sumValues = (block: MapOfCount): number => {
 };
 
 /**
- * Creates a map of userAddress => true
- * @param arrayOfStrings
- * @returns map
+ * Creates a map of addresses => true
+ * @param arrayOfAddresses
+ * @returns map of booleans
  */
 export const createStringMap = (
-  arrayOfStrings: string[]
+  arrayOfAddresses: string[]
 ): { [key: string]: boolean } => {
-  return arrayOfStrings.reduce((acc, curr) => {
+  return arrayOfAddresses.reduce((acc, curr) => {
     if (!acc[curr]) {
       acc[curr] = true;
     }
@@ -48,6 +48,11 @@ export const createStringMap = (
   }, {});
 };
 
+/**
+ * Returns an array of userAmounts from 10^6 if coming from Subgraph
+ * @param userAmounts
+ * @returns userAmounts
+ */
 export const cleanUserAmounts = (userAmounts: UserAmount[]): UserAmount[] => {
   return userAmounts.map(({ user, amount }) => {
     return {
@@ -60,6 +65,11 @@ export const cleanUserAmounts = (userAmounts: UserAmount[]): UserAmount[] => {
   });
 };
 
+/**
+ * Makes a points map from userAmounts where key is address and value is number
+ * @param userAmounts
+ * @returns mapOfCount
+ */
 export const makePointsMap = (userAmounts: UserAmount[]): MapOfCount => {
   return userAmounts.reduce<MapOfCount>((acc, curr) => {
     if (!acc[curr.user]) {
@@ -70,6 +80,13 @@ export const makePointsMap = (userAmounts: UserAmount[]): MapOfCount => {
   }, {});
 };
 
+/**
+ * Makes a payouts map given a points map, total points and token supply 
+ * @param pointsMap 
+ * @param totalPoints 
+ * @param supply 
+ * @returns mapOfCount
+ */
 export const makePayoutsMap = (
   pointsMap: MapOfCount,
   totalPoints: number,
@@ -85,6 +102,11 @@ export const makePayoutsMap = (
   }, {});
 };
 
+/**
+ * Combines an array maps where the key is an address and value is number of points/payout amounts
+ * @param arrayOfMaps (mapOfCount[]) 
+ * @returns mapOfCount
+ */
 export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
   const newMap = {};
   for (const oldMap of arrayOfMaps) {
@@ -98,6 +120,11 @@ export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
   return newMap;
 };
 
+/**
+ * Takes in a payout/points map, returns proxy wallet + eoa wallet + amount.
+ * @param map where key is address and value is amount (string or number) 
+ * @returns proxyWallet, eoaWallet, amount  
+ */
 export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
   [account: string]: T;
 }): Promise<{ proxyWallet: string; magicWallet: string; amount: T }[]> => {
@@ -114,6 +141,12 @@ export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
   );
 };
 
+/**
+ * Takes in a map with address and number amount
+ * @param mapOfCount
+ * @returns OldFormat from parseBalanceMap
+ * @returns todo - update cleanNumber
+ */
 export const normalizeMapAmounts = (
   map: MapOfCount
 ): { [account: string]: number } => {
@@ -125,6 +158,12 @@ export const normalizeMapAmounts = (
   }, {});
 };
 
+/**
+ * Takes in a map with address and number amount
+ * @param mapOfCount
+ * @returns NewFormat[] from parseBalanceMap
+ * @returns todo - cleanNumber
+ */
 export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
   return Object.keys(map).reduce((acc, curr) => {
     acc.push({
@@ -136,6 +175,11 @@ export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
   }, []);
 };
 
+/**
+ * Takes in a float
+ * @param number 
+ * @returns the float's ceiling, an integer - todo
+ */
 export const cleanNumber = (number: number): number => {
   return Math.ceil(number);
 
@@ -147,6 +191,13 @@ export const cleanNumber = (number: number): number => {
   //   return int === "0" ? onlyDecimals : `${int}${onlyDecimals}`;
 };
 
+/**
+ * Takes in a isClaimed array from the sdk, filters out claimed amounts,
+ * combines with a new payout map and returns the new merkle claims + root
+ * @param prevClaims 
+ * @param mapOfCount 
+ * @returns merkleDistributorInfo
+ */
 export const combineMerkleInfo = (
   prevClaims: IsClaimed[],
   newClaimMap: MapOfCount

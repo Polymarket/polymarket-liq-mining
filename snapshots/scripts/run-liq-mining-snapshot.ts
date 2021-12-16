@@ -1,10 +1,13 @@
 import * as dotenv from "dotenv";
 import * as yargs from "yargs";
 import { generateLpSnapshot } from "../src/lp-snapshot";
-// import { writeSnapshot } from "../src/utils";
-// import { updateMagicCacheFromSnapshot } from "../src/magic";
 import * as fs from "fs";
-import { ONE_DAY_AGO, normalizeMapAmounts, addEoaToUserPayoutMap, normalizeEarningsFewFormat } from '../src/helpers';
+import {
+  ONE_DAY_AGO,
+  normalizeMapAmounts,
+  addEoaToUserPayoutMap,
+  normalizeEarningsFewFormat,
+} from "../src/helpers";
 import {
   parseBalanceMap,
   MerkleDistributorInfo,
@@ -12,7 +15,7 @@ import {
 import {
   combineMaps,
   createStringMap,
-//   addEoaToUserPayoutMap,
+  //   addEoaToUserPayoutMap,
   TWO_DAYS_AGO,
 } from "../src/helpers";
 import { generateFeesSnapshot } from "../src/fees-snapshot";
@@ -22,9 +25,9 @@ import { updateMagicCacheFromSnapshot } from "../src/magic";
 
 const DEFAULT_TOKEN_SUPPLY = 1000000;
 const DEFAULT_FILE_PATH = `./snapshots/week`;
-// const DEFAULT_BLOCK_SAMPLE = 1800; //Approx every hour with a 2s block time
-// const DEFAULT_BLOCK_SAMPLE = 1; // Every block
+// const DEFAULT_BLOCK_SAMPLE = 1800; // Approx every hour with a 2s block time
 const DEFAULT_BLOCK_SAMPLE = 30; // Approx every min with a 2s block time
+// const DEFAULT_BLOCK_SAMPLE = 1; // Every block
 const DEFAULT_PER_BLOCK_TOKEN_SUPPLY = 60; // divide supply / sample to get per block amount
 
 dotenv.config();
@@ -78,11 +81,10 @@ const args = yargs.options({
 
 (async (args: any) => {
   // todo
-  const WEEK_NUMBER = 1;
-  const now = Date.now();
   // fetchFromStrapi(week)
   // returns all market maker addresses ids, timestamps, supply
-
+  const WEEK_NUMBER = 1;
+  const now = Date.now();
   const endTimestamp = args.endTimestamp;
   const startTimestamp = args.startTimestamp;
   const supply = args.supply;
@@ -120,22 +122,28 @@ const args = yargs.options({
 
   console.log("totalUserMap", totalUserMap);
   const normalizedUserMap = normalizeMapAmounts(totalUserMap);
-  
-  // todo - we need to figure out if it's using our proxy (magic, metamask) 
+
+  // todo - we need to figure out if it's using our proxy (magic, metamask)
   // or if they're interacting directly with the contract
   // then add the correct payout address
 
   const snapshot = await addEoaToUserPayoutMap(normalizedUserMap);
   updateMagicCacheFromSnapshot(snapshot);
 
-  // todo - get previous claimed merkle info and update and add any unclaimed values
-  // then recalculate the tree
+  // todo - look at DistributorSdk.spec.ts for this...
+  // if (week > 0) {
+  // sdk = new MerkleDistributorSdk()
+  // sdk.freeze()
+  // get-previous-week-merkle-info-from-strapi-or-locally
+  // const previousClaims = await sdk.getClaimedStatus(previousMerkleInfo);
+  // const nextMerkleInfo = combineMerkleInfo(previousClaims, normalizedUserMap);
+  // await deployerSdk.updateMerkleRoot(nextMerkleInfo.merkleRoot);
 
-  const normalizedEarnings  = normalizeEarningsFewFormat(totalUserMap)
+  const normalizedEarnings = normalizeEarningsFewFormat(totalUserMap);
   const merkleInfo: MerkleDistributorInfo = parseBalanceMap(normalizedEarnings);
   console.log("merkleInfo", merkleInfo);
 
-  // do we use `now` every time? or over write with just the week number?
+  // todo - once this is rolling, remove `now` so we can pull from fs by week...
   const merkleRootFileName = `${baseFilePath}-${WEEK_NUMBER}-merkle-${now}.json`;
   try {
     fs.writeFileSync(merkleRootFileName, JSON.stringify(merkleInfo));
