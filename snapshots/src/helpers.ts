@@ -2,7 +2,13 @@
 
 import { MapOfCount, UserAmount } from "./interfaces";
 import { getMagicLinkAddress } from "./magic";
-import { NewFormat } from "../../merkle-distributor/src/parse-balance-map";
+import {
+  NewFormat,
+  parseBalanceMap,
+} from "../../merkle-distributor/src/parse-balance-map";
+import { IsClaimed } from "../../sdk/types";
+import { BigNumber } from "@ethersproject/bignumber";
+import { MerkleDistributorInfo } from "../../merkle-distributor/src/parse-balance-map";
 
 // VARIABLES
 export const SCALE_FACTOR = Math.pow(10, 6);
@@ -132,9 +138,32 @@ export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
 
 export const cleanNumber = (number: number): number => {
   return Math.ceil(number);
-  const string = number.toString();
-  const [int, dec] = string.split(".");
-  const minDecimals = dec.padEnd(DECIMALS, "0");
-  const onlyDecimals = minDecimals.slice(0, DECIMALS);
-  return int === "0" ? onlyDecimals : `${int}${onlyDecimals}`;
+
+  // todo - figure out this
+  //   const string = number.toString();
+  //   const [int, dec] = string.split(".");
+  //   const minDecimals = dec.padEnd(DECIMALS, "0");
+  //   const onlyDecimals = minDecimals.slice(0, DECIMALS);
+  //   return int === "0" ? onlyDecimals : `${int}${onlyDecimals}`;
+};
+
+export const combineMerkleInfo = (
+  prevClaims: IsClaimed[],
+  newClaimMap: MapOfCount
+): MerkleDistributorInfo => {
+  const mapOfUnpaidClaims: MapOfCount = prevClaims
+    .filter((c) => !c.isClaimed)
+    .reduce((acc, curr) => {
+      if (!acc[curr.address]) {
+        const bn = BigNumber.from(curr.amount);
+        acc[curr.address] = bn.toNumber();
+        // todo
+        // acc[curr.address] = whatever cleanNumber needs
+      }
+      return acc;
+    }, {});
+
+  const combined = combineMaps([newClaimMap, mapOfUnpaidClaims]);
+  const normalized = normalizeEarningsFewFormat(combined);
+  return parseBalanceMap(normalized);
 };

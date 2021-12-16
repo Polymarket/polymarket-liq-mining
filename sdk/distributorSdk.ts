@@ -1,33 +1,86 @@
 import { JsonRpcSigner, JsonRpcProvider } from "@ethersproject/providers";
 import { ethers, Contract, BigNumberish } from "ethers";
 import MerkleDistributorAbi from "./abi/MerkleDistributor.json";
-import { claim, claimTo } from "./claims";
+import { claimToTx, claimTx } from "./claims";
 import { utils } from "ethers";
+import { IsClaimed } from "./types";
+import { MerkleDistributorInfo } from "../merkle-distributor/src/parse-balance-map";
+import { freezeTx, unfreezeTx, updateMerkleRootTx } from "./admin";
+import { getContracts } from "./networks";
 
 export class DistributorSdk {
   readonly chainID: number;
   readonly signer: JsonRpcSigner;
   distributor: Contract;
 
-  constructor(signer: JsonRpcSigner, chainID: number) {
+  constructor(
+    signer: JsonRpcSigner,
+    chainID: number,
+    distributorAddress?: string
+  ) {
     if (!signer.provider) {
       throw new Error("Signer must be connected to a provider.");
     }
     this.signer = signer;
     this.chainID = chainID;
-    // this.setContracts(this.signer, getContracts(chainID).distributor);
-  }
-
-  public setContracts(signer: JsonRpcSigner, distributorAddress: string) {
-    if (!signer.provider) {
-      throw new Error("Signer must be connected to a provider.");
-    }
 
     this.distributor = new Contract(
-      distributorAddress,
+      distributorAddress ?? getContracts(chainID).distributor,
       MerkleDistributorAbi,
       signer.provider
     );
+  }
+
+  /**
+   * returns an array of what leafs have been claimed
+   * @param merkleInfo - merkle distributor info. which claims to iterate over
+   */
+  public async getClaimedStatus(
+    merkleInfo: MerkleDistributorInfo
+  ): Promise<IsClaimed[]> {
+    const promises = [];
+    for (const address in merkleInfo.claims) {
+      const isClaimed = await this.isClaimed(merkleInfo.claims[address].index);
+      promises.push({
+        ...merkleInfo.claims[address],
+        isClaimed,
+        address,
+      });
+    }
+    return Promise.all(promises);
+  }
+
+  /**
+   * freezes the contract
+   * @notice - only admin
+   */
+  public async freeze(): Promise<ethers.providers.TransactionResponse> {
+    const tx = freezeTx(this.distributor.address);
+    const res = await this.signer.sendTransaction(tx);
+    return res;
+  }
+
+  /**
+   * unfreezes the contract
+   * @notice - only admin
+   */
+  public async unfreeze(): Promise<ethers.providers.TransactionResponse> {
+    const tx = unfreezeTx(this.distributor.address);
+    const res = await this.signer.sendTransaction(tx);
+    return res;
+  }
+
+  /**
+   * updates the merkle root
+   * @notice - only admin
+   * @param newRoot - new merkle root
+   */
+  public async updateMerkleRoot(
+    newRoot: string
+  ): Promise<ethers.providers.TransactionResponse> {
+    const tx = updateMerkleRootTx(this.distributor.address, newRoot);
+    const res = await this.signer.sendTransaction(tx);
+    return res;
   }
 
   /**
@@ -60,7 +113,7 @@ export class DistributorSdk {
     amount: BigNumberish,
     merkleProof: string[]
   ): Promise<ethers.providers.TransactionResponse> {
-    const tx = claim(
+    const tx = claimTx(
       this.distributor.address,
       claimIndex,
       account,
@@ -109,7 +162,7 @@ export class DistributorSdk {
     const hexSig0 = await this.signer._signTypedData(domain, types, value);
     const { v: v0, r: r0, s: s0 } = utils.splitSignature(hexSig0);
 
-    const tx = claimTo(
+    const tx = claimToTx(
       this.distributor.address,
       claimIndex,
       amount,
