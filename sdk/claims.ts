@@ -27,7 +27,7 @@ const encodeClaim = (
  * @param amount - amount of tokens to be transferred
  * @param merkleProof - proof of claim
  */
-export const claim = (
+export const claimTx = (
   merkleDistributorAddress: string,
   claimIndex: BigNumberish,
   account: string,
@@ -74,7 +74,7 @@ const encodeClaimTo = (
  * @param r - r split signature
  * @param S - s split signature
  */
-export const claimTo = (
+export const claimToTx = (
   merkleDistributorAddress: string,
   claimIndex: BigNumberish,
   amount: BigNumberish,
