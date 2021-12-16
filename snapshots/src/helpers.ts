@@ -110,7 +110,7 @@ export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
 
 export const normalizeMapAmounts = (
   map: MapOfCount
-): { [account: string]: string } => {
+): { [account: string]: number } => {
   return Object.keys(map).reduce((acc, curr) => {
     if (!acc[curr]) {
       acc[curr] = cleanNumber(map[curr]);
@@ -130,11 +130,11 @@ export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
   }, []);
 };
 
-export const cleanNumber = (number: number): string => {
+export const cleanNumber = (number: number): number => {
+  return Math.ceil(number);
   const string = number.toString();
   const [int, dec] = string.split(".");
   const minDecimals = dec.padEnd(DECIMALS, "0");
   const onlyDecimals = minDecimals.slice(0, DECIMALS);
-  const newNum = int === "0" ? onlyDecimals : `${int}${onlyDecimals}`;
-  return `0x${parseInt(newNum).toString(16)}`;
+  return int === "0" ? onlyDecimals : `${int}${onlyDecimals}`;
 };
