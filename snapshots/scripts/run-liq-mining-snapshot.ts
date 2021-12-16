@@ -143,8 +143,7 @@ const args = yargs.options({
   const merkleInfo: MerkleDistributorInfo = parseBalanceMap(normalizedEarnings);
   console.log("merkleInfo", merkleInfo);
 
-  // todo - once this is rolling, remove `now` so we can pull from fs by week...
-  const merkleRootFileName = `${baseFilePath}-${WEEK_NUMBER}-merkle-${now}.json`;
+  const merkleRootFileName = `${baseFilePath}-${WEEK_NUMBER}-merkle-info.json`;
   try {
     fs.writeFileSync(merkleRootFileName, JSON.stringify(merkleInfo));
   } catch (error) {

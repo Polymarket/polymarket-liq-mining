@@ -41,7 +41,6 @@ export const claimTx = (
   };
 };
 
-// CLAIM TO
 const encodeClaimTo = (
   claimIndex: BigNumberish,
   amount: BigNumberish,

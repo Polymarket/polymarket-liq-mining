@@ -137,7 +137,7 @@ export class DistributorSdk {
     recipient: string
   ): Promise<ethers.providers.TransactionResponse> {
     const domain = {
-      name: "PolyMarket Distributor", // todo - make token specific?
+      name: "PolyMarket Distributor", // todo - make token specific? if so, you add it to the contract
       chainId: this.chainID,
       verifyingContract: this.distributor.address,
     };
