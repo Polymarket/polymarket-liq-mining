@@ -12,21 +12,21 @@ export async function generateFeesSnapshot(
   returnType: ReturnType,
   startTimestamp: number,
   endTimestamp: number,
-  totalSupply: number
+  tokensPerEpoch: number
 ): Promise<ReturnSnapshot[] | MapOfCount> {
   console.log(
     `Generating fees snapshot from timestamp ${new Date(startTimestamp).toString()} to ${new Date(endTimestamp).toString()}: `
   );
 
   console.log(
-    `Total Token Supply for Fees: ${totalSupply} tokens`
+    `Total Token Supply for Fees: ${tokensPerEpoch} tokens`
   );
 
   const fees = await getAllFeesInEpoch(startTimestamp, endTimestamp);
   const cleanedUserAmounts = cleanUserAmounts(fees);
   const pointsMap = makePointsMap(cleanedUserAmounts);
   const feeSum = sumValues(pointsMap);
-  const payoutMap = makePayoutsMap(pointsMap, feeSum, totalSupply);
+  const payoutMap = makePayoutsMap(pointsMap, feeSum, tokensPerEpoch);
   if (returnType === ReturnType.Map) {
     return payoutMap;
   }

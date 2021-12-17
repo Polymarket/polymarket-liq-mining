@@ -20,15 +20,17 @@ import { ReturnType, MapOfCount } from "../src/interfaces";
 // import { updateMagicCacheFromSnapshot } from "../src/magic";
 // import { writeSnapshot } from "../src/utils";
 
-const DEFAULT_TOKEN_SUPPLY = 1000000;
+const DEFAULT_TOKENS_PER_EPOCH = 1000000;
 const DEFAULT_FILE_PATH = `./snapshots/week`;
-// const DEFAULT_BLOCK_SAMPLE = 1800; // Approx every hour with a 2s block time
 
-const DEFAULT_BLOCK_SAMPLE = 30; // Approx every min with a 2s block time
-const DEFAULT_PER_BLOCK_TOKEN_SUPPLY = 60; // divide supply / sample to get per block amount
+// const DEFAULT_TOKENS_PER_BLOCK=1
+// const DEFAULT_BLOCKS_PER_SAMPLE = 1800; // Approx every hour with a 2s block time
+// const DEFAULT_TOKENS_PER_SAMPLE = 1800; // tokens_per_block * block_per_sample
 
-// const DEFAULT_BLOCK_SAMPLE = 1; // Every block
-// const DEFAULT_PER_BLOCK_TOKEN_SUPPLY = 2; // divide supply / sample to get per block amount
+// const DEFAULT_TOKENS_PER_BLOCK=2
+const DEFAULT_BLOCKS_PER_SAMPLE = 30; // Approx every min with a 2s block time
+const DEFAULT_TOKENS_PER_SAMPLE = 60; // tokens_per_block * block_per_sample
+
 
 dotenv.config();
 
@@ -45,7 +47,6 @@ const args = yargs.options({
     // default: FOUR_DAYS_AGO,
     // default: EIGHT_DAYS_AGO,
   },
-  feePerBlock: { type: "number", demandOption: false, default: 1 },
   baseFilePath: {
     type: "string",
     demandOption: false,
@@ -81,20 +82,25 @@ const args = yargs.options({
       "0x1E388fD85eBa65182Ad9AE52A0eab094aF785eE1", // 'will-hikaru-nakamura-win-the-2021-speed-chess-championship-main-event'
     ],
   },
-  supply: {
+//   tokensPerBlock: {
+//     type: "string",
+//     demandOption: false,
+//     default: DEFAULT_TOKENS_PER_BLOCK,
+//   },
+  tokensPerEpoch: {
     type: "string",
     demandOption: false,
-    default: DEFAULT_TOKEN_SUPPLY,
+    default: DEFAULT_TOKENS_PER_EPOCH,
   },
-  blockSampleSize: {
+  blocksPerSample: {
     type: "number",
     demandOption: false,
-    default: DEFAULT_BLOCK_SAMPLE,
+    default: DEFAULT_BLOCKS_PER_SAMPLE,
   },
-  perBlockReward: {
+  tokensPerSample: {
     type: "number",
     demandOption: false,
-    default: DEFAULT_PER_BLOCK_TOKEN_SUPPLY,
+    default: DEFAULT_TOKENS_PER_SAMPLE,
   },
 }).argv;
 
@@ -103,12 +109,11 @@ const args = yargs.options({
   // fetchFromStrapi(week)
   // returns all market maker addresses ids, timestamps, supply
   const WEEK_NUMBER = 1;
-  //   const now = Date.now();
   const endTimestamp = args.endTimestamp;
   const startTimestamp = args.startTimestamp;
-  const supply = args.supply;
-  const blockSampleSize = args.blockSampleSize;
-  const perBlockReward = args.perBlockReward;
+  const blocksPerSample = args.blocksPerSample;
+  const tokensPerEpoch = args.tokensPerEpoch;
+  const tokensPerSample = args.tokensPerSample;
   const baseFilePath = args.baseFilePath;
 
   const incentivizedMarketMakers = args.incentivizedMarketMakerAddresses.map(
@@ -119,11 +124,11 @@ const args = yargs.options({
   const liqMap = await generateLpSnapshot(
     ReturnType.Map,
     endTimestamp,
-    supply,
-    blockSampleSize,
+    tokensPerEpoch,
+    blocksPerSample,
     incentivizedMarketMakers,
     startTimestamp,
-    perBlockReward
+    tokensPerSample
   );
   console.log("liqMap", Object.keys(liqMap).length + " liquidity providers");
   const t2 = Date.now();
@@ -132,7 +137,7 @@ const args = yargs.options({
     ReturnType.Map,
     startTimestamp,
     endTimestamp,
-    supply
+    tokensPerEpoch
   );
   console.log("feeMap", Object.keys(feeMap).length + " users who paid fees");
   const t3 = Date.now();
@@ -147,7 +152,7 @@ const args = yargs.options({
     Object.keys(totalUserMap).length + " total users"
   );
 
-  //   const normalizedUserMap = normalizeMapAmounts(totalUserMap);
+  // const normalizedUserMap = normalizeMapAmounts(totalUserMap);
 
   // todo - we need to figure out if it's using our proxy (magic, metamask)
   // or if they're interacting directly with the contract

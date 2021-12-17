@@ -27,11 +27,11 @@ export enum LpCalculation {
 export async function generateLpSnapshot(
   returnType: ReturnType,
   endTimestamp: number,
-  supplyOfTokenForEpoch: number,
-  blockSampleSize: number,
+  tokensPerEpoch: number,
+  blocksPerSample: number,
   marketMakers: string[],
   startTimestamp: number,
-  perBlockReward: number
+  tokensPerSample: number
 ): Promise<ReturnSnapshot[] | MapOfCount> {
   console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
@@ -65,7 +65,7 @@ export async function generateLpSnapshot(
       for (
         let block = startBlock;
         block <= endBlock;
-        block += blockSampleSize
+        block += blocksPerSample
       ) {
         blocks.push(block);
       }
@@ -85,24 +85,24 @@ export async function generateLpSnapshot(
       if (howToCalculate === LpCalculation.PerBlock) {
         console.log(
           `Calculating liquidity per block with a per block reward of ${
-            perBlockReward / blockSampleSize
+            tokensPerSample / blocksPerSample
           } tokens`
         );
         userTokensPerEpoch = updateTokensPerBlockReward(
           userTokensPerEpoch,
           liquidityAcrossBlocks,
-          perBlockReward
+          tokensPerSample
         );
       }
 
       if (howToCalculate === LpCalculation.TotalSupply) {
         console.log(
-          `Calculating liquidity per epoch with a total supply of ${supplyOfTokenForEpoch} tokens`
+          `Calculating liquidity per epoch with a total supply of ${tokensPerEpoch} tokens`
         );
         userTokensPerEpoch = updateTokensPerEpochReward(
           userTokensPerEpoch,
           liquidityAcrossBlocks,
-          supplyOfTokenForEpoch
+          tokensPerEpoch
         );
       }
     }
