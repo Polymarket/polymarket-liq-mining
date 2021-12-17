@@ -1,4 +1,3 @@
-import { getAllMarkets } from "./markets";
 import { calculateValOfLpPositionsAcrossBlocks } from "./fpmm";
 import {
   getStartBlock,
@@ -30,25 +29,21 @@ export async function generateLpSnapshot(
   endTimestamp: number,
   supplyOfTokenForEpoch: number,
   blockSampleSize: number,
-  map: { [key: string]: boolean },
+  marketMakers: string[],
   startTimestamp: number,
   perBlockReward: number
 ): Promise<ReturnSnapshot[] | MapOfCount> {
   console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
   let userTokensPerEpoch: { [proxyWallet: string]: number } = {};
-  // get all markets pre snapshot
-  const allMarkets: string[] = await getAllMarkets(endTimestamp);
-  // only care about incentivized markets
-  const markets = allMarkets.filter((m) => map[m.toLowerCase()]);
+  const markets = marketMakers.map(addr => addr.toLowerCase())
 
   const epochEndBlock = await convertTimestampToBlockNumber(endTimestamp);
   const epochStartBlock = await convertTimestampToBlockNumber(startTimestamp);
 
-  for (const market of markets) {
-    const marketStartBlock = await getStartBlock(market);
-    const marketEndBlock = await getEndBlock(market);
-
+  for (const marketMakerAddress of markets) {
+    const marketStartBlock = await getStartBlock(marketMakerAddress);
+    const marketEndBlock = await getEndBlock(marketMakerAddress);
     const {
       howToCalculate,
       startBlock,
@@ -81,15 +76,17 @@ export async function generateLpSnapshot(
         } blocks. (43,200 = 1 day; 1,800 = 1 hour; 30 = 1 minute)`
       );
 
-      //   get liquidity state across many blocks for a market
+      // get liquidity state across many blocks for a market
       const liquidityAcrossBlocks = await calculateValOfLpPositionsAcrossBlocks(
-        market,
+        marketMakerAddress,
         blocks
       );
 
       if (howToCalculate === LpCalculation.PerBlock) {
         console.log(
-          `Calculating liquidity per block with a per block reward of ${perBlockReward/blockSampleSize} tokens`
+          `Calculating liquidity per block with a per block reward of ${
+            perBlockReward / blockSampleSize
+          } tokens`
         );
         userTokensPerEpoch = updateTokensPerBlockReward(
           userTokensPerEpoch,

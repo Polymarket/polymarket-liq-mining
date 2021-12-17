@@ -33,22 +33,6 @@ export const sumValues = (block: MapOfCount): number => {
 };
 
 /**
- * Creates a map of addresses => true
- * @param arrayOfAddresses
- * @returns map of booleans
- */
-export const createStringMap = (
-  arrayOfAddresses: string[]
-): { [key: string]: boolean } => {
-  return arrayOfAddresses.reduce((acc, curr) => {
-    if (!acc[curr]) {
-      acc[curr] = true;
-    }
-    return acc;
-  }, {});
-};
-
-/**
  * Returns an array of userAmounts from 10^6 if coming from Subgraph
  * @param userAmounts
  * @returns userAmounts

@@ -2,7 +2,6 @@ import * as dotenv from "dotenv";
 import * as yargs from "yargs";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 import { writeSnapshot } from "../src/utils";
-import { createStringMap } from "../src/helpers";
 import { ReturnType } from "../src/interfaces";
 
 const DEFAULT_PER_BLOCK_TOKEN_SUPPLY = 2;
@@ -70,14 +69,16 @@ const args = yargs.options({
   const perBlockReward = args.perBlockReward;
   const snapshotFilePath = args.snapshotFilePath;
 
-  const map = createStringMap(args.incentivizedMarketMakerAddresses.map(addr => addr.toLowerCase()));
+  const marketMakers = args.incentivizedMarketMakerAddresses.map((addr) =>
+    addr.toLowerCase()
+  );
 
   const snapshot = await generateLpSnapshot(
     ReturnType.Snapshot,
     endTimestamp,
     supply,
     blockSampleSize,
-    map,
+    marketMakers,
     startTimestamp,
     perBlockReward
   );
