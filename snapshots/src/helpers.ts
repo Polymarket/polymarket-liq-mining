@@ -23,7 +23,7 @@ export const EIGHT_DAYS_AGO = now - 691200000;
 /**
  * Sums liquidity of a given block
  * @param block
- * @returns the sum of all block values 
+ * @returns the sum of all block values
  */
 export const sumValues = (block: MapOfCount): number => {
   const allLiquidity: number[] = Object.values(block);
@@ -81,10 +81,10 @@ export const makePointsMap = (userAmounts: UserAmount[]): MapOfCount => {
 };
 
 /**
- * Makes a payouts map given a points map, total points and token supply 
- * @param pointsMap 
- * @param totalPoints 
- * @param supply 
+ * Makes a payouts map given a points map, total points and token supply
+ * @param pointsMap
+ * @param totalPoints
+ * @param supply
  * @returns mapOfCount
  */
 export const makePayoutsMap = (
@@ -104,7 +104,7 @@ export const makePayoutsMap = (
 
 /**
  * Combines an array maps where the key is an address and value is number of points/payout amounts
- * @param arrayOfMaps (mapOfCount[]) 
+ * @param arrayOfMaps (mapOfCount[])
  * @returns mapOfCount
  */
 export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
@@ -122,8 +122,8 @@ export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
 
 /**
  * Takes in a payout/points map, returns proxy wallet + eoa wallet + amount.
- * @param map where key is address and value is amount (string or number) 
- * @returns proxyWallet, eoaWallet, amount  
+ * @param map where key is address and value is amount (string or number)
+ * @returns proxyWallet, eoaWallet, amount
  */
 export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
   [account: string]: T;
@@ -142,6 +142,13 @@ export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
 };
 
 /**
+ * Removes keys from map where value is 0 or negative
+ * @param mapOfCount
+ * @returns addresses with positive values
+ */
+const positiveAddressesOnly = (map) => Object.keys(map).filter((key) => map[key] > 0);
+
+/**
  * Takes in a map with address and number amount
  * @param mapOfCount
  * @returns OldFormat from parseBalanceMap
@@ -150,7 +157,7 @@ export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
 export const normalizeMapAmounts = (
   map: MapOfCount
 ): { [account: string]: number } => {
-  return Object.keys(map).reduce((acc, curr) => {
+  return positiveAddressesOnly(map).reduce((acc, curr) => {
     if (!acc[curr]) {
       acc[curr] = cleanNumber(map[curr]);
     }
@@ -165,7 +172,7 @@ export const normalizeMapAmounts = (
  * @returns todo - cleanNumber
  */
 export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
-  return Object.keys(map).reduce((acc, curr) => {
+  return positiveAddressesOnly(map).reduce((acc, curr) => {
     acc.push({
       address: curr,
       earnings: cleanNumber(map[curr]),
@@ -177,7 +184,7 @@ export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
 
 /**
  * Takes in a float
- * @param number 
+ * @param number
  * @returns the float's ceiling, an integer - todo
  */
 export const cleanNumber = (number: number): number => {
@@ -194,8 +201,8 @@ export const cleanNumber = (number: number): number => {
 /**
  * Takes in a isClaimed array from the sdk, filters out claimed amounts,
  * combines with a new payout map and returns the new merkle claims + root
- * @param prevClaims 
- * @param mapOfCount 
+ * @param prevClaims
+ * @param mapOfCount
  * @returns merkleDistributorInfo
  */
 export const combineMerkleInfo = (
