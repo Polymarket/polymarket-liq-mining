@@ -1,7 +1,7 @@
 // GENERAL HELPERS
 
 import { MapOfCount, UserAmount } from "./interfaces";
-import { getMagicLinkAddress } from "./magic";
+import {  getEoaLinkAddress } from './magic';
 import {
   NewFormat,
   parseBalanceMap,
@@ -111,15 +111,15 @@ export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
  */
 export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
   [account: string]: T;
-}): Promise<{ proxyWallet: string; magicWallet: string; amount: T }[]> => {
+}): Promise<{ proxyWallet: string; eoaWallet: string; amount: T }[]> => {
   // Return an array with address, EOA and amount
   return Promise.all(
     Object.keys(map).map(async (userAddress) => {
-      const magicWallet = await getMagicLinkAddress(userAddress);
+      const eoaWallet = await getEoaLinkAddress(userAddress);
       return {
         proxyWallet: userAddress,
         amount: map[userAddress] as T,
-        magicWallet: magicWallet,
+        eoaWallet: eoaWallet,
       };
     })
   );

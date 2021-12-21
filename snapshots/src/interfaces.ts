@@ -11,7 +11,7 @@ export enum ReturnType {
 }
 
 export interface LpSnapshot {
-  magicWallet: string | null;
+  eoaWallet: string | null;
   amount: number;
 }
 

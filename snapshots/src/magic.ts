@@ -54,81 +54,84 @@ async function getTransactionHashes(address: string): Promise<string[]> {
   return transactionHashes;
 }
 
-const magicAddressCacheName = "./proxy-wallet-to-magic-addresses.json";
+const eoaCacheFilename = "./proxy-wallet-to-magic-addresses.json";
 
-function getMagicCache() {
-  let magicAddressCache;
+function getEoaCache() {
+  let eoaCache;
   try {
-    magicAddressCache = JSON.parse(
-      fs.readFileSync(magicAddressCacheName).toString()
-    );
+    eoaCache = JSON.parse(fs.readFileSync(eoaCacheFilename).toString());
   } catch (error) {
-    magicAddressCache = {};
+    eoaCache = {};
   }
-  return magicAddressCache;
+  return eoaCache;
 }
 
-export const updateMagicCacheFromSnapshot = (snapshot: {magicWallet: string | null, proxyWallet: string}[]):void => {
+export const updateEoaCacheFromSnapshot = (
+  snapshot: { eoaWallet: string | null; proxyWallet: string }[]
+): void => {
   const newCache = snapshot.reduce((acc, curr) => {
-    if (!acc[curr.proxyWallet] && curr.magicWallet) {
-      acc[curr.proxyWallet] = curr.magicWallet;
+    if (!acc[curr.proxyWallet] && curr.eoaWallet) {
+      acc[curr.proxyWallet] = curr.eoaWallet;
     }
     return acc;
   }, {});
-  batchUpdateMagicCache(newCache);
+  batchUpdateEoaCache(newCache);
 };
 
-export const batchUpdateMagicCache = (newCache: { [key: string]: string }): void => {
-  const oldCache = getMagicCache();
-  console.log(`Batch updating magic cache of ${Object.keys(oldCache).length} magic addresses with ${Object.keys(oldCache).length} new magic addresses`)
-  const magicCache = { ...oldCache, ...newCache };
-  writeToMagicCache(magicCache);
+export const batchUpdateEoaCache = (newCache: {
+  [key: string]: string;
+}): void => {
+  const oldCache = getEoaCache();
+  console.log(
+    `Batch updating eoa cache of ${Object.keys(oldCache).length} eoa with ${
+      Object.keys(newCache).length
+    } new eoa's`
+  );
+  writeToEoaCache({ ...oldCache, ...newCache });
 };
 
-export function writeToMagicCache(newCache: { [key: string]: string }): void {
+export function writeToEoaCache(newCache: { [key: string]: string }): void {
   try {
-    fs.writeFileSync(magicAddressCacheName, JSON.stringify(newCache));
+    fs.writeFileSync(eoaCacheFilename, JSON.stringify(newCache));
   } catch (error) {
-    console.log("writeToMagicCache error", error);
+    console.log("writeToEoaCache error", error);
   }
 }
 
-export const magicAddressCache = getMagicCache();
+export const eoaCache = getEoaCache();
 
 /**
- * Gets the corresponding magic link address for a proxy wallet address
+ * Gets the corresponding eoa address for a proxy wallet address
  * Fetches the address from a pre-populated cache.
  * Falls back to the subgraph and RPC provider if the address is not found
  * @param address
  * @returns
  */
-export const fetchMagicAddress = async (address: string): Promise<string> => {
-  let magicAddress = magicAddressCache[address];
-  console.log("MagicAddress in cache - ", magicAddress);
-  if (!magicAddress) {
+export const fetchEoaAddress = async (address: string): Promise<string> => {
+  let eoaAddress = eoaCache[address];
+  console.log("eoa in cache - ", eoaAddress);
+  if (!eoaAddress) {
     try {
-      magicAddress = await getMagicLinkAddress(address);
-      if (magicAddress) {
-        console.log(
-          "Updating magic cache in fetchMagicAddress! " + magicAddress
-        );
-        writeToMagicCache({ ...magicAddressCache, [address]: magicAddress });
+      eoaAddress = await getEoaLinkAddress(address);
+      if (eoaAddress) {
+        console.log("Updating eoa cache in fetchEoaAddress! " + eoaAddress);
+        writeToEoaCache({ ...eoaCache, [address]: eoaAddress });
       }
     } catch (error) {
-      console.log("fetchMagicAddress error", error);
-      return magicAddress;
+      console.log("fetchEoaAddress error", error);
+      return eoaAddress;
     }
   }
-  return magicAddress;
+  return eoaAddress;
 };
 
 /**
- * Gets the corresponding magic link address for a proxy wallet
- * Queries the subgraph and a Matic RPC provider for TransactionRelayed event logs, which index the magic address
+ * Gets the corresponding eoa link address for a proxy wallet
+ * Queries the subgraph and a Matic RPC provider for TransactionRelayed event logs, which index the eoa address
  * @param address: string
- * @returns magicAddress: string
+ * @returns eoaAddress: string
  */
-export const getMagicLinkAddress = async (address: string): Promise<string> => {
+export const getEoaLinkAddress = async (address: string): Promise<string> => {
   if (await isEOA(address)) {
     return address;
   }
@@ -144,8 +147,8 @@ export const getMagicLinkAddress = async (address: string): Promise<string> => {
         const topicHash = log.topics[0];
         if (topicHash == TXN_RELAY_EVENT_TOPIC_HASH) {
           const txnRelayedEvent = RElAY_HUB_INTERFACE.parseLog(log);
-          const magicAddress = txnRelayedEvent.args.from;
-          return magicAddress;
+          const eoaAddress = txnRelayedEvent.args.from;
+          return eoaAddress;
         }
       }
     }

@@ -1,10 +1,10 @@
 // import fs from "fs";
 import yargs from "yargs";
 import {
-  getMagicLinkAddress,
+	eoaCache,
+	getEoaLinkAddress,
   //   magicAddressCacheName,
-  magicAddressCache,
-  writeToMagicCache,
+writeToEoaCache
 } from "../src/magic";
 import { getAllUsers } from "../src/users";
 import * as dotenv from "dotenv";
@@ -19,14 +19,14 @@ const args = yargs.options({
 }).argv;
 
 /**
- * Helper script to generate a cache of proxy wallet address to magic addresses
+ * Helper script to generate a cache of proxy wallet address to eoa wallets
  * Takes in a timestamp, pulls all polymarket users at the timestamp and then generates
  * a json file
  */
 
 (async (args: any) => {
   const timestamp = args.timestamp;
-  const oldCache = magicAddressCache;
+  const oldCache = eoaCache;
   const cachedAddresses = Object.keys(oldCache);
   console.log("Cached addresses length:", `${cachedAddresses.length} users`);
   const newCache = { ...oldCache };
@@ -38,21 +38,21 @@ const args = yargs.options({
     if (!newCache[user]) {
       console.log("cache[user] - ", newCache[user]);
       try {
-        const magicAddress = await getMagicLinkAddress(user);
-        if (magicAddress) {
-          console.log("magicAddress exists -", magicAddress);
-          newCache[user] = magicAddress;
+        const eoaAddress = await getEoaLinkAddress(user);
+        if (eoaAddress) {
+          console.log("eoa exists -", eoaAddress);
+          newCache[user] = eoaAddress;
           count++;
           console.log(
-            "Saved! number of magic addresses saved this session:",
+            "Saved! number of eoa addresses saved this session:",
             count
           );
           if (count % 100 === 0) {
-            console.log("Saving magic cache!");
-            writeToMagicCache(newCache);
+            console.log("Saving eoa cache!");
+            writeToEoaCache(newCache);
           }
         } else {
-          console.log("magicAddress does not exist", magicAddress);
+          console.log("eoa does not exist", eoaAddress);
         }
       } catch (error) {
         console.error(error);
@@ -61,7 +61,7 @@ const args = yargs.options({
             Object.keys(newCache).length - cachedAddresses.length
           } new addresses`
         );
-        writeToMagicCache(newCache);
+        writeToEoaCache(newCache);
         break;
       }
     } else {
@@ -70,6 +70,6 @@ const args = yargs.options({
   }
 
   console.log(`Writing mapping to disk...`);
-  writeToMagicCache(newCache);
+  writeToEoaCache(newCache);
   console.log(`Complete!`);
 })(args);
