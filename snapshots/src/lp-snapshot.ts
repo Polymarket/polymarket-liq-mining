@@ -6,17 +6,14 @@ import {
   getCurrentBlockNumber,
 } from "./block_numbers";
 import {
+  calculateTokensPerSample,
+  lowerCaseMarketMakers,
+  LpMarketInfo,
   updateTokensPerBlockReward,
-  updateTokensPerEpochReward,
 } from "./lp-helpers";
 import { getStartAndEndBlock } from "./lp-helpers";
 import { MapOfCount, ReturnSnapshot, ReturnType } from "./interfaces";
 import { addEoaToUserPayoutMap } from "./helpers";
-
-export enum LpCalculation {
-  TotalSupply = "totalSupply",
-  PerBlock = "perBlock",
-}
 
 /**
  * Generate a lp weighted token snapshot
@@ -26,29 +23,24 @@ export enum LpCalculation {
  */
 export async function generateLpSnapshot(
   returnType: ReturnType,
-  endTimestamp: number,
-  tokensPerEpoch: number,
-  blocksPerSample: number,
-  marketMakers: string[],
   startTimestamp: number,
-  tokensPerSample: number
+  endTimestamp: number,
+  marketMakers: LpMarketInfo[],
+  blocksPerSample: number
 ): Promise<ReturnSnapshot[] | MapOfCount> {
   console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
   let userTokensPerEpoch: { [proxyWallet: string]: number } = {};
-  const markets = marketMakers.map(addr => addr.toLowerCase())
+  const markets = lowerCaseMarketMakers(marketMakers);
 
   const epochEndBlock = await convertTimestampToBlockNumber(endTimestamp);
   const epochStartBlock = await convertTimestampToBlockNumber(startTimestamp);
 
-  for (const marketMakerAddress of markets) {
-    const marketStartBlock = await getStartBlock(marketMakerAddress);
-    const marketEndBlock = await getEndBlock(marketMakerAddress);
-    const {
-      howToCalculate,
-      startBlock,
-      endBlock: eb,
-    } = getStartAndEndBlock({
+  for (const market of markets) {
+    const { marketMaker } = market;
+    const marketStartBlock = await getStartBlock(marketMaker);
+    const marketEndBlock = await getEndBlock(marketMaker);
+    const { startBlock, endBlock: eb } = getStartAndEndBlock({
       epochStartBlock,
       epochEndBlock,
       marketStartBlock,
@@ -61,14 +53,26 @@ export async function generateLpSnapshot(
 
     //Ensure that the market occured within the blocks being checked
     if (startBlock !== null && endBlock > startBlock) {
-      const blocks: number[] = [];
+      const samples: number[] = [];
       for (
         let block = startBlock;
         block <= endBlock;
         block += blocksPerSample
       ) {
-        blocks.push(block);
+        samples.push(block);
       }
+
+      console.log(`Using ${market.howToCalculate} calculation`);
+
+      const tokensPerSample = calculateTokensPerSample(
+        market,
+        samples.length,
+        blocksPerSample
+      );
+      console.log(`Using ${tokensPerSample} tokens per sample`);
+      console.log(
+        `Using ${tokensPerSample / blocksPerSample} tokens per block`
+      );
 
       console.log(
         `Diff between now and endBlock is ${
@@ -78,33 +82,15 @@ export async function generateLpSnapshot(
 
       // get liquidity state across many blocks for a market
       const liquidityAcrossBlocks = await calculateValOfLpPositionsAcrossBlocks(
-        marketMakerAddress,
-        blocks
+        marketMaker,
+        samples
       );
 
-      if (howToCalculate === LpCalculation.PerBlock) {
-        console.log(
-          `Calculating liquidity per block with a per block reward of ${
-            tokensPerSample / blocksPerSample
-          } tokens`
-        );
-        userTokensPerEpoch = updateTokensPerBlockReward(
-          userTokensPerEpoch,
-          liquidityAcrossBlocks,
-          tokensPerSample
-        );
-      }
-
-      if (howToCalculate === LpCalculation.TotalSupply) {
-        console.log(
-          `Calculating liquidity per epoch with a total supply of ${tokensPerEpoch} tokens`
-        );
-        userTokensPerEpoch = updateTokensPerEpochReward(
-          userTokensPerEpoch,
-          liquidityAcrossBlocks,
-          tokensPerEpoch
-        );
-      }
+      userTokensPerEpoch = updateTokensPerBlockReward(
+        userTokensPerEpoch,
+        liquidityAcrossBlocks,
+        tokensPerSample
+      );
     }
   }
   if (returnType === ReturnType.Map) {

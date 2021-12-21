@@ -1,6 +1,25 @@
 import { sumValues, combineMaps, makePayoutsMap } from "./helpers";
 import { MapOfCount } from "./interfaces";
-import { LpCalculation } from "./lp-snapshot";
+
+// TYPES
+export interface IStartAndEndBlock {
+  epochStartBlock: number | null;
+  epochEndBlock: number | null;
+  marketStartBlock: number | null;
+  marketEndBlock: number | null;
+}
+
+export interface LpMarketInfo {
+  marketMaker: string;
+  slug: string;
+  howToCalculate: LpCalculation;
+  amount: number;
+}
+
+export enum LpCalculation {
+  PerBlock = "perBlock",
+  PerMarket = "perMarket",
+}
 
 /**
  * Iterates over blocks and updates the userTokensPerEpoch map
@@ -15,7 +34,7 @@ export const updateTokensPerBlockReward = (
   liquidityAcrossBlocks: MapOfCount[],
   perBlockReward: number
 ): MapOfCount => {
-  let updatedMap = {...userTokensPerEpoch};
+  let updatedMap = { ...userTokensPerEpoch };
   for (const liquidityAtBlock of liquidityAcrossBlocks) {
     const sumOfBlockLiquidity = sumValues(liquidityAtBlock);
     const blockPoints = makePayoutsMap(
@@ -28,35 +47,6 @@ export const updateTokensPerBlockReward = (
   return updatedMap;
 };
 
-/**
- * Iterates over blocks and updates the userTokensPerEpoch map
- * According to a per EPOCH reward amount
- * @param userTokensPerEpoch
- * @param liquidityAcrossBlocks
- * @param supplyOfTokenForEpoch
- * @returns MapOfCount
- */
-export const updateTokensPerEpochReward = (
-  userTokensPerEpoch: MapOfCount | Record<string, never>,
-  liquidityAcrossBlocks: MapOfCount[],
-  supplyOfTokenForEpoch: number
-): MapOfCount => {
-  const liquidityOfAllBlocks = combineMaps(liquidityAcrossBlocks);
-  const totalLiquidity = sumValues(liquidityOfAllBlocks);
-  const lpMap = makePayoutsMap(
-    liquidityOfAllBlocks,
-    totalLiquidity,
-    supplyOfTokenForEpoch
-  );
-  return combineMaps([lpMap, userTokensPerEpoch]);
-};
-
-export interface IStartAndEndBlock {
-  epochStartBlock: number | null;
-  epochEndBlock: number | null;
-  marketStartBlock: number | null;
-  marketEndBlock: number | null;
-}
 
 /**
  * Takes in epoch and market start blocks and end blocks
@@ -73,7 +63,6 @@ export const getStartAndEndBlock = ({
   marketStartBlock,
   marketEndBlock,
 }: IStartAndEndBlock): {
-  howToCalculate: LpCalculation;
   startBlock: number;
   endBlock: number | null;
 } => {
@@ -103,13 +92,11 @@ export const getStartAndEndBlock = ({
   }
 
   let endBlock;
-  let howToCalculate: LpCalculation;
 
   // market is live, epoch is live...
   if (!epochEndBlock && !marketEndBlock) {
     // get current block in case market has not ended and epoch end is in the future
     endBlock = null;
-    howToCalculate = LpCalculation.TotalSupply;
   }
 
   // epoch ended before market or epoch ended and market is still live
@@ -118,7 +105,6 @@ export const getStartAndEndBlock = ({
     (epochEndBlock && !marketEndBlock)
   ) {
     endBlock = epochEndBlock;
-    howToCalculate = LpCalculation.PerBlock;
   }
 
   // market ended before epoch or market ended and epoch has not finished
@@ -127,12 +113,42 @@ export const getStartAndEndBlock = ({
     (!epochEndBlock && marketEndBlock)
   ) {
     endBlock = marketEndBlock;
-    howToCalculate = LpCalculation.TotalSupply;
   }
 
   return {
-    howToCalculate,
     startBlock,
     endBlock,
   };
+};
+
+/**
+ * Returns Market Info with the marketMaker address lowercased
+ * @param LpMarketInfo[]
+ * @returns LpMarketInfo[]
+ */
+export const lowerCaseMarketMakers = (
+  markets: LpMarketInfo[]
+): LpMarketInfo[] => {
+  return markets.map((market) => ({
+    ...market,
+    marketMaker: market.marketMaker.toLowerCase(),
+  }));
+};
+
+/**
+ * Calculates how many tokens per sample of blocks
+ * so we can always have consistent tokens per block calculation
+ * @param market LpMarketInfo
+ * @param numSamples number
+ * @param blocksPerSample number
+ * @returns tokensPerSample number
+ */
+export const calculateTokensPerSample = (
+  market: LpMarketInfo,
+  numSamples: number,
+  blocksPerSample: number
+): number => {
+  return market.howToCalculate === LpCalculation.PerMarket
+    ? market.amount / numSamples
+    : market.amount * blocksPerSample;
 };
