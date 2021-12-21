@@ -1,7 +1,7 @@
 // GENERAL HELPERS
 
 import { MapOfCount, UserAmount } from "./interfaces";
-import {  getEoaLinkAddress } from './magic';
+import { getEoaLinkAddress } from "./eoa";
 import {
   NewFormat,
   parseBalanceMap,
@@ -130,7 +130,8 @@ export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
  * @param mapOfCount
  * @returns addresses with positive values
  */
-const positiveAddressesOnly = (map) => Object.keys(map).filter((key) => map[key] > 0);
+const positiveAddressesOnly = (map) =>
+  Object.keys(map).filter((key) => map[key] > 0);
 
 /**
  * Takes in a map with address and number amount

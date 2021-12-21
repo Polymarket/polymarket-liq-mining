@@ -1,15 +1,8 @@
 // import fs from "fs";
 import yargs from "yargs";
-import {
-	eoaCache,
-	getEoaLinkAddress,
-  //   magicAddressCacheName,
-writeToEoaCache
-} from "../src/magic";
+import { eoaCache, getEoaLinkAddress, writeToEoaCache } from "../src/eoa";
 import { getAllUsers } from "../src/users";
 import * as dotenv from "dotenv";
-
-// const DEFAULT_CACHE_NAME = "../snapshots/proxy-wallet-to-magic-addresses.json";
 
 dotenv.config();
 
@@ -43,13 +36,10 @@ const args = yargs.options({
           console.log("eoa exists -", eoaAddress);
           newCache[user] = eoaAddress;
           count++;
-          console.log(
-            "Saved! number of eoa addresses saved this session:",
-            count
-          );
+          console.log("Number of eoa addresses added this session:", count);
           if (count % 100 === 0) {
-            console.log("Saving eoa cache!");
             writeToEoaCache(newCache);
+            console.log("SAVED eoa cache!");
           }
         } else {
           console.log("eoa does not exist", eoaAddress);

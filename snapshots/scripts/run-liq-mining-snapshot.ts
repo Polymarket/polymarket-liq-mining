@@ -17,7 +17,7 @@ import {
 } from "../../merkle-distributor/src/parse-balance-map";
 import { generateFeesSnapshot } from "../src/fees-snapshot";
 import { ReturnType, MapOfCount } from "../src/interfaces";
-import { updateEoaCacheFromSnapshot } from "../src/magic";
+import { updateEoaCacheFromSnapshot } from "../src/eoa";
 // import { writeSnapshot } from "../src/utils";
 import { LpCalculation, lowerCaseMarketMakers } from "../src/lp-helpers";
 
@@ -229,9 +229,10 @@ const args = yargs.options({
 
   const snapshot = await addEoaToUserPayoutMap(normalizedUserMap);
   console.log("snapshot", snapshot);
+  const nullAddressesOnly = snapshot.filter(s => s.eoaWallet === null)
+  console.log(JSON.stringify(nullAddressesOnly))
   updateEoaCacheFromSnapshot(snapshot);
   const t4 = Date.now();
-
   // todo - look at DistributorSdk.spec.ts for this...
   // if (week > 0) {
   // sdk = new MerkleDistributorSdk()

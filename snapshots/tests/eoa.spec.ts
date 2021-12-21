@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { fetchEoaAddress, getEoaLinkAddress  } from "../src/magic";
+import { fetchEoaAddress, getEoaLinkAddress  } from "../src/eoa";
 
 describe('Proxy wallet to eoa wallet tests', () => {
 

@@ -5,7 +5,7 @@ import { TransactionReceipt } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import { TxnRelayedEventAbiFragment } from "./relayHubAbi";
 import * as fs from "fs";
-import { ReturnSnapshot } from "./interfaces";
+// import { ReturnSnapshot } from "./interfaces";
 // import { batch } from "promises-tho";
 
 const RELAY_HUB_ADDRESS = "0xD216153c06E857cD7f72665E0aF1d7D82172F494";
@@ -54,7 +54,7 @@ async function getTransactionHashes(address: string): Promise<string[]> {
   return transactionHashes;
 }
 
-const eoaCacheFilename = "./proxy-wallet-to-magic-addresses.json";
+const eoaCacheFilename = "./proxy-wallet-to-eoa.json";
 
 function getEoaCache() {
   let eoaCache;

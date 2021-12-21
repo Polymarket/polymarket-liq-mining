@@ -1,4 +1,4 @@
-import { fetchEoaAddress } from "./magic";
+import { fetchEoaAddress } from "./eoa";
 import { getTradeVolume } from "./trade-volume";
 import { getAllUsers } from "./users";
 
