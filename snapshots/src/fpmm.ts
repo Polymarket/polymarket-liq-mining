@@ -69,10 +69,10 @@ const calculateValOfLpPositionsWrapper = async(args: {marketAddress: string, blo
 
 const calculateValOfLpPositionsBatched = batch({batchSize: 75}, calculateValOfLpPositionsWrapper);
 
-export const calculateValOfLpPositionsAcrossBlocks = async(marketAddress: string, blocks: number[]) : Promise<any> => {
-    console.log(`Calculating value of LP positions for market: ${marketAddress} across ${blocks.length} blocks!`);
+export const calculateValOfLpPositionsAcrossBlocks = async(marketAddress: string, samples: number[]) : Promise<any> => {
+    console.log(`Calculating value of LP positions for market: ${marketAddress} across ${samples.length} samples!`);
     const args: {marketAddress: string, block: number}[] = [];
-    for(const block of blocks){
+    for(const block of samples){
         args.push({marketAddress:marketAddress, block: block});
     }
     return await calculateValOfLpPositionsBatched(args);

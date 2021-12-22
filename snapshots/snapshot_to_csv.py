@@ -7,7 +7,7 @@ def main():
     with open(snapshot_file_path) as fh:
         snapshot = json.load(fh)
 
-    snapshot_sorted = sorted([(d.get("proxyWallet"), d.get("magicWallet"), d.get("amount")) for d in snapshot],
+    snapshot_sorted = sorted([(d.get("proxyWallet"), d.get("eoaWallet"), d.get("amount")) for d in snapshot],
     key=lambda x: x[2], reverse=True)
 
     with open("{}_csv.csv".format(snapshot_file_path), "w+") as fh:

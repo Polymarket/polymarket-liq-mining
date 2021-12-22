@@ -1,27 +1,34 @@
-import { getFees } from "./trade-volume";
-import { getAllUsers } from "./users";
-import { fetchMagicAddress } from "./magic";
+import { getAllFeesInEpoch } from "./fees";
+import { MapOfCount, ReturnSnapshot, ReturnType } from "./interfaces";
+import {
+  sumValues,
+  makePointsMap,
+  makePayoutsMap,
+  cleanUserAmounts,
+  addEoaToUserPayoutMap,
+} from "./helpers";
 
-const snapshot: { proxyWallet: string, magicWallet: string; feesPaid: number }[] = [];
+export async function generateFeesSnapshot(
+  returnType: ReturnType,
+  startTimestamp: number,
+  endTimestamp: number,
+  tokensPerEpoch: number
+): Promise<ReturnSnapshot[] | MapOfCount> {
+  console.log(
+    `Generating fees snapshot from timestamp ${new Date(startTimestamp).toString()} to ${new Date(endTimestamp).toString()}: `
+  );
 
+  console.log(
+    `Total Token Supply for Fees: ${tokensPerEpoch} tokens`
+  );
 
-export async function generateFeesSnapshot(startTimestamp: number, endTimestamp: number): Promise<any> {
-    console.log(`Generating fees snapshot from timestamp ${startTimestamp} to ${endTimestamp}: `);
-    
-    // get all users
-    const users: string[] = await getAllUsers(endTimestamp); 
-    
-    //get fees paid per user at the timestamp
-    console.log(`Fetching fees paid per user at snapshot...`);
-    const feesPaid = await getFees(users, startTimestamp, endTimestamp);
-
-    for(const userIndex in users){
-        const user = users[userIndex];
-        const userFeesPaid = feesPaid[userIndex];
-        if(userFeesPaid > 0){
-            const magicAddress = await fetchMagicAddress(user);
-            snapshot.push({proxyWallet: user, magicWallet: magicAddress, feesPaid: userFeesPaid });
-        }
-    }
-    return snapshot;
+  const fees = await getAllFeesInEpoch(startTimestamp, endTimestamp);
+  const cleanedUserAmounts = cleanUserAmounts(fees);
+  const pointsMap = makePointsMap(cleanedUserAmounts);
+  const feeSum = sumValues(pointsMap);
+  const payoutMap = makePayoutsMap(pointsMap, feeSum, tokensPerEpoch);
+  if (returnType === ReturnType.Map) {
+    return payoutMap;
+  }
+  return addEoaToUserPayoutMap(payoutMap);
 }

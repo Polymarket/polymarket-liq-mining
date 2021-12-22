@@ -1,72 +1,101 @@
-import { getAllMarkets } from "./markets";
-import { fetchMagicAddress } from "./magic";
 import { calculateValOfLpPositionsAcrossBlocks } from "./fpmm";
-import { getStartBlock, getEndBlock, convertTimestampToBlockNumber} from "./block_numbers";
-
+import {
+  getStartBlock,
+  getEndBlock,
+  convertTimestampToBlockNumber,
+  getCurrentBlockNumber,
+} from "./block_numbers";
+import {
+  calculateTokensPerSample,
+  lowerCaseMarketMakers,
+  LpMarketInfo,
+  updateTokensPerBlockReward,
+} from "./lp-helpers";
+import { getStartAndEndBlock } from "./lp-helpers";
+import { MapOfCount, ReturnSnapshot, ReturnType } from "./interfaces";
+import { addEoaToUserPayoutMap } from "./helpers";
 
 /**
  * Generate a lp weighted token snapshot
- * @param timestamp
- * @param supply 
- * @returns 
+ * @param endTimestamp
+ * @param supply
+ * @returns
  */
-export async function generateLpSnapshot(timestamp: number, supply: number, blockSampleSize: number): Promise<any> {
-    console.log(`Generating lp weighted snapshot with timestamp: ${timestamp} and token total supply: ${supply}...`);
-    
-    const snapshot: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
-    const lpPointsCache = {};
+export async function generateLpSnapshot(
+  returnType: ReturnType,
+  startTimestamp: number,
+  endTimestamp: number,
+  marketMakers: LpMarketInfo[],
+  blocksPerSample: number
+): Promise<ReturnSnapshot[] | MapOfCount> {
+  console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
-    // get all markets pre snapshot
-    const markets: string[] = await getAllMarkets(timestamp);
+  let userTokensPerEpoch: { [proxyWallet: string]: number } = {};
+  const markets = lowerCaseMarketMakers(marketMakers);
 
-    let endBlock = await convertTimestampToBlockNumber(timestamp);
-    
-    //For each market, calculate liquidity from startBlock till endBlock, every blockSampleSize
-    for(const market of markets){
-        const startBlock = await getStartBlock(market);
-        const marketEndBlock = await getEndBlock(market);
-        if(marketEndBlock != null){
-            console.log(`Found market end block: ${marketEndBlock}`);
-            endBlock = marketEndBlock;
-        }
+  const epochEndBlock = await convertTimestampToBlockNumber(endTimestamp);
+  const epochStartBlock = await convertTimestampToBlockNumber(startTimestamp);
 
-        //Ensure that the market occured within the blocks being checked
-        if(startBlock != null && endBlock > startBlock){
-            const blocks: number[] = [];
-            for(let block = startBlock; block <= endBlock; block+=blockSampleSize){
-                blocks.push(block);
-            }
+  for (const market of markets) {
+    const { marketMaker } = market;
+    const marketStartBlock = await getStartBlock(marketMaker);
+    const marketEndBlock = await getEndBlock(marketMaker);
+    const { startBlock, endBlock: eb } = getStartAndEndBlock({
+      epochStartBlock,
+      epochEndBlock,
+      marketStartBlock,
+      marketEndBlock,
+    });
 
-            //get liquidity state across many blocks for a market
-            const liquidityAcrossBlocks = await calculateValOfLpPositionsAcrossBlocks(market, blocks);
+    const currentBlock = await getCurrentBlockNumber();
+    // if epoch has not ended and market has not resolved, get current block?
+    const endBlock = !eb ? currentBlock : eb;
 
-            for(const liquidityAtBlock of liquidityAcrossBlocks){
-                for(const liquidityProvider of Object.keys(liquidityAtBlock)){
-                    if(lpPointsCache[liquidityProvider] == null){
-                        lpPointsCache[liquidityProvider] = 0;
-                    }
-                    lpPointsCache[liquidityProvider] = lpPointsCache[liquidityProvider] + liquidityAtBlock[liquidityProvider];
-                }
-            }
-        }
+    //Ensure that the market occured within the blocks being checked
+    if (startBlock !== null && endBlock > startBlock) {
+      const samples: number[] = [];
+      for (
+        let block = startBlock;
+        block <= endBlock;
+        block += blocksPerSample
+      ) {
+        samples.push(block);
+      }
+
+      console.log(`Using ${market.howToCalculate} calculation`);
+
+      const tokensPerSample = calculateTokensPerSample(
+        market,
+        samples.length,
+        blocksPerSample
+      );
+      console.log(`Using ${tokensPerSample} tokens per sample`);
+      console.log(
+        `Using ${tokensPerSample / blocksPerSample} tokens per block`
+      );
+
+      console.log(
+        `Diff between now and endBlock is ${
+          currentBlock - endBlock
+        } blocks. (43,200 = 1 day; 1,800 = 1 hour; 30 = 1 minute)`
+      );
+
+      // get liquidity state across many blocks for a market
+      const liquidityAcrossBlocks = await calculateValOfLpPositionsAcrossBlocks(
+        marketMaker,
+        samples
+      );
+
+      userTokensPerEpoch = updateTokensPerBlockReward(
+        userTokensPerEpoch,
+        liquidityAcrossBlocks,
+        tokensPerSample
+      );
     }
-    
-    //get total liquidity points
-    const allLiquidity: number[] = Object.values(lpPointsCache);
-    const totalLiquidityPoints = allLiquidity.reduce(function(prev, current){
-        return prev + current;
-    }, 0);
-    
-    //Populate snapshot
-    for(const liquidityProvider of Object.keys(lpPointsCache)){
-        const liquidityPointsPerLp = lpPointsCache[liquidityProvider];
-        const airdropAmount = ( liquidityPointsPerLp / totalLiquidityPoints ) * supply;
-        const magicAddress = await fetchMagicAddress(liquidityProvider);
-        
-        snapshot.push({ proxyWallet: liquidityProvider, 
-                        magicWallet: magicAddress, 
-                        amount: airdropAmount
-        });
-    }
-    return snapshot;
+  }
+  if (returnType === ReturnType.Map) {
+    return userTokensPerEpoch;
+  }
+
+  return addEoaToUserPayoutMap(userTokensPerEpoch);
 }

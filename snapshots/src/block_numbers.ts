@@ -3,6 +3,10 @@ import { normalizeTimestamp } from "./utils";
 import { queryGqlClient } from "./gql_client"; 
 import { firstLiquidityAddedQuery, marketResolutionTxnQuery } from "./queries";
 
+export const getCurrentBlockNumber = async (): Promise<number> => {
+    const provider = getProvider();
+    return provider.getBlockNumber();
+}
 
 export const getStartBlock = async (marketAddress: string): Promise<number> => {
     let blockNumber: number;

@@ -27,6 +27,22 @@ task("accounts", "Prints the list of accounts", async (args, { ethers }) => {
   }
 });
 
+// Matic config from other chain
+// const maticVigilChains = ["matic", "mumbai"] as const;
+// type MaticVigilChain = typeof maticVigilChains[number];
+// const getMaticVigilConfig = (network: MaticVigilChain): { url: string; chainId: number, gasPrice?: number } => {
+//     if (!maticVigilApiKey) {
+//         throw new Error("Please set your MATICVIGIL_API_KEY in a .env file");
+//     }
+
+//     const networkString = network === "matic" ? "mainnet" : "mumbai";
+//     return {
+//         url: `https://rpc-${networkString}.maticvigil.com/v1/${maticVigilApiKey}`,
+//         chainId: ChainId[network],
+//         gasPrice: 8000000000, // default is 'auto' which breaks chains without the london hardfork => https://stackoverflow.com/questions/68934132/on-hardhat-when-deploying-a-contract-or-minting-an-nft-getting-error-providerer
+//     };
+// };
+
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   etherscan: {
@@ -38,18 +54,16 @@ const config: HardhatUserConfig = {
     enabled: process.env.REPORT_GAS === "true",
   },
   namedAccounts: {
-    deployer: {
-      default: 0,
-    },
-    alice: {
-      default: 1,
-    },
-    bob: {
-      default: 2,
-    },
-    carol: {
-      default: 3,
-    },
+    deployer: { default: 0 },
+    alice: { default: 1 },
+    bob: { default: 2 },
+    carol: { default: 3 },
+    daryl: { default: 4 },
+    evan: { default: 5 },
+    frank: { default: 6 },
+    greg: { default: 7 },
+    hank: { default: 8 },
+    ivan: { default: 9 },
   },
   networks: {
     localhost: {
@@ -68,7 +82,9 @@ const config: HardhatUserConfig = {
       saveDeployments: true,
       tags: ["test", "local"],
       blockGasLimit: 12450000,
-      accounts: { mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn' }
+      accounts: {
+        mnemonic: "horn horn horn horn horn horn horn horn horn horn horn horn",
+      },
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`,
@@ -103,7 +119,7 @@ const config: HardhatUserConfig = {
       tags: ["staging"],
     },
     moonbase: {
-      url: 'https://rpc.testnet.moonbeam.network',
+      url: "https://rpc.testnet.moonbeam.network",
       accounts,
       chainId: 1287,
       live: true,
@@ -111,7 +127,7 @@ const config: HardhatUserConfig = {
       tags: ["staging"],
     },
     arbitrum: {
-      url: 'https://kovan3.arbitrum.io/rpc',
+      url: "https://kovan3.arbitrum.io/rpc",
       accounts,
       chainId: 79377087078960,
       live: true,
@@ -161,7 +177,7 @@ const config: HardhatUserConfig = {
       live: true,
       saveDeployments: true,
       tags: ["staging"],
-    }
+    },
   },
   solidity: {
     compilers: [
@@ -173,8 +189,8 @@ const config: HardhatUserConfig = {
             runs: 200,
           },
         },
-      }
-    ]
+      },
+    ],
   },
   watcher: {
     compile: {

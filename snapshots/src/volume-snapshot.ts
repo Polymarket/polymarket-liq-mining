@@ -1,8 +1,8 @@
+import { fetchEoaAddress } from "./eoa";
 import { getTradeVolume } from "./trade-volume";
 import { getAllUsers } from "./users";
-import { fetchMagicAddress } from "./magic";
 
-const snapshot: { proxyWallet: string, magicWallet: string; amount: number }[] = [];
+const snapshot: { proxyWallet: string, eoaWallet: string; amount: number }[] = [];
 
 export async function generateVolumeSnapshot(timestamp: number, supply: number): Promise<any> {
     console.log(`Generating volume weighted snapshot with timestamp: ${timestamp} and token total supply: ${supply}...`);
@@ -25,8 +25,8 @@ export async function generateVolumeSnapshot(timestamp: number, supply: number):
         const userVolume = tradeVolumes[userIndex];
         if(userVolume > 0){
             const airdropAmount = (userVolume / totalTradeVolume) * supply;
-            const magicAddress = await fetchMagicAddress(user);
-            snapshot.push({proxyWallet: user, magicWallet: magicAddress, amount: airdropAmount });
+            const eoa = await fetchEoaAddress(user);
+            snapshot.push({proxyWallet: user, eoaWallet: eoa, amount: airdropAmount });
         }
     }
     return snapshot;
