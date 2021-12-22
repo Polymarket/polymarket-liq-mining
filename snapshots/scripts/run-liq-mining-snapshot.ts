@@ -168,16 +168,6 @@ const args = yargs.options({
     demandOption: false,
     default: DEFAULT_FEE_TOKENS_PER_EPOCH,
   },
-  lpTokensPerMarket: {
-    type: "number",
-    demandOption: false,
-    default: DEFAULT_LP_TOKENS_PER_MARKET,
-  },
-  lpTokensPerBlock: {
-    type: "string",
-    demandOption: false,
-    default: DEFAULT_LP_TOKENS_PER_BLOCK,
-  },
   blocksPerSample: {
     type: "number",
     demandOption: false,
@@ -221,18 +211,6 @@ const args = yargs.options({
     Object.keys(totalUserMap).length + " total users"
   );
 
-  const normalizedUserMap = normalizeMapAmounts(totalUserMap);
-
-  // todo - we need to figure out if it's using our proxy (magic, metamask)
-  // or if they're interacting directly with the contract
-  // then add the correct payout address
-
-  const snapshot = await addEoaToUserPayoutMap(normalizedUserMap);
-  console.log("snapshot", snapshot);
-  const nullAddressesOnly = snapshot.filter(s => s.eoaWallet === null)
-  console.log(JSON.stringify(nullAddressesOnly))
-  updateEoaCacheFromSnapshot(snapshot);
-  const t4 = Date.now();
   // todo - look at DistributorSdk.spec.ts for this...
   // if (week > 0) {
   // sdk = new MerkleDistributorSdk()
@@ -251,7 +229,6 @@ const args = yargs.options({
   );
   console.log("liq diff", t2 - t1);
   console.log("fee diff", t3 - t2);
-  console.log("eoa diff", t4 - t3);
 
   const merkleRootFileName = `${args.baseFilePath}-${WEEK_NUMBER}-merkle-info.json`;
   try {
