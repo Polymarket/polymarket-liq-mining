@@ -11,7 +11,6 @@ export interface IStartAndEndBlock {
 
 export interface LpMarketInfo {
   marketMaker: string;
-  slug: string;
   howToCalculate: LpCalculation;
   amount: number;
 }
@@ -20,6 +19,90 @@ export enum LpCalculation {
   PerBlock = "perBlock",
   PerMarket = "perMarket",
 }
+
+export interface RewardMarketFromStrapi {
+  lp_token_supply: number;
+  token_calculation: LpCalculation;
+  market_maker: string;
+  reward_epoch: number;
+}
+
+export interface RewardEpochFromStrapi {
+  start: string;
+  end: string;
+  epoch: number;
+  fee_token_supply: number;
+  reward_markets: RewardMarketFromStrapi[];
+}
+
+interface CleanEpochInfo {
+  startTimestamp: number;
+  endTimestamp: number;
+  markets: LpMarketInfo[];
+  epoch: number;
+  feeTokenSupply: number;
+}
+/**
+ * Throws errors if properties we need from Strapi are not present
+ * @param epochInfo
+ * @returns boolean
+ */
+export const ensureGoodDataFromStrapi = (
+  epochInfo: RewardEpochFromStrapi
+): boolean => {
+  if (!epochInfo) {
+    throw new Error("Epoch Info Error!");
+  }
+  const { start, end, epoch, fee_token_supply, reward_markets } = epochInfo;
+  if (!start || !end) {
+    throw new Error("Dates not set!");
+  }
+  if (!epoch) {
+    throw new Error("Epoch not set!");
+  }
+
+  if (!fee_token_supply) {
+    throw new Error("Fee Token supply not set!");
+  }
+  if (!reward_markets || reward_markets.length === 0) {
+    throw new Error("No Reward Markets!");
+  }
+
+  return true;
+};
+
+/**
+ * Takes camel case reward market data from strapi
+ * Returns clean reward market data
+ * @param epochInfoFromStrapi
+ * @returns cleanEpochInfo
+ */
+const cleanMarketDataFromStrapi = (
+  markets: RewardMarketFromStrapi[]
+): LpMarketInfo[] => {
+  const toCamelCase = markets.map((m) => ({
+    amount: m.lp_token_supply,
+    howToCalculate: m.token_calculation,
+    marketMaker: m.market_maker,
+  }));
+  return lowerCaseMarketMakers(toCamelCase);
+};
+
+/**
+ * Takes camel case reward epoch data from strapi
+ * Returns clean reward epoch data
+ * @param epochInfoFromStrapi
+ * @returns cleanEpochInfo
+ */
+export const cleanEpochInfoFromStrapi = (
+  epochInfo: RewardEpochFromStrapi
+): CleanEpochInfo => ({
+  startTimestamp: new Date(epochInfo.start).getTime(),
+  endTimestamp: new Date(epochInfo.end).getTime(),
+  markets: cleanMarketDataFromStrapi(epochInfo.reward_markets),
+  feeTokenSupply: epochInfo.fee_token_supply,
+  epoch: epochInfo.epoch,
+});
 
 /**
  * Iterates over blocks and updates the userTokensPerEpoch map
@@ -46,7 +129,6 @@ export const updateTokensPerBlockReward = (
   }
   return updatedMap;
 };
-
 
 /**
  * Takes in epoch and market start blocks and end blocks
