@@ -23,7 +23,9 @@ export enum LpCalculation {
 export interface RewardMarketFromStrapi {
   lp_token_supply: number;
   token_calculation: LpCalculation;
-  market_maker: string;
+  market: {
+    marketMakerAddress: string;
+  };
   reward_epoch: number;
 }
 
@@ -68,6 +70,13 @@ export const ensureGoodDataFromStrapi = (
     throw new Error("No Reward Markets!");
   }
 
+  if (
+    !reward_markets[0].market ||
+    !reward_markets[0].market.marketMakerAddress
+  ) {
+    throw new Error("No Market Maker Address!");
+  }
+
   return true;
 };
 
@@ -83,7 +92,7 @@ const cleanMarketDataFromStrapi = (
   const toCamelCase = markets.map((m) => ({
     amount: m.lp_token_supply,
     howToCalculate: m.token_calculation,
-    marketMaker: m.market_maker,
+    marketMaker: m.market.marketMakerAddress,
   }));
   return lowerCaseMarketMakers(toCamelCase);
 };
