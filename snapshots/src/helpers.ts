@@ -1,6 +1,6 @@
 // GENERAL HELPERS
 
-import { MapOfCount, UserAmount } from "./interfaces";
+import { MapOfCount, UserAmount, UserRewardForStrapi } from "./interfaces";
 import { getEoaLinkAddress } from "./eoa";
 import {
   NewFormat,
@@ -209,4 +209,17 @@ export const combineMerkleInfo = (
   const combined = combineMaps([newClaimMap, mapOfUnpaidClaims]);
   const normalized = normalizeEarningsFewFormat(combined);
   return parseBalanceMap(normalized);
+};
+
+export const formatClaimsForStrapi = (
+  merkleInfo: MerkleDistributorInfo,
+  epoch: number
+): UserRewardForStrapi[] => {
+  return Object.keys(merkleInfo.claims).map((username) => {
+    return {
+      username,
+      epoch,
+      ...merkleInfo.claims[username],
+    };
+  });
 };

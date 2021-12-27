@@ -18,3 +18,10 @@ export interface LpSnapshot {
 export interface ReturnSnapshot extends LpSnapshot {
   proxyWallet: string;
 }
+
+export interface UserRewardForStrapi {
+	username: string
+	amount: string 
+	index: number
+	proof: string[]
+}

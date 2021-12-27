@@ -4,9 +4,10 @@ import fetch from "cross-fetch";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 import * as fs from "fs";
 import {
-//   normalizeMapAmounts,
+  //   normalizeMapAmounts,
   normalizeEarningsFewFormat,
   combineMaps,
+  formatClaimsForStrapi,
 } from "../src/helpers";
 import {
   parseBalanceMap,
@@ -157,13 +158,15 @@ const args = yargs.options({
   epoch: {
     type: "number",
     demandOption: false,
-    default: 2, // CHANGE THIS!
+    default: 3, // increment here
   },
 }).argv;
 
 (async (args: any) => {
-  const res = await fetch(`${args.strapiUrl}/reward-epoches/${args.epoch}`);
-  const epochInfo: RewardEpochFromStrapi = await res.json();
+  const epochRes = await fetch(
+    `${args.strapiUrl}/reward-epoches/${args.epoch}`
+  );
+  const epochInfo: RewardEpochFromStrapi = await epochRes.json();
   ensureGoodDataFromStrapi(epochInfo);
 
   if (epochInfo.epoch !== parseInt(args.epoch)) {
@@ -216,7 +219,7 @@ const args = yargs.options({
 
   const normalizedEarnings = normalizeEarningsFewFormat(totalUserMap);
   const merkleInfo: MerkleDistributorInfo = parseBalanceMap(normalizedEarnings);
-  //   console.log( "merkleInfo", merkleInfo);
+  console.log("merkleInfo", merkleInfo);
   console.log(
     "merkleInfo",
     Object.keys(merkleInfo.claims).length + " total claims"
@@ -225,9 +228,23 @@ const args = yargs.options({
   console.log("fee diff", t3 - t2);
 
   const merkleRootFileName = `${args.baseFilePath}-${args.epoch}-merkle-info.json`;
+
   try {
     fs.writeFileSync(merkleRootFileName, JSON.stringify(merkleInfo));
   } catch (error) {
     console.log("write merkle snapshot", error);
+  }
+
+  const usersForStrapi = formatClaimsForStrapi(merkleInfo, args.epoch);
+  try {
+    await fetch(`${args.strapiUrl}/reward-users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(usersForStrapi),
+    });
+  } catch (error) {
+    console.log("error", error);
   }
 })(args);
