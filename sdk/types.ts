@@ -11,3 +11,8 @@ export interface IsClaimed {
 	proof: string[]
 	amount: string
 }
+
+export enum Token {
+	Uma = "uma",
+	Matic = "matic"
+} 

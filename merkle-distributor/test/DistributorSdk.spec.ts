@@ -14,6 +14,7 @@ import {
   normalizeEarningsFewFormat,
 } from "../../snapshots/src/helpers";
 import { MapOfCount } from "../../snapshots/src/interfaces";
+import { Token } from "../../sdk/types";
 
 const { solidity, provider, deployContract } = waffle;
 
@@ -36,7 +37,7 @@ const createMockPayoutMap = (wallets: Wallet[], deployerAddress: string) => {
   );
 };
 
-describe("Distributor SDK", () => {
+describe.only("Distributor SDK", () => {
   const wallets = provider.getWallets();
   const [deployer, alice] = wallets;
 
@@ -70,6 +71,7 @@ describe("Distributor SDK", () => {
     sdk = new DistributorSdk(
       aliceSignerWithAddress._signer,
       31337,
+      Token.Matic,
       merkleDistributor.address
     );
   });
@@ -99,6 +101,7 @@ describe("Distributor SDK", () => {
     sdk = new DistributorSdk(
       bobSigner._signer,
       31337,
+      Token.Matic,
       merkleDistributor.address
     );
     const bobMerkleInfo = merkleInfo.claims[bobSigner.address];
@@ -119,6 +122,37 @@ describe("Distributor SDK", () => {
     );
   });
 
+  it("should allow a user to claimAndTransfer", async () => {
+    const carolSigner = await ethers.getNamedSigner("carol");
+    const evanSigner = await ethers.getNamedSigner("evan");
+
+    const carolSdk = new DistributorSdk(
+      carolSigner._signer,
+      31337,
+      token.address,
+      merkleDistributor.address
+    );
+
+    const carolMerkle = merkleInfo.claims[carolSigner.address];
+    expect(await merkleDistributor.totalClaimed(carolSigner.address)).to.eq(0);
+    expect(await merkleDistributor.totalClaimed(evanSigner.address)).to.eq(0);
+    expect(await carolSdk.isClaimed(carolMerkle.index)).to.eq(false);
+    await carolSdk.claimAndTransfer(
+      carolMerkle.index,
+      carolMerkle.amount,
+      carolMerkle.proof,
+      carolSigner.address,
+      evanSigner.address
+    );
+
+    expect(await carolSdk.isClaimed(carolMerkle.index)).to.eq(true);
+    expect(await merkleDistributor.totalClaimed(carolSigner.address)).to.eq(
+      carolMerkle.amount
+    );
+    expect(await token.balanceOf(carolSigner.address)).to.eq(0);
+    expect(await token.balanceOf(evanSigner.address)).to.eq(carolMerkle.amount);
+  });
+
   // multiple claims
   it("should update the merkle root with last epoch data", async () => {
     // daryl sdk
@@ -126,6 +160,7 @@ describe("Distributor SDK", () => {
     const darylSdk = new DistributorSdk(
       darylSigner._signer,
       31337,
+      Token.Matic,
       merkleDistributor.address
     );
 
@@ -149,6 +184,7 @@ describe("Distributor SDK", () => {
     const deployerSdk = new DistributorSdk(
       deployerSigner._signer,
       31337,
+      Token.Matic,
       merkleDistributor.address
     );
 
@@ -171,9 +207,10 @@ describe("Distributor SDK", () => {
 
     // ivan claims
     const ivanSigner = await ethers.getNamedSigner("ivan");
-	const ivanSdk =  new DistributorSdk(
+    const ivanSdk = new DistributorSdk(
       ivanSigner._signer,
       31337,
+      Token.Matic,
       merkleDistributor.address
     );
     const ivanMerkle = nextMerkleInfo.claims[ivanSigner.address];
