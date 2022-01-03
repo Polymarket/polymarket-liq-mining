@@ -122,6 +122,7 @@ describe.only("Distributor SDK", () => {
     );
   });
 
+  // claimAndTransfer
   it("should allow a user to claimAndTransfer", async () => {
     const carolSigner = await ethers.getNamedSigner("carol");
     const evanSigner = await ethers.getNamedSigner("evan");
@@ -154,7 +155,7 @@ describe.only("Distributor SDK", () => {
   });
 
   // multiple claims
-  it("should update the merkle root with last epoch data", async () => {
+  it("should update the merkle root with last epoch data and multiple claims", async () => {
     // daryl sdk
     const darylSigner = await ethers.getNamedSigner("daryl");
     const darylSdk = new DistributorSdk(
@@ -245,6 +246,104 @@ describe.only("Distributor SDK", () => {
     expect(await merkleDistributor.totalClaimed(darylSigner.address)).to.eq(
       BigNumber.from(darylMerkleBefore.amount).add(
         BigNumber.from(darylMerkleAfter.amount)
+      )
+    );
+  });
+
+  it("should update the merkle root with last epoch data and multiple claim and transfers", async () => {
+    // frank sdk
+    const frankSigner = await ethers.getNamedSigner("frank");
+    const frankSdk = new DistributorSdk(
+      frankSigner._signer,
+      31337,
+      token.address,
+      merkleDistributor.address
+    );
+
+    // frank claims
+    const frankMerkleBefore = merkleInfo.claims[frankSigner.address];
+    expect(await merkleDistributor.totalClaimed(frankSigner.address)).to.eq(0);
+    expect(await frankSdk.isClaimed(frankMerkleBefore.index)).to.eq(false);
+    await frankSdk.claimAndTransfer(
+      frankMerkleBefore.index,
+      frankMerkleBefore.amount,
+      frankMerkleBefore.proof,
+      frankSigner.address,
+      frankSigner.address
+    );
+    expect(await frankSdk.isClaimed(frankMerkleBefore.index)).to.eq(true);
+    expect(await merkleDistributor.totalClaimed(frankSigner.address)).to.eq(
+      frankMerkleBefore.amount
+    );
+
+    // deployer instantiates sdk
+    const deployerSigner = await ethers.getNamedSigner("deployer");
+    const deployerSdk = new DistributorSdk(
+      deployerSigner._signer,
+      31337,
+      token.address,
+      merkleDistributor.address
+    );
+
+    // // deployer freezes
+    await deployerSdk.freeze();
+    expect(await merkleDistributor.frozen()).to.eq(true);
+
+    // deployer updates merkle root with new claims + previous unpaid claims
+    const previousClaims = await sdk.getClaimedStatus(merkleInfo);
+    const nextMockPayout = createMockPayoutMap(wallets, deployer.address);
+    const nextMerkleInfo = combineMerkleInfo(previousClaims, nextMockPayout);
+    await deployerSdk.updateMerkleRoot(nextMerkleInfo.merkleRoot);
+    expect(await merkleDistributor.merkleRoot()).to.eq(
+      nextMerkleInfo.merkleRoot
+    );
+
+    // deployer unfreezes
+    await deployerSdk.unfreeze();
+    expect(await merkleDistributor.frozen()).to.eq(false);
+
+    // greg claims
+    const gregSigner = await ethers.getNamedSigner("greg");
+    const gregSdk = new DistributorSdk(
+      gregSigner._signer,
+      31337,
+      Token.Matic,
+      merkleDistributor.address
+    );
+    const ivanMerkle = nextMerkleInfo.claims[gregSigner.address];
+    expect(await merkleDistributor.totalClaimed(gregSigner.address)).to.eq(0);
+    expect(await gregSdk.isClaimed(ivanMerkle.index)).to.eq(false);
+    await gregSdk.claim(
+      ivanMerkle.index,
+      gregSigner.address,
+      ivanMerkle.amount,
+      ivanMerkle.proof
+    );
+    expect(await gregSdk.isClaimed(ivanMerkle.index)).to.eq(true);
+    expect(await merkleDistributor.totalClaimed(gregSigner.address)).to.eq(
+      ivanMerkle.amount
+    );
+
+    // frank claims again, but sends to hank
+    const frankMerkleAfter = nextMerkleInfo.claims[frankSigner.address];
+    expect(await merkleDistributor.totalClaimed(frankSigner.address)).to.eq(
+      frankMerkleBefore.amount
+    );
+    expect(await frankSdk.isClaimed(frankMerkleAfter.index)).to.eq(false);
+    const hankSigner = await ethers.getNamedSigner("hank");
+    await frankSdk.claimAndTransfer(
+      frankMerkleAfter.index,
+      frankMerkleAfter.amount,
+      frankMerkleAfter.proof,
+      frankSigner.address,
+      hankSigner.address
+    );
+
+    // frank total claims should be both merkle amounts
+    expect(await frankSdk.isClaimed(frankMerkleAfter.index)).to.eq(true);
+    expect(await merkleDistributor.totalClaimed(frankSigner.address)).to.eq(
+      BigNumber.from(frankMerkleBefore.amount).add(
+        BigNumber.from(frankMerkleAfter.amount)
       )
     );
   });
