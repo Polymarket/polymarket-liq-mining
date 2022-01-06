@@ -59,7 +59,7 @@ export const ensureGoodDataFromStrapi = (
   if (!start || !end) {
     throw new Error("Dates not set!");
   }
-  if (!epoch) {
+  if (typeof epoch !== "number") {
     throw new Error("Epoch not set!");
   }
 

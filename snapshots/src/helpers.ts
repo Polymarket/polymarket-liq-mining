@@ -6,7 +6,7 @@ import {
   NewFormat,
   parseBalanceMap,
 } from "../../merkle-distributor/src/parse-balance-map";
-import { IsClaimed } from "../../sdk/types";
+import { IsClaimed } from "../../sdk/src/types";
 import { BigNumber } from "@ethersproject/bignumber";
 import { MerkleDistributorInfo } from "../../merkle-distributor/src/parse-balance-map";
 
@@ -160,7 +160,7 @@ export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
   return positiveAddressesOnly(map).reduce((acc, curr) => {
     acc.push({
       address: curr,
-      earnings: cleanNumber(map[curr]),
+      earnings: BigNumber.from(cleanNumber(map[curr])).toString(),
       reasons: "",
     });
     return acc;

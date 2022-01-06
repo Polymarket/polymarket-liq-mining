@@ -19,13 +19,11 @@ describe("calculate samples correctly", () => {
     markets = [
       {
         marketMaker: "0xa",
-        slug: "hello",
         howToCalculate: LpCalculation.PerBlock,
         amount: 2,
       },
       {
         marketMaker: "0xb",
-        slug: "world",
         howToCalculate: LpCalculation.PerMarket,
         amount: 20000,
       },
