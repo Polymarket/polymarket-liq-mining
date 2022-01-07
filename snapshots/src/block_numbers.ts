@@ -69,11 +69,15 @@ export async function convertTimestampToBlockNumber(timestamp: number) : Promise
     
     //get current block number
     const currentBlockNumber = await provider.getBlockNumber();
+	console.log('currentBlockNumber', currentBlockNumber)
     let block = await provider.getBlock(currentBlockNumber)
+
     let requestsMade = 0;
     
     let blockNumber = currentBlockNumber;
-    const timestampDiff = block.timestamp - timestampInSeconds;
+
+	console.log('block.timestamp', block?.timestamp ?? 0)
+    const timestampDiff = block?.timestamp ?? 0 - timestampInSeconds;
     
     //If current block timestamp and given timestamp within 50s of each other, return
     if(timestampDiff < 50){

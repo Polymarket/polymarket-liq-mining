@@ -4,7 +4,6 @@ import fetch from "cross-fetch";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 import * as fs from "fs";
 import {
-  //   normalizeMapAmounts,
   normalizeEarningsFewFormat,
   combineMaps,
   formatClaimsForStrapi,
@@ -12,6 +11,7 @@ import {
 import {
   parseBalanceMap,
   MerkleDistributorInfo,
+  NewFormat,
 } from "../../merkle-distributor/src/parse-balance-map";
 import { generateFeesSnapshot } from "../src/fees-snapshot";
 import { ReturnType, MapOfCount } from "../src/interfaces";
@@ -20,11 +20,13 @@ import {
   ensureGoodDataFromStrapi,
   cleanEpochInfoFromStrapi,
 } from "../src/lp-helpers";
+import { BigNumber, ethers } from "ethers";
+import { cleanNumber } from "../src/helpers";
 
 const DEFAULT_FILE_PATH = `./snapshots/week`;
 
-// const DEFAULT_BLOCKS_PER_SAMPLE = 1800; // Approx every hour with a 2s block time
-const DEFAULT_BLOCKS_PER_SAMPLE = 30; // Approx every min with a 2s block time
+const DEFAULT_BLOCKS_PER_SAMPLE = 1800; // Approx every hour with a 2s block time
+// const DEFAULT_BLOCKS_PER_SAMPLE = 30; // Approx every min with a 2s block time
 // const DEFAULT_TOKENS_PER_SAMPLE = 60; // tokens_per_block * block_per_sample
 
 dotenv.config();
@@ -158,7 +160,7 @@ const args = yargs.options({
   epoch: {
     type: "number",
     demandOption: false,
-    default: 3, // increment here
+    default: 0, // increment here
   },
 }).argv;
 
@@ -168,13 +170,14 @@ const args = yargs.options({
   );
   const epochInfo: RewardEpochFromStrapi = await epochRes.json();
   ensureGoodDataFromStrapi(epochInfo);
-
   if (epochInfo.epoch !== parseInt(args.epoch)) {
     throw new Error("Epochs do not match!");
   }
-
   const { startTimestamp, endTimestamp, markets, feeTokenSupply } =
     cleanEpochInfoFromStrapi(epochInfo);
+
+  console.log("start Date", new Date(startTimestamp));
+  console.log("end Date", new Date(endTimestamp));
 
   const t1 = Date.now();
   const liqMap = await generateLpSnapshot(
@@ -184,67 +187,58 @@ const args = yargs.options({
     markets,
     args.blocksPerSample
   );
-
   console.log("liqMap", Object.keys(liqMap).length + " liquidity providers");
   const t2 = Date.now();
-
   const feeMap = await generateFeesSnapshot(
     ReturnType.Map,
     startTimestamp,
     endTimestamp,
     feeTokenSupply
   );
-
   console.log("feeMap", Object.keys(feeMap).length + " users who paid fees");
   const t3 = Date.now();
-
   const totalUserMap = combineMaps([
     liqMap as MapOfCount,
     feeMap as MapOfCount,
   ]);
-
   console.log(
     "totalUserMap",
     Object.keys(totalUserMap).length + " total users"
   );
-
-  // // todo - look at DistributorSdk.spec.ts for this...
-  // // if (week > 1) {
-  // // sdk = new MerkleDistributorSdk()
-  // // sdk.freeze()
-  // // get-previous-week-merkle-info-from-strapi-or-locally
-  // // const previousClaims = await sdk.getClaimedStatus(previousMerkleInfo);
-  // // const nextMerkleInfo = combineMerkleInfo(previousClaims, normalizedUserMap);
-  // // await deployerSdk.updateMerkleRoot(nextMerkleInfo.merkleRoot);
-
+  // todo - look at DistributorSdk.spec.ts for this...
+  //   if (week > 0) {
+  //   sdk = new MerkleDistributorSdk()
+  //   sdk.freeze()
+  //   get-previous-week-merkle-info-from-strapi-or-locally
+  //   const previousClaims = await sdk.getClaimedStatus(previousMerkleInfo);
+  //   const nextMerkleInfo = combineMerkleInfo(previousClaims, normalizedUserMap);
+  //   await deployerSdk.updateMerkleRoot(nextMerkleInfo.merkleRoot);
   const normalizedEarnings = normalizeEarningsFewFormat(totalUserMap);
+  //   console.log("normalizedEarnings", normalizedEarnings);
   const merkleInfo: MerkleDistributorInfo = parseBalanceMap(normalizedEarnings);
-  console.log("merkleInfo", merkleInfo);
+  //   console.log("merkleInfo", merkleInfo);
   console.log(
     "merkleInfo",
     Object.keys(merkleInfo.claims).length + " total claims"
   );
   console.log("liq diff", t2 - t1);
   console.log("fee diff", t3 - t2);
-
   const merkleRootFileName = `${args.baseFilePath}-${args.epoch}-merkle-info.json`;
-
   try {
     fs.writeFileSync(merkleRootFileName, JSON.stringify(merkleInfo));
   } catch (error) {
     console.log("write merkle snapshot", error);
   }
-
-  const usersForStrapi = formatClaimsForStrapi(merkleInfo, args.epoch);
-  try {
-    await fetch(`${args.strapiUrl}/reward-users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(usersForStrapi),
-    });
-  } catch (error) {
-    console.log("error", error);
-  }
+    const usersForStrapi = formatClaimsForStrapi(merkleInfo, args.epoch);
+    try {
+      await fetch(`${args.strapiUrl}/reward-users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(usersForStrapi),
+      });
+    } catch (error) {
+      console.log("error", error);
+    }
 })(args);

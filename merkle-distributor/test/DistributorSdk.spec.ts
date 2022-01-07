@@ -8,13 +8,13 @@ import {
   parseBalanceMap,
   MerkleDistributorInfo,
 } from "../src/parse-balance-map";
-import { DistributorSdk } from "../../sdk/distributorSdk";
+import { DistributorSdk } from "../../sdk/src/distributorSdk";
 import {
   combineMerkleInfo,
   normalizeEarningsFewFormat,
 } from "../../snapshots/src/helpers";
 import { MapOfCount } from "../../snapshots/src/interfaces";
-import { Token } from "../../sdk/types";
+import { Token } from "../../sdk/src/types";
 
 const { solidity, provider, deployContract } = waffle;
 
@@ -338,6 +338,8 @@ describe.only("Distributor SDK", () => {
       frankSigner.address,
       hankSigner.address
     );
+
+    expect(await token.balanceOf(hankSigner.address)).to.eq(frankMerkleAfter.amount);
 
     // frank total claims should be both merkle amounts
     expect(await frankSdk.isClaimed(frankMerkleAfter.index)).to.eq(true);

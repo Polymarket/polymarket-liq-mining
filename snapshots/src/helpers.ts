@@ -9,10 +9,10 @@ import {
 import { IsClaimed } from "../../sdk/src/types";
 import { BigNumber } from "@ethersproject/bignumber";
 import { MerkleDistributorInfo } from "../../merkle-distributor/src/parse-balance-map";
+import { ethers } from "ethers";
 
 // VARIABLES
-export const SCALE_FACTOR = Math.pow(10, 6);
-export const DECIMALS = 6;
+const GRAPH_SCALE_FACTOR = Math.pow(10, 6);
 
 const now = Date.now();
 export const ONE_DAY_AGO = now - 86400000;
@@ -43,8 +43,8 @@ export const cleanUserAmounts = (userAmounts: UserAmount[]): UserAmount[] => {
       user,
       amount:
         typeof amount === "number"
-          ? amount / SCALE_FACTOR
-          : parseInt(amount) / SCALE_FACTOR,
+          ? amount / GRAPH_SCALE_FACTOR
+          : parseInt(amount) / GRAPH_SCALE_FACTOR,
     };
   });
 };
@@ -133,22 +133,22 @@ export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
 const positiveAddressesOnly = (map) =>
   Object.keys(map).filter((key) => map[key] > 0);
 
-/**
- * Takes in a map with address and number amount
- * @param mapOfCount
- * @returns OldFormat from parseBalanceMap
- * @returns todo - update cleanNumber
- */
-export const normalizeMapAmounts = (
-  map: MapOfCount
-): { [account: string]: number } => {
-  return positiveAddressesOnly(map).reduce((acc, curr) => {
-    if (!acc[curr]) {
-      acc[curr] = cleanNumber(map[curr]);
-    }
-    return acc;
-  }, {});
-};
+// /**
+//  * Takes in a map with address and number amount
+//  * @param mapOfCount
+//  * @returns OldFormat from parseBalanceMap
+//  * @returns todo - update cleanNumber
+//  */
+// export const normalizeMapAmounts = (
+//   map: MapOfCount
+// ): { [account: string]: number } => {
+//   return positiveAddressesOnly(map).reduce((acc, curr) => {
+//     if (!acc[curr]) {
+//       acc[curr] = cleanNumber(map[curr]);
+//     }
+//     return acc;
+//   }, {});
+// };
 
 /**
  * Takes in a map with address and number amount
@@ -160,7 +160,7 @@ export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
   return positiveAddressesOnly(map).reduce((acc, curr) => {
     acc.push({
       address: curr,
-      earnings: BigNumber.from(cleanNumber(map[curr])).toString(),
+      earnings: cleanNumber(map[curr]).toString(),
       reasons: "",
     });
     return acc;
@@ -170,17 +170,12 @@ export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
 /**
  * Takes in a float
  * @param number
- * @returns the float's ceiling, an integer - todo
+ * @returns
  */
-export const cleanNumber = (number: number): number => {
-  return Math.ceil(number);
-
-  // todo - figure out this
-  //   const string = number.toString();
-  //   const [int, dec] = string.split(".");
-  //   const minDecimals = dec.padEnd(DECIMALS, "0");
-  //   const onlyDecimals = minDecimals.slice(0, DECIMALS);
-  //   return int === "0" ? onlyDecimals : `${int}${onlyDecimals}`;
+export const cleanNumber = (number: number): BigNumber => {
+  const n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
+  const ether = ethers.utils.parseEther(n);
+  return ether;
 };
 
 /**
@@ -198,9 +193,8 @@ export const combineMerkleInfo = (
     .filter((c) => !c.isClaimed)
     .reduce((acc, curr) => {
       if (!acc[curr.address]) {
-        const bn = BigNumber.from(curr.amount);
-        acc[curr.address] = bn.toNumber();
-        // todo
+        // const bn = BigNumber.from(curr.amount);
+        // acc[curr.address] = bn.toNumber();
         // acc[curr.address] = whatever cleanNumber needs
       }
       return acc;

@@ -3,7 +3,7 @@ import { ethers, Contract, BigNumberish } from "ethers";
 import MerkleDistributorAbi from "./abi/MerkleDistributor.json";
 import { claimToTx, claimTx } from "./claims";
 import { utils } from "ethers";
-import { IsClaimed, Token, Transaction, MerkleDistributorInfo } from './types';
+import { IsClaimed, Token,  MerkleDistributorInfo } from "./types";
 import { freezeTx, unfreezeTx, updateMerkleRootTx } from "./admin";
 import { getContracts } from "./networks";
 import { erc20TransferTransaction } from "./erc20";
@@ -19,7 +19,7 @@ export class DistributorSdk {
    * @param signer - a JsonRpcSigner to sign transactions
    * @param chainID - the chain ID
    * @param token - our Token TS enum which maps to a an ERC20 address OR an ERC20 token address for testing
-   * @param distributorAddress - a local address to the distributor token - only used for testing. 
+   * @param distributorAddress - a local address to the distributor token - only used for testing.
    */
   constructor(
     signer: JsonRpcSigner,
@@ -212,6 +212,7 @@ export class DistributorSdk {
         merkleProof
       )
     );
+
     const transferResponse = await this.signer.sendTransaction(
       erc20TransferTransaction(
         this.token in Token
