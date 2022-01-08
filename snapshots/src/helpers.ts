@@ -9,7 +9,8 @@ import {
 import { IsClaimed } from "../../sdk/src/types";
 import { BigNumber } from "@ethersproject/bignumber";
 import { MerkleDistributorInfo } from "../../merkle-distributor/src/parse-balance-map";
-import { ethers } from "ethers";
+import { ethers  } from "ethers";
+import { getAddress, isAddress } from "ethers/lib/utils";
 
 // VARIABLES
 const GRAPH_SCALE_FACTOR = Math.pow(10, 6);
@@ -39,8 +40,9 @@ export const sumValues = (block: MapOfCount): number => {
  */
 export const cleanUserAmounts = (userAmounts: UserAmount[]): UserAmount[] => {
   return userAmounts.map(({ user, amount }) => {
+    const address = validateAddress(user);
     return {
-      user,
+      user: address,
       amount:
         typeof amount === "number"
           ? amount / GRAPH_SCALE_FACTOR
@@ -56,10 +58,11 @@ export const cleanUserAmounts = (userAmounts: UserAmount[]): UserAmount[] => {
  */
 export const makePointsMap = (userAmounts: UserAmount[]): MapOfCount => {
   return userAmounts.reduce<MapOfCount>((acc, curr) => {
-    if (!acc[curr.user]) {
-      acc[curr.user] = 0;
+    const address = validateAddress(curr.user);
+    if (!acc[address]) {
+      acc[address] = 0;
     }
-    acc[curr.user] += curr.amount;
+    acc[address] += curr.amount;
     return acc;
   }, {});
 };
@@ -77,11 +80,12 @@ export const makePayoutsMap = (
   supply: number
 ): MapOfCount => {
   return Object.keys(pointsMap).reduce((acc, user) => {
-    if (!acc[user]) {
-      acc[user] = 0;
+    const address = validateAddress(user);
+    if (!acc[address]) {
+      acc[address] = 0;
     }
-    const percentOfTotalFees = pointsMap[user] / totalPoints;
-    acc[user] = percentOfTotalFees * supply;
+    const percentOfTotalFees = pointsMap[address] / totalPoints;
+    acc[address] = percentOfTotalFees * supply;
     return acc;
   }, {});
 };
@@ -95,10 +99,11 @@ export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
   const newMap = {};
   for (const oldMap of arrayOfMaps) {
     for (const user of Object.keys(oldMap)) {
-      if (!newMap[user]) {
-        newMap[user] = 0;
+      const address = validateAddress(user);
+      if (!newMap[address]) {
+        newMap[address] = 0;
       }
-      newMap[user] = newMap[user] + oldMap[user];
+      newMap[address] = newMap[address] + oldMap[address];
     }
   }
   return newMap;
@@ -126,6 +131,24 @@ export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
 };
 
 /**
+ * Takes in claims from merkle info and addsl epoch for strapi user rewards
+ * @param merkleInfo merkleInfo with claims array
+ * @param epoch which epoch
+ */
+export const formatClaimsForStrapi = (
+  merkleInfo: MerkleDistributorInfo,
+  epoch: number
+): UserRewardForStrapi[] => {
+  return Object.keys(merkleInfo.claims).map((username) => {
+    return {
+      username,
+      epoch,
+      ...merkleInfo.claims[username],
+    };
+  });
+};
+
+/**
  * Removes keys from map where value is 0 or negative
  * @param mapOfCount
  * @returns addresses with positive values
@@ -133,38 +156,80 @@ export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
 const positiveAddressesOnly = (map) =>
   Object.keys(map).filter((key) => map[key] > 0);
 
-// /**
-//  * Takes in a map with address and number amount
-//  * @param mapOfCount
-//  * @returns OldFormat from parseBalanceMap
-//  * @returns todo - update cleanNumber
-//  */
-// export const normalizeMapAmounts = (
-//   map: MapOfCount
-// ): { [account: string]: number } => {
-//   return positiveAddressesOnly(map).reduce((acc, curr) => {
-//     if (!acc[curr]) {
-//       acc[curr] = cleanNumber(map[curr]);
-//     }
-//     return acc;
-//   }, {});
-// };
+/**
+ * Makes sure the address is valid and then formats it correctly
+ * @param address string
+ */
+export const validateAddress = (address: string): string => {
+  if (!isAddress(address)) {
+    throw new Error("Invalid address");
+  }
+  return getAddress(address);
+};
+
+// --------------------------
+// BIGNUMBER
+// --------------------------
+
+type BigNumberMapOfCount = { [address: string]: BigNumber };
+
+/**
+ * Takes in a map with address and number amount
+ * @param mapOfCount
+ * @returns OldFormat from parseBalanceMap
+ * @returns todo - update getAmountInEther
+ */
+export const normalizeMapAmounts = (map: MapOfCount): BigNumberMapOfCount => {
+  return positiveAddressesOnly(map).reduce((acc, curr) => {
+    const address = validateAddress(curr);
+    if (!acc[address]) {
+      acc[address] = BigNumber.from(getAmountInEther(map[address]));
+    }
+    return acc;
+  }, {});
+};
 
 /**
  * Takes in a map with address and number amount
  * @param mapOfCount
  * @returns NewFormat[] from parseBalanceMap
- * @returns todo - cleanNumber
+ * @returns todo - getAmountInEther
  */
-export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
-  return positiveAddressesOnly(map).reduce((acc, curr) => {
-    acc.push({
-      address: curr,
-      earnings: cleanNumber(map[curr]).toString(),
+export const normalizeEarningsNewFormat = (
+  map: MapOfCount | BigNumberMapOfCount
+): NewFormat[] => {
+  return positiveAddressesOnly(map).map((addr) => {
+    const address = validateAddress(addr);
+    return {
+      address: address,
+      earnings: BigNumber.isBigNumber(map[address])
+        ? map[address].toString()
+        : getAmountInEther(map[address] as number).toString(),
       reasons: "",
-    });
-    return acc;
-  }, []);
+    };
+  });
+};
+
+/**
+ * Combines an array maps where the key is an address and value is number of points/payout amounts
+ * @param arrayOfMaps (mapOfCount[])
+ * @returns mapOfCount
+ */
+export const combineBigNumberMaps = (
+  arrayOfMaps: BigNumberMapOfCount[]
+): BigNumberMapOfCount => {
+  const newMap = {};
+
+  for (const oldMap of arrayOfMaps) {
+    for (const user of Object.keys(oldMap)) {
+      const address = validateAddress(user);
+      if (!newMap[address]) {
+        newMap[address] = BigNumber.from("0");
+      }
+      newMap[address] = newMap[address].add(oldMap[address]);
+    }
+  }
+  return newMap;
 };
 
 /**
@@ -172,10 +237,9 @@ export const normalizeEarningsFewFormat = (map: MapOfCount): NewFormat[] => {
  * @param number
  * @returns
  */
-export const cleanNumber = (number: number): BigNumber => {
+export const getAmountInEther = (number: number): BigNumber => {
   const n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
-  const ether = ethers.utils.parseEther(n);
-  return ether;
+  return ethers.utils.parseEther(n);
 };
 
 /**
@@ -189,31 +253,18 @@ export const combineMerkleInfo = (
   prevClaims: IsClaimed[],
   newClaimMap: MapOfCount
 ): MerkleDistributorInfo => {
-  const mapOfUnpaidClaims: MapOfCount = prevClaims
+  const mapOfUnpaidClaims: BigNumberMapOfCount = prevClaims
     .filter((c) => !c.isClaimed)
     .reduce((acc, curr) => {
-      if (!acc[curr.address]) {
-        // const bn = BigNumber.from(curr.amount);
-        // acc[curr.address] = bn.toNumber();
-        // acc[curr.address] = whatever cleanNumber needs
+      const address = validateAddress(curr.address);
+      if (!acc[address]) {
+        acc[address] = BigNumber.from(curr.amount);
       }
       return acc;
     }, {});
 
-  const combined = combineMaps([newClaimMap, mapOfUnpaidClaims]);
-  const normalized = normalizeEarningsFewFormat(combined);
+  const newMap = normalizeMapAmounts(newClaimMap);
+  const combined = combineBigNumberMaps([newMap, mapOfUnpaidClaims]);
+  const normalized = normalizeEarningsNewFormat(combined);
   return parseBalanceMap(normalized);
-};
-
-export const formatClaimsForStrapi = (
-  merkleInfo: MerkleDistributorInfo,
-  epoch: number
-): UserRewardForStrapi[] => {
-  return Object.keys(merkleInfo.claims).map((username) => {
-    return {
-      username,
-      epoch,
-      ...merkleInfo.claims[username],
-    };
-  });
 };

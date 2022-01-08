@@ -22,7 +22,6 @@ export default async ({ getNamedAccounts, deployments }) => {
 
   const erc20Contract = new Contract(tokenAddress, Erc20Abi, deployerSigner);
   const contractSupply = await erc20Contract.totalSupply();
-  console.log("contractSupply", BigNumber.from(contractSupply).toString());
 
   const { address: distributorAddress }: MerkleDistributor = await deploy(
     "MerkleDistributor",
@@ -38,7 +37,9 @@ export default async ({ getNamedAccounts, deployments }) => {
   );
 
   const distributorBalance = await erc20Contract.balanceOf(distributorAddress);
+  console.log('deployer address', deployerSigner.address)
   console.log("deployerBalance", BigNumber.from(distributorBalance).toString());
+  console.log("contractSupply", BigNumber.from(contractSupply).toString());
   console.log("tokenAddress", tokenAddress);
   console.log("distributorAddress", distributorAddress);
 };

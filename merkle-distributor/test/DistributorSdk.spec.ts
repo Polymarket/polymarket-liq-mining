@@ -11,7 +11,7 @@ import {
 import { DistributorSdk } from "../../sdk/src/distributorSdk";
 import {
   combineMerkleInfo,
-  normalizeEarningsFewFormat,
+  normalizeEarningsNewFormat,
 } from "../../snapshots/src/helpers";
 import { MapOfCount } from "../../snapshots/src/interfaces";
 import { Token } from "../../sdk/src/types";
@@ -48,7 +48,7 @@ describe.only("Distributor SDK", () => {
 
   beforeEach("deploy token", async () => {
     const mockPayout = createMockPayoutMap(wallets, deployer.address);
-    merkleInfo = parseBalanceMap(normalizeEarningsFewFormat(mockPayout));
+    merkleInfo = parseBalanceMap(normalizeEarningsNewFormat(mockPayout));
 
     token = await deployContract(
       deployer,
