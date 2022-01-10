@@ -23,7 +23,6 @@ import {
 import { ethers, providers } from "ethers";
 import { DistributorSdk } from "../../sdk/src/distributorSdk";
 
-const DEFAULT_FILE_PATH = `./snapshots/week`;
 const DEFAULT_BLOCKS_PER_SAMPLE = 1800; // Approx every hour with a 2s block time
 // const DEFAULT_BLOCKS_PER_SAMPLE = 30; // Approx every min with a 2s block time
 // const DEFAULT_TOKENS_PER_SAMPLE = 60; // tokens_per_block * block_per_sample
@@ -31,25 +30,20 @@ const DEFAULT_BLOCKS_PER_SAMPLE = 1800; // Approx every hour with a 2s block tim
 dotenv.config();
 
 const args = yargs.options({
-  baseFilePath: {
-    type: "string",
-    demandOption: false,
-    default: DEFAULT_FILE_PATH,
-  },
   blocksPerSample: {
     type: "number",
     demandOption: false,
     default: DEFAULT_BLOCKS_PER_SAMPLE,
   },
+  baseFilePath: {
+    type: "string",
+    demandOption: false,
+    default: "./snapshots/week"
+  },
   strapiUrl: {
     type: "string",
     demandOption: false,
     default: `http://localhost:1337`,
-  },
-  epoch: {
-    type: "number",
-    demandOption: false,
-    default: 0, // MANUALLY INCREMENT EPOCH HERE!
   },
   distributorAddress: {
     type: "string",
@@ -60,6 +54,11 @@ const args = yargs.options({
     type: "string",
     demandOption: false,
     default: "http://127.0.0.1:8545/",
+  },
+  epoch: {
+    type: "number",
+    demandOption: false,
+    default: 0, // MANUALLY INCREMENT EPOCH HERE!
   },
 }).argv;
 
@@ -118,22 +117,17 @@ const args = yargs.options({
   }
 
   if (epochInfo.epoch > 0) {
-    // from hardhat config =>
+    // mnemonic is from hardhat config https://hardhat.org/hardhat-network/reference/#accounts
     const mnemonic =
       "test test test test test test test test test test test junk";
     const provider = new providers.JsonRpcProvider(args.rpcUrl);
-    // const deployerAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-
     const account = ethers.utils.HDNode.fromMnemonic(mnemonic);
-
-    // console.log("account", account);
     const walletWithProvider = new ethers.Wallet(account, provider);
     walletWithProvider.connect(provider);
-    // console.log("walletWithProvider", walletWithProvider);
     const signer = provider.getSigner();
-    // console.log("signer", signer);
 
     const sdk = new DistributorSdk(
+      // eslint-disable-next-line
       // @ts-ignore
       signer,
       31337,
