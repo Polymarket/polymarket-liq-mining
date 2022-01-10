@@ -12,7 +12,6 @@ import {
 import {
   parseBalanceMap,
   MerkleDistributorInfo,
-  NewFormat,
 } from "../../merkle-distributor/src/parse-balance-map";
 import { generateFeesSnapshot } from "../src/fees-snapshot";
 import { ReturnType, MapOfCount } from "../src/interfaces";
@@ -21,13 +20,10 @@ import {
   ensureGoodDataFromStrapi,
   cleanEpochInfoFromStrapi,
 } from "../src/lp-helpers";
-import { BigNumber, ethers, providers } from "ethers";
-import { getAmountInEther } from "../src/helpers";
+import { ethers, providers } from "ethers";
 import { DistributorSdk } from "../../sdk/src/distributorSdk";
-import { JsonRpcSigner } from "@ethersproject/providers";
 
 const DEFAULT_FILE_PATH = `./snapshots/week`;
-
 const DEFAULT_BLOCKS_PER_SAMPLE = 1800; // Approx every hour with a 2s block time
 // const DEFAULT_BLOCKS_PER_SAMPLE = 30; // Approx every min with a 2s block time
 // const DEFAULT_TOKENS_PER_SAMPLE = 60; // tokens_per_block * block_per_sample
@@ -53,7 +49,7 @@ const args = yargs.options({
   epoch: {
     type: "number",
     demandOption: false,
-    default: 1, // MANUALLY INCREMENT EPOCH HERE!
+    default: 0, // MANUALLY INCREMENT EPOCH HERE!
   },
   distributorAddress: {
     type: "string",
@@ -176,16 +172,26 @@ const args = yargs.options({
   } catch (error) {
     console.log("write merkle snapshot", error);
   }
+
   const usersForStrapi = formatClaimsForStrapi(merkleInfo, args.epoch);
-  try {
-    await fetch(`${args.strapiUrl}/reward-users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(usersForStrapi),
-    });
-  } catch (error) {
-    console.log("error", error);
+  const userSampleSize = 1000;
+  console.log(
+    "splitting user chunks into",
+    (usersForStrapi.length % userSampleSize) + "sample"
+  );
+
+  while (usersForStrapi.length > 0) {
+    const sample = usersForStrapi.splice(0, 1000);
+    try {
+      await fetch(`${args.strapiUrl}/reward-users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(sample),
+      });
+    } catch (error) {
+      console.log("error", error);
+    }
   }
 })(args);
