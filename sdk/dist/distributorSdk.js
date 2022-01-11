@@ -243,6 +243,30 @@ var DistributorSdk = /** @class */ (function () {
             });
         });
     };
+    /**
+     * THIS DOES NOT SIGN TX, JUST POPULATES THE TX
+     * @param claimIndex - claim index
+     * @param account - account included in the proof + where token will be transferred to
+     * @param amount - amount of tokens to be transferred
+     * @param merkleProof - proof of claim
+     */
+    DistributorSdk.prototype.populateClaimTx = function (claimIndex, account, amount, merkleProof) {
+        var tx = claims_1.claimTx(this.distributor.address, claimIndex, account, amount, merkleProof);
+        return tx;
+    };
+    /**
+     * THIS DOES NOT SIGN TX, JUST POPULATES THE TX
+     * @param claimIndex - claim index
+     * @param amount - amount of tokens to be transferred
+     * @param merkleProof - proof of claim
+     * @param account - who can claim the token
+     * @param recipient - where token will be transferred to
+     */
+    DistributorSdk.prototype.populateClaimAndTransferTx = function (claimIndex, amount, merkleProof, account, recipient) {
+        var txA = claims_1.claimTx(this.distributor.address, claimIndex, account, amount, merkleProof);
+        var txB = erc20_1.erc20TransferTransaction(this.token in types_1.Token ? networks_1.getContracts(this.chainID)[this.token] : this.token, recipient, amount);
+        return [txA, txB];
+    };
     return DistributorSdk;
 }());
 exports.DistributorSdk = DistributorSdk;

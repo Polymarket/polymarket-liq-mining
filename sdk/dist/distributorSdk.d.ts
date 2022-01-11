@@ -1,6 +1,7 @@
 import { JsonRpcSigner } from "@ethersproject/providers";
 import { ethers, Contract, BigNumberish } from "ethers";
-import { IsClaimed, Token, MerkleDistributorInfo } from './types';
+import { IsClaimed, Token, MerkleDistributorInfo } from "./types";
+import { Transaction } from "./types";
 export declare class DistributorSdk {
     readonly chainID: number;
     readonly signer: JsonRpcSigner;
@@ -38,11 +39,11 @@ export declare class DistributorSdk {
     /**
      * gets current week
      */
-    getWeek(): Promise<ethers.providers.TransactionResponse>;
+    getWeek(): Promise<number>;
     /**
      * @param claimIndex - claim index to check if an amount has been claimed
      */
-    isClaimed(claimIndex: BigNumberish): Promise<ethers.providers.TransactionResponse>;
+    isClaimed(claimIndex: BigNumberish): Promise<boolean>;
     /**
      * @param claimIndex - claim index
      * @param account - account included in the proof + where token will be transferred to
@@ -68,5 +69,22 @@ export declare class DistributorSdk {
         ethers.providers.TransactionResponse,
         ethers.providers.TransactionResponse
     ]>;
+    /**
+     * THIS DOES NOT SIGN TX, JUST POPULATES THE TX
+     * @param claimIndex - claim index
+     * @param account - account included in the proof + where token will be transferred to
+     * @param amount - amount of tokens to be transferred
+     * @param merkleProof - proof of claim
+     */
+    populateClaimTx(claimIndex: BigNumberish, account: string, amount: BigNumberish, merkleProof: string[]): Transaction;
+    /**
+     * THIS DOES NOT SIGN TX, JUST POPULATES THE TX
+     * @param claimIndex - claim index
+     * @param amount - amount of tokens to be transferred
+     * @param merkleProof - proof of claim
+     * @param account - who can claim the token
+     * @param recipient - where token will be transferred to
+     */
+    populateClaimAndTransferTx(claimIndex: BigNumberish, amount: BigNumberish, merkleProof: string[], account: string, recipient: string): [Transaction, Transaction];
 }
 //# sourceMappingURL=distributorSdk.d.ts.map
