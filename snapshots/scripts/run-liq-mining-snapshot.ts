@@ -20,7 +20,7 @@ import {
   ensureGoodDataFromStrapi,
   cleanEpochInfoFromStrapi,
 } from "../src/lp-helpers";
-import { ethers, providers } from "ethers";
+import { BigNumber, ethers, providers } from "ethers";
 import { DistributorSdk } from "../../sdk/src/distributorSdk";
 
 const DEFAULT_BLOCKS_PER_SAMPLE = 1800; // Approx every hour with a 2s block time
@@ -38,7 +38,7 @@ const args = yargs.options({
   baseFilePath: {
     type: "string",
     demandOption: false,
-    default: "./snapshots/week"
+    default: "./snapshots/week",
   },
   strapiUrl: {
     type: "string",
@@ -58,7 +58,7 @@ const args = yargs.options({
   epoch: {
     type: "number",
     demandOption: false,
-    default: 0, // MANUALLY INCREMENT EPOCH HERE!
+    default: 1, // MANUALLY INCREMENT EPOCH HERE!
   },
 }).argv;
 
@@ -93,8 +93,10 @@ const args = yargs.options({
     endTimestamp,
     feeTokenSupply
   );
+
   console.log("feeMap", Object.keys(feeMap).length + " users who paid fees");
   const t3 = Date.now();
+
   const currentEpochUserMap = combineMaps([
     liqMap as MapOfCount,
     feeMap as MapOfCount,
@@ -107,13 +109,13 @@ const args = yargs.options({
   const createMerkleRootFileName = (epoch: number) => {
     return `${args.baseFilePath}-${epoch}-merkle-info.json`;
   };
-  console.log("epochInfo.epoch", epochInfo.epoch);
 
   let merkleInfo: MerkleDistributorInfo;
 
   if (epochInfo.epoch === 0) {
     const normalizedEarnings = normalizeEarningsNewFormat(currentEpochUserMap);
     merkleInfo = parseBalanceMap(normalizedEarnings);
+    console.log("epoch 0 merkleInfo", BigNumber.from(merkleInfo.tokenTotal).toString());
   }
 
   if (epochInfo.epoch > 0) {
@@ -143,7 +145,13 @@ const args = yargs.options({
       const prevMerkleInfo: MerkleDistributorInfo = JSON.parse(prevFile);
       const previousClaims = await sdk.getClaimedStatus(prevMerkleInfo);
 
+      console.log(
+        "prevMerkleInfo tokenTotal",
+        BigNumber.from(prevMerkleInfo.tokenTotal).toString()
+      );
+
       merkleInfo = combineMerkleInfo(previousClaims, currentEpochUserMap);
+
       await sdk.freeze();
       await sdk.updateMerkleRoot(merkleInfo.merkleRoot);
       await sdk.unfreeze();
@@ -151,6 +159,10 @@ const args = yargs.options({
       console.log("error", error);
     }
   }
+  console.log(
+    "new merkleInfo tokenTotal",
+    BigNumber.from(merkleInfo.tokenTotal).toString()
+  );
 
   console.log(
     "merkleInfo",

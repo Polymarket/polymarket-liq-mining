@@ -9,7 +9,7 @@ import {
 import { IsClaimed } from "../../sdk/src/types";
 import { BigNumber } from "@ethersproject/bignumber";
 import { MerkleDistributorInfo } from "../../merkle-distributor/src/parse-balance-map";
-import { ethers  } from "ethers";
+import { ethers } from "ethers";
 import { getAddress, isAddress } from "ethers/lib/utils";
 
 // VARIABLES
@@ -183,7 +183,7 @@ export const normalizeMapAmounts = (map: MapOfCount): BigNumberMapOfCount => {
   return positiveAddressesOnly(map).reduce((acc, curr) => {
     const address = validateAddress(curr);
     if (!acc[address]) {
-      acc[address] = BigNumber.from(getAmountInEther(map[address]));
+      acc[address] = getAmountInEther(map[address]);
     }
     return acc;
   }, {});
