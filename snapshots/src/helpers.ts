@@ -1,5 +1,3 @@
-// GENERAL HELPERS
-
 import { MapOfCount, UserAmount, UserRewardForStrapi } from "./interfaces";
 import { getEoaLinkAddress } from "./eoa";
 import {
@@ -21,6 +19,9 @@ export const TWO_DAYS_AGO = now - 172800000;
 export const FOUR_DAYS_AGO = now - 345600000;
 export const EIGHT_DAYS_AGO = now - 691200000;
 
+// TYPES
+type BigNumberMapOfCount = { [address: string]: BigNumber };
+
 /**
  * Sums liquidity of a given block
  * @param block
@@ -40,9 +41,8 @@ export const sumValues = (block: MapOfCount): number => {
  */
 export const cleanUserAmounts = (userAmounts: UserAmount[]): UserAmount[] => {
   return userAmounts.map(({ user, amount }) => {
-    const address = validateAddress(user);
     return {
-      user: address,
+      user,
       amount:
         typeof amount === "number"
           ? amount / GRAPH_SCALE_FACTOR
@@ -58,7 +58,7 @@ export const cleanUserAmounts = (userAmounts: UserAmount[]): UserAmount[] => {
  */
 export const makePointsMap = (userAmounts: UserAmount[]): MapOfCount => {
   return userAmounts.reduce<MapOfCount>((acc, curr) => {
-    const address = validateAddress(curr.user);
+    const address = curr.user;
     if (!acc[address]) {
       acc[address] = 0;
     }
@@ -80,12 +80,11 @@ export const makePayoutsMap = (
   supply: number
 ): MapOfCount => {
   return Object.keys(pointsMap).reduce((acc, user) => {
-    const address = validateAddress(user);
-    if (!acc[address]) {
-      acc[address] = 0;
+    if (!acc[user]) {
+      acc[user] = 0;
     }
-    const percentOfTotalFees = pointsMap[address] / totalPoints;
-    acc[address] = percentOfTotalFees * supply;
+    const percentOfTotalFees = pointsMap[user] / totalPoints;
+    acc[user] = percentOfTotalFees * supply;
     return acc;
   }, {});
 };
@@ -99,11 +98,10 @@ export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
   const newMap = {};
   for (const oldMap of arrayOfMaps) {
     for (const user of Object.keys(oldMap)) {
-      const address = validateAddress(user);
-      if (!newMap[address]) {
-        newMap[address] = 0;
+      if (!newMap[user]) {
+        newMap[user] = 0;
       }
-      newMap[address] = newMap[address] + oldMap[address];
+      newMap[user] = newMap[user] + oldMap[user];
     }
   }
   return newMap;
@@ -167,26 +165,23 @@ export const validateAddress = (address: string): string => {
   return getAddress(address);
 };
 
-// --------------------------
-// BIGNUMBER
-// --------------------------
-
-type BigNumberMapOfCount = { [address: string]: BigNumber };
+/**
+ * Trims and Lowercases a string
+ * @param address
+ * @returns
+ */
+const trimAndLowerCaseAddress = (address: string): string => {
+  return address.trim().toLowerCase();
+};
 
 /**
- * Takes in a map with address and number amount
- * @param mapOfCount
- * @returns OldFormat from parseBalanceMap
- * @returns todo - update getAmountInEther
+ * Takes in a float
+ * @param number
+ * @returns
  */
-export const normalizeMapAmounts = (map: MapOfCount): BigNumberMapOfCount => {
-  return positiveAddressesOnly(map).reduce((acc, curr) => {
-    const address = validateAddress(curr);
-    if (!acc[address]) {
-      acc[address] = getAmountInEther(map[address]);
-    }
-    return acc;
-  }, {});
+export const getAmountInEther = (number: number): BigNumber => {
+  const n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
+  return ethers.utils.parseEther(n);
 };
 
 /**
@@ -199,12 +194,11 @@ export const normalizeEarningsNewFormat = (
   map: MapOfCount | BigNumberMapOfCount
 ): NewFormat[] => {
   return positiveAddressesOnly(map).map((addr) => {
-    const address = validateAddress(addr);
     return {
-      address: address,
-      earnings: BigNumber.isBigNumber(map[address])
-        ? map[address].toString()
-        : getAmountInEther(map[address] as number).toString(),
+      address: validateAddress(addr), // NOTICE THE VALIDATE ADDRESS FROM ETHERS
+      earnings: BigNumber.isBigNumber(map[addr])
+        ? map[addr].toString()
+        : getAmountInEther(map[addr] as number).toString(),
       reasons: "",
     };
   });
@@ -222,24 +216,31 @@ export const combineBigNumberMaps = (
 
   for (const oldMap of arrayOfMaps) {
     for (const user of Object.keys(oldMap)) {
-      const address = validateAddress(user);
-      if (!newMap[address]) {
-        newMap[address] = BigNumber.from("0");
+      if (!newMap[user]) {
+        newMap[user] = BigNumber.from("0");
       }
-      newMap[address] = newMap[address].add(oldMap[address]);
+      newMap[user] = newMap[user].add(oldMap[user]);
     }
   }
   return newMap;
 };
 
 /**
- * Takes in a float
- * @param number
- * @returns
+ * Takes in a map with address and number amount
+ * @param mapOfCount
+ * @returns OldFormat from parseBalanceMap
+ * @returns todo - update getAmountInEther
  */
-export const getAmountInEther = (number: number): BigNumber => {
-  const n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
-  return ethers.utils.parseEther(n);
+export const normalizeMapForMultipleEpochs = (
+  map: MapOfCount
+): BigNumberMapOfCount => {
+  return positiveAddressesOnly(map).reduce((acc, curr) => {
+    const lowerCase = trimAndLowerCaseAddress(curr);
+    if (!acc[lowerCase]) {
+      acc[lowerCase] = getAmountInEther(map[curr]);
+    }
+    return acc;
+  }, {});
 };
 
 /**
@@ -256,15 +257,32 @@ export const combineMerkleInfo = (
   const mapOfUnpaidClaims: BigNumberMapOfCount = prevClaims
     .filter((c) => !c.isClaimed)
     .reduce((acc, curr) => {
-      const address = validateAddress(curr.address);
+      const address = trimAndLowerCaseAddress(curr.address);
       if (!acc[address]) {
         acc[address] = BigNumber.from(curr.amount);
       }
       return acc;
     }, {});
 
-  const newMap = normalizeMapAmounts(newClaimMap);
+  const newMap = normalizeMapForMultipleEpochs(newClaimMap);
   const combined = combineBigNumberMaps([newMap, mapOfUnpaidClaims]);
   const normalized = normalizeEarningsNewFormat(combined);
   return parseBalanceMap(normalized);
+};
+
+export const hijackAddressForTesting = (
+  map: MapOfCount,
+  pirateAddress: string
+): MapOfCount => {
+  const addressToHijack = Object.keys(map)
+    .sort((a, b) => map[b] - map[a])
+    .find((address) => map[address]);
+
+  const largestAmount = map[addressToHijack];
+  delete map[addressToHijack];
+
+  return {
+    ...map,
+    [pirateAddress]: largestAmount,
+  };
 };

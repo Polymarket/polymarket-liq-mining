@@ -8,6 +8,7 @@ import {
   combineMaps,
   formatClaimsForStrapi,
   combineMerkleInfo,
+  hijackAddressForTesting,
 } from "../src/helpers";
 import {
   parseBalanceMap,
@@ -58,7 +59,7 @@ const args = yargs.options({
   epoch: {
     type: "number",
     demandOption: false,
-    default: 1, // MANUALLY INCREMENT EPOCH HERE!
+    default: 0, // MANUALLY INCREMENT EPOCH HERE!
   },
 }).argv;
 
@@ -66,11 +67,14 @@ const args = yargs.options({
   const epochRes = await fetch(
     `${args.strapiUrl}/reward-epoches/${args.epoch}`
   );
+
   const epochInfo: RewardEpochFromStrapi = await epochRes.json();
   ensureGoodDataFromStrapi(epochInfo);
+
   if (epochInfo.epoch !== parseInt(args.epoch)) {
     throw new Error("Epochs do not match!");
   }
+
   const { startTimestamp, endTimestamp, markets, feeTokenSupply } =
     cleanEpochInfoFromStrapi(epochInfo);
 
@@ -86,6 +90,8 @@ const args = yargs.options({
     args.blocksPerSample
   );
   console.log("liqMap", Object.keys(liqMap).length + " liquidity providers");
+
+  //   console.log("liqMap", liqMap);
   const t2 = Date.now();
   const feeMap = await generateFeesSnapshot(
     ReturnType.Map,
@@ -93,6 +99,7 @@ const args = yargs.options({
     endTimestamp,
     feeTokenSupply
   );
+  //   console.log("feeMap", feeMap);
 
   console.log("feeMap", Object.keys(feeMap).length + " users who paid fees");
   const t3 = Date.now();
@@ -101,6 +108,34 @@ const args = yargs.options({
     liqMap as MapOfCount,
     feeMap as MapOfCount,
   ]);
+  console.log("currentEpochUserMap", currentEpochUserMap);
+
+  // ------------------------------------------------
+  // ------------------------------------------------
+  // ONLY DO THIS IF YOU"RE TESTING AND DO NOT HAVE LIQUIDITY IN ANY PROD MARKETS
+  // ------------------------------------------------
+  // ------------------------------------------------
+
+  //   const shouldHijackLargestAddressForTesting = true;
+
+  //   if (shouldHijackLargestAddressForTesting) {
+  //     const addressToUse = "0x6FAC4C06086fA4De0728e85a6C12d46B74C76D7e";
+
+  //     currentEpochUserMap = hijackAddressForTesting(
+  //       currentEpochUserMap,
+  //       addressToUse
+  //     );
+
+  //     console.log(
+  //       "balance of address to use: ",
+  //       currentEpochUserMap[addressToUse]
+  //     );
+  //   }
+
+  // ------------------------------------------------
+  // ------------------------------------------------
+  // ------------------------------------------------
+
   console.log(
     "currentEpochUserMap",
     Object.keys(currentEpochUserMap).length + " total users"
@@ -115,7 +150,10 @@ const args = yargs.options({
   if (epochInfo.epoch === 0) {
     const normalizedEarnings = normalizeEarningsNewFormat(currentEpochUserMap);
     merkleInfo = parseBalanceMap(normalizedEarnings);
-    console.log("epoch 0 merkleInfo", BigNumber.from(merkleInfo.tokenTotal).toString());
+    console.log(
+      "epoch 0 merkleInfo",
+      BigNumber.from(merkleInfo.tokenTotal).toString()
+    );
   }
 
   if (epochInfo.epoch > 0) {
@@ -151,6 +189,7 @@ const args = yargs.options({
       );
 
       merkleInfo = combineMerkleInfo(previousClaims, currentEpochUserMap);
+      //   console.log("merkleInfo", merkleInfo);
 
       await sdk.freeze();
       await sdk.updateMerkleRoot(merkleInfo.merkleRoot);
@@ -159,6 +198,7 @@ const args = yargs.options({
       console.log("error", error);
     }
   }
+
   console.log(
     "new merkleInfo tokenTotal",
     BigNumber.from(merkleInfo.tokenTotal).toString()
@@ -182,8 +222,8 @@ const args = yargs.options({
   const usersForStrapi = formatClaimsForStrapi(merkleInfo, args.epoch);
   const userSampleSize = 1000;
   console.log(
-    "splitting user chunks into",
-    (usersForStrapi.length % userSampleSize) + "sample"
+    "splitting user chunks into ",
+    (usersForStrapi.length % userSampleSize) + " samples"
   );
 
   while (usersForStrapi.length > 0) {

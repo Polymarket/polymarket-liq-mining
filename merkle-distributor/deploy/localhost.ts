@@ -7,10 +7,11 @@ export default async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-    const epoch0MerkleRoot = // todo set this
-    const epoch0Supply = // todo set this
+  const epoch0MerkleRoot =
+    "0xf9c83989a69f297cce23b3eaa170ffc83bc134b9a6bb59580bcaff5dc858fac7";
 
-  const epoch0TokenTotal = BigNumber.from(epoch0Supply);
+//   const epoch0TokenTotal = "0x152d02c7e14ae9ba1e28";
+//   const epoch0Supply = BigNumber.from(epoch0TokenTotal);
 
   const totalTokenSupply = BigNumber.from(10).pow(18).mul(1000000000);
 
@@ -35,7 +36,7 @@ export default async ({ getNamedAccounts, deployments }) => {
   erc20Contract.transfer(
     distributorAddress,
     BigNumber.from(10).pow(18).mul(1000000).toString()
-    // epoch0TokenTotal.toString() // would have to transfer more ERC20 every epoch...
+    // epoch0Supply.toString() // would have to transfer more ERC20 every epoch...
   );
 
   const distributorBalance = await erc20Contract.balanceOf(distributorAddress);
