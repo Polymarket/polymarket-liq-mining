@@ -37,7 +37,7 @@ const createMockPayoutMap = (wallets: Wallet[], deployerAddress: string) => {
   );
 };
 
-describe.only("Distributor SDK", () => {
+describe("Distributor SDK", () => {
   const wallets = provider.getWallets();
   const [deployer, alice] = wallets;
 
