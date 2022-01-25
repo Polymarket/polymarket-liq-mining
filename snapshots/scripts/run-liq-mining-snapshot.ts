@@ -154,6 +154,26 @@ const args = yargs.options({
       "epoch 0 merkleInfo",
       BigNumber.from(merkleInfo.tokenTotal).toString()
     );
+
+    // ------------------------------------------------
+    // ------------------------------------------------
+    // THIS DELETES ALL REWARD USERS FROM STRAPI!!!
+    // ONLY USE LOCALLY
+    // ------------------------------------------------
+    // ------------------------------------------------
+
+    // const res = await fetch(`${args.strapiUrl}/reward-users`, {
+    //   method: "DELETE",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // });
+
+    // const wereAllUserRecordsDeleted = await res.json();
+    // console.log("wereAllUserRecordsDeleted", wereAllUserRecordsDeleted);
+
+    // ------------------------------------------------
+    // ------------------------------------------------
   }
 
   if (epochInfo.epoch > 0) {
