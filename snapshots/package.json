@@ -10,7 +10,8 @@
     "volume-snapshot": "ts-node scripts/run-volume-snapshot.ts",
     "lp-snapshot": "ts-node scripts/run-lp-snapshot.ts",
     "fees-snapshot": "ts-node scripts/run-fees-snapshot.ts",
-    "liq-mining-snapshot": "ts-node scripts/run-liq-mining-snapshot.ts"
+    "liq-mining-snapshot": "ts-node scripts/run-liq-mining-snapshot.ts",
+    "reset-local": "ts-node scripts/run-reset-local.ts"
   },
   "lint-staged": {
     "*.ts": [
@@ -50,6 +51,7 @@
     "@types/yargs": "^17.0.0",
     "cross-fetch": "^3.1.4",
     "graphql": "^15.5.0",
+    "inquirer": "^8.2.0",
     "promises-tho": "^1.1.0",
     "react": "^17.0.2",
     "yargs": "^17.0.1"
