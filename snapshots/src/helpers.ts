@@ -9,6 +9,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { MerkleDistributorInfo } from "../../merkle-distributor/src/parse-balance-map";
 import { ethers } from "ethers";
 import { getAddress, isAddress } from "ethers/lib/utils";
+import { RewardToken } from "./lp-helpers";
 
 // VARIABLES
 const GRAPH_SCALE_FACTOR = Math.pow(10, 6);
@@ -135,12 +136,14 @@ export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
  */
 export const formatClaimsForStrapi = (
   merkleInfo: MerkleDistributorInfo,
-  epoch: number
+  epoch: number,
+  tokenId: RewardToken["id"]
 ): UserRewardForStrapi[] => {
   return Object.keys(merkleInfo.claims).map((username) => {
     return {
       username,
       epoch,
+      tokenId,
       ...merkleInfo.claims[username],
     };
   });
@@ -180,7 +183,12 @@ const trimAndLowerCaseAddress = (address: string): string => {
  * @returns
  */
 export const getAmountInEther = (number: number): BigNumber => {
-  const n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
+  let n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
+
+  if (n.includes("e")) {
+    const eIndex = n.indexOf("e");
+    n = n.slice(0, eIndex);
+  }
   return ethers.utils.parseEther(n);
 };
 

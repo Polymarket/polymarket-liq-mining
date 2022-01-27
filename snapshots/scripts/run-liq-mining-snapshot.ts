@@ -81,11 +81,12 @@ const args = yargs.options({
 
   const { startTimestamp, endTimestamp, tokenMap } =
     cleanAndSeparateEpochPerToken(epochInfo);
+  console.log("epochInfo", epochInfo);
 
-  Object.keys(tokenMap).forEach(async (token) => {
-    const { markets, feeTokenSupply } = tokenMap[token];
+  Object.keys(tokenMap).forEach(async (tokenId) => {
+    const { markets, feeTokenSupply } = tokenMap[tokenId];
     console.log("feeTokenSupply", feeTokenSupply);
-    console.log(`${token} markets`, markets);
+    console.log(`${tokenId} markets`, markets);
     console.log("start Date", new Date(startTimestamp));
     console.log("end Date", new Date(endTimestamp));
     const t1 = Date.now();
@@ -96,9 +97,9 @@ const args = yargs.options({
       markets,
       args.blocksPerSample
     );
-    console.log(`${token} liqMap`, liqMap);
+    // console.log(`${tokenId} liqMap`, liqMap);
     console.log(
-      `${token} liqMap`,
+      `${tokenId} liqMap`,
       Object.keys(liqMap).length + " liquidity providers"
     );
     const t2 = Date.now();
@@ -108,9 +109,9 @@ const args = yargs.options({
       endTimestamp,
       feeTokenSupply
     );
-    console.log(`${token} feeMap`, feeMap);
+    // console.log(`${tokenId} feeMap`, feeMap);
     console.log(
-      `${token} feeMap`,
+      `${tokenId} feeMap`,
       Object.keys(feeMap).length + " users who paid fees"
     );
     const t3 = Date.now();
@@ -118,7 +119,7 @@ const args = yargs.options({
       liqMap as MapOfCount,
       feeMap as MapOfCount,
     ]);
-    console.log(`${token} currentEpochUserMap`, feeMap);
+    // console.log(`${tokenId} currentEpochUserMap`, feeMap);
 
     // // ------------------------------------------------
     // // ------------------------------------------------
@@ -144,25 +145,26 @@ const args = yargs.options({
       "currentEpochUserMap",
       Object.keys(currentEpochUserMap).length + " total users"
     );
-    const createMerkleRootFileName = (epoch: number, token: string) => {
-      return `${args.baseFilePath}-${epoch}-${token}-merkle-info.json`;
+    const createMerkleRootFileName = (epoch: number, tokenId: string) => {
+      return `${args.baseFilePath}-epoch${epoch}-token${tokenId}-merkle-info.json`;
     };
 
     let merkleInfo: MerkleDistributorInfo;
     let prevMerkleFile: string | false;
     try {
       prevMerkleFile = fs
-        .readFileSync(createMerkleRootFileName(args.epoch - 1, token))
+        .readFileSync(createMerkleRootFileName(args.epoch - 1, tokenId))
         .toString();
     } catch (error) {
       prevMerkleFile = false;
     }
-    console.log("prevMerkleFile", prevMerkleFile);
+    // console.log("prevMerkleFile", prevMerkleFile);
 
     if (!prevMerkleFile) {
       const normalizedEarnings =
         normalizeEarningsNewFormat(currentEpochUserMap);
 
+      console.log("normalizedEarnings length", normalizedEarnings.length);
       merkleInfo = parseBalanceMap(normalizedEarnings);
 
       console.log(
@@ -220,17 +222,24 @@ const args = yargs.options({
     console.log("fee diff", t3 - t2);
     try {
       fs.writeFileSync(
-        createMerkleRootFileName(args.epoch, token),
+        createMerkleRootFileName(args.epoch, tokenId),
         JSON.stringify(merkleInfo)
       );
     } catch (error) {
       console.log("write merkle snapshot", error);
     }
-    const usersForStrapi = formatClaimsForStrapi(merkleInfo, args.epoch);
+
+    const usersForStrapi = formatClaimsForStrapi(
+      merkleInfo,
+      args.epoch,
+      Number(tokenId)
+    );
+
+    // console.log("usersForStrapi", usersForStrapi);
     const userSampleSize = 1000;
     console.log(
       "splitting user chunks into ",
-      (usersForStrapi.length % userSampleSize) + " samples"
+      (usersForStrapi.length / userSampleSize) + " samples"
     );
     while (usersForStrapi.length > 0) {
       const sample = usersForStrapi.splice(0, 1000);

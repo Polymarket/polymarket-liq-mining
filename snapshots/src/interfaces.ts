@@ -1,3 +1,4 @@
+import { RewardToken } from './lp-helpers';
 export type MapOfCount = { [address: string]: number };
 
 export interface UserAmount {
@@ -24,4 +25,6 @@ export interface UserRewardForStrapi {
 	amount: string 
 	index: number
 	proof: string[]
+	epoch: number
+	tokenId: number
 }

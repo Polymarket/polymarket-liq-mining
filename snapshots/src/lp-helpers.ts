@@ -72,7 +72,7 @@ interface StrapiIcon {
 }
 
 export interface RewardToken {
-//   id: number;
+  id: number;
   symbol: string;
   name: string;
   icon: StrapiIcon;
@@ -161,8 +161,8 @@ export const cleanAndSeparateEpochPerToken = (
 ): CleanEpochInfo => {
   console.log("epochInfo", epochInfo);
   const feeMap = epochInfo.reward_tokens.reduce((acc, curr) => {
-    if (!acc[curr.reward_token.name]) {
-      acc[curr.reward_token.name] = {
+    if (!acc[curr.reward_token.id]) {
+      acc[curr.reward_token.id] = {
         feeTokenSupply: BigNumber.from(curr.fees_token_supply).toNumber(),
       };
     }
@@ -172,12 +172,12 @@ export const cleanAndSeparateEpochPerToken = (
 
   const liqMap = epochInfo.reward_markets.reduce((acc, curr) => {
     curr.reward_tokens_liquidity.forEach((token) => {
-      if (!acc[token.reward_token.name]) {
-        acc[token.reward_token.name] = {
+      if (!acc[token.reward_token.id]) {
+        acc[token.reward_token.id] = {
           markets: [],
         };
       }
-      acc[token.reward_token.name].markets.push({
+      acc[token.reward_token.id].markets.push({
         amount: BigNumber.from(token.lp_token_supply).toNumber(),
         howToCalculate: token.token_calculation,
         marketMaker: curr.market.marketMakerAddress.toLowerCase(),
@@ -190,11 +190,11 @@ export const cleanAndSeparateEpochPerToken = (
   const keys = [...new Set(Object.keys(feeMap).concat(Object.keys(liqMap)))];
   console.log("keys", keys);
 
-  const tokenMap = keys.reduce((acc, tokenName) => {
-    if (!acc[tokenName]) {
-      acc[tokenName] = {
-        markets: liqMap[tokenName]?.markets ?? [],
-        feeTokenSupply: feeMap[tokenName]?.feeTokenSupply ?? 0,
+  const tokenMap = keys.reduce((acc, tokenId) => {
+    if (!acc[tokenId]) {
+      acc[tokenId] = {
+        markets: liqMap[tokenId]?.markets ?? [],
+        feeTokenSupply: feeMap[tokenId]?.feeTokenSupply ?? 0,
       };
     }
 
