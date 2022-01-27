@@ -19,7 +19,10 @@ import { ReturnType, MapOfCount } from "../src/interfaces";
 import {
   RewardEpochFromStrapi,
   ensureGoodDataFromStrapi,
-  cleanEpochInfoFromStrapi,
+  //   cleanEpochInfoFromStrapi,
+  LpMarketInfo,
+  //   separateEpochPerToken,
+  cleanAndSeparateEpochPerToken,
 } from "../src/lp-helpers";
 import { BigNumber, ethers, providers } from "ethers";
 import { DistributorSdk } from "../../sdk/src/distributorSdk";
@@ -75,189 +78,174 @@ const args = yargs.options({
     throw new Error("Epochs do not match!");
   }
 
-  const { startTimestamp, endTimestamp, markets, feeTokenSupply } =
-    cleanEpochInfoFromStrapi(epochInfo);
+  //   const { startTimestamp, endTimestamp, markets, feeTokenSupply } =
+  // cleanEpochInfoFromStrapi(epochInfo);
+  const { startTimestamp, endTimestamp, tokenMap } =
+    cleanAndSeparateEpochPerToken(epochInfo);
 
-  console.log("start Date", new Date(startTimestamp));
-  console.log("end Date", new Date(endTimestamp));
-
-  const t1 = Date.now();
-  const liqMap = await generateLpSnapshot(
-    ReturnType.Map,
-    startTimestamp,
-    endTimestamp,
-    markets,
-    args.blocksPerSample
-  );
-  console.log("liqMap", Object.keys(liqMap).length + " liquidity providers");
-
-  //   console.log("liqMap", liqMap);
-  const t2 = Date.now();
-  const feeMap = await generateFeesSnapshot(
-    ReturnType.Map,
-    startTimestamp,
-    endTimestamp,
-    feeTokenSupply
-  );
-  //   console.log("feeMap", feeMap);
-
-  console.log("feeMap", Object.keys(feeMap).length + " users who paid fees");
-  const t3 = Date.now();
-
-  const currentEpochUserMap = combineMaps([
-    liqMap as MapOfCount,
-    feeMap as MapOfCount,
-  ]);
-  console.log("currentEpochUserMap", currentEpochUserMap);
-
-  // ------------------------------------------------
-  // ------------------------------------------------
-  // ONLY DO THIS IF YOU"RE TESTING AND DO NOT HAVE LIQUIDITY IN ANY PROD MARKETS
-  // ------------------------------------------------
-  // ------------------------------------------------
-
-  //   const shouldHijackLargestAddressForTesting = true;
-
-  //   if (shouldHijackLargestAddressForTesting) {
-  //     const addressToUse = "0x6FAC4C06086fA4De0728e85a6C12d46B74C76D7e";
-
-  //     currentEpochUserMap = hijackAddressForTesting(
-  //       currentEpochUserMap,
-  //       addressToUse
-  //     );
-
-  //     console.log(
-  //       "balance of address to use: ",
-  //       currentEpochUserMap[addressToUse]
-  //     );
-  //   }
-
-  // ------------------------------------------------
-  // ------------------------------------------------
-  // ------------------------------------------------
-
-  console.log(
-    "currentEpochUserMap",
-    Object.keys(currentEpochUserMap).length + " total users"
-  );
-
-  const createMerkleRootFileName = (epoch: number) => {
-    return `${args.baseFilePath}-${epoch}-merkle-info.json`;
-  };
-
-  let merkleInfo: MerkleDistributorInfo;
-
-  if (epochInfo.epoch === 0) {
-    const normalizedEarnings = normalizeEarningsNewFormat(currentEpochUserMap);
-    merkleInfo = parseBalanceMap(normalizedEarnings);
+  Object.keys(tokenMap).forEach(async (token) => {
+    const { markets, feeTokenSupply } = tokenMap[token];
+    console.log("feeTokenSupply", feeTokenSupply);
+    console.log(`${token} markets`, markets);
+    console.log("start Date", new Date(startTimestamp));
+    console.log("end Date", new Date(endTimestamp));
+    const t1 = Date.now();
+    const liqMap = await generateLpSnapshot(
+      ReturnType.Map,
+      startTimestamp,
+      endTimestamp,
+      markets,
+      args.blocksPerSample
+    );
+    console.log(`${token} liqMap`, liqMap);
     console.log(
-      "epoch 0 merkleInfo",
-      BigNumber.from(merkleInfo.tokenTotal).toString()
+      `${token} liqMap`,
+      Object.keys(liqMap).length + " liquidity providers"
     );
-
-    // ------------------------------------------------
-    // ------------------------------------------------
-    // THIS DELETES ALL REWARD USERS FROM STRAPI!!!
-    // ONLY USE LOCALLY
-    // ------------------------------------------------
-    // ------------------------------------------------
-
-    // const res = await fetch(`${args.strapiUrl}/reward-users`, {
-    //   method: "DELETE",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    // });
-
-    // const wereAllUserRecordsDeleted = await res.json();
-    // console.log("wereAllUserRecordsDeleted", wereAllUserRecordsDeleted);
-
-    // ------------------------------------------------
-    // ------------------------------------------------
-  }
-
-  if (epochInfo.epoch > 0) {
-    // mnemonic is from hardhat config https://hardhat.org/hardhat-network/reference/#accounts
-    const mnemonic =
-      "test test test test test test test test test test test junk";
-    const provider = new providers.JsonRpcProvider(args.rpcUrl);
-    const account = ethers.utils.HDNode.fromMnemonic(mnemonic);
-    const walletWithProvider = new ethers.Wallet(account, provider);
-    walletWithProvider.connect(provider);
-    const signer = provider.getSigner();
-
-    const sdk = new DistributorSdk(
-      // eslint-disable-next-line
-      // @ts-ignore
-      signer,
-      31337,
-      "token-address-not-needed-to-freeze",
-      args.distributorAddress
+    const t2 = Date.now();
+    const feeMap = await generateFeesSnapshot(
+      ReturnType.Map,
+      startTimestamp,
+      endTimestamp,
+      feeTokenSupply
     );
+    console.log(`${token} feeMap`, feeMap);
+    console.log(
+      `${token} feeMap`,
+      Object.keys(feeMap).length + " users who paid fees"
+    );
+    const t3 = Date.now();
+    const currentEpochUserMap = combineMaps([
+      liqMap as MapOfCount,
+      feeMap as MapOfCount,
+    ]);
+    console.log(`${token} currentEpochUserMap`, feeMap);
 
+    // // ------------------------------------------------
+    // // ------------------------------------------------
+    // // ONLY DO THIS IF YOU"RE TESTING AND DO NOT HAVE LIQUIDITY IN ANY PROD MARKETS
+    // // ------------------------------------------------
+    // // ------------------------------------------------
+    // //   const shouldHijackLargestAddressForTesting = true;
+    // //   if (shouldHijackLargestAddressForTesting) {
+    // //     const addressToUse = "0x6FAC4C06086fA4De0728e85a6C12d46B74C76D7e";
+    // //     currentEpochUserMap = hijackAddressForTesting(
+    // //       currentEpochUserMap,
+    // //       addressToUse
+    // //     );
+    // //     console.log(
+    // //       "balance of address to use: ",
+    // //       currentEpochUserMap[addressToUse]
+    // //     );
+    // //   }
+    // // ------------------------------------------------
+    // // ------------------------------------------------
+
+    console.log(
+      "currentEpochUserMap",
+      Object.keys(currentEpochUserMap).length + " total users"
+    );
+    const createMerkleRootFileName = (epoch: number, token: string) => {
+      return `${args.baseFilePath}-${epoch}-${token}-merkle-info.json`;
+    };
+
+    let merkleInfo: MerkleDistributorInfo;
+    let prevMerkleFile: string | false;
     try {
-      const prevFile = fs
-        .readFileSync(createMerkleRootFileName(args.epoch - 1))
+      prevMerkleFile = fs
+        .readFileSync(createMerkleRootFileName(args.epoch - 1, token))
         .toString();
+    } catch (error) {
+      prevMerkleFile = false;
+    }
+    console.log("prevMerkleFile", prevMerkleFile);
 
-      const prevMerkleInfo: MerkleDistributorInfo = JSON.parse(prevFile);
-      const previousClaims = await sdk.getClaimedStatus(prevMerkleInfo);
+    if (!prevMerkleFile) {
+      const normalizedEarnings =
+        normalizeEarningsNewFormat(currentEpochUserMap);
+
+      merkleInfo = parseBalanceMap(normalizedEarnings);
 
       console.log(
-        "prevMerkleInfo tokenTotal",
-        BigNumber.from(prevMerkleInfo.tokenTotal).toString()
+        "epoch 0 merkleInfo",
+        BigNumber.from(merkleInfo.tokenTotal).toString()
       );
-
-      merkleInfo = combineMerkleInfo(previousClaims, currentEpochUserMap);
-      //   console.log("merkleInfo", merkleInfo);
-
-      await sdk.freeze();
-      await sdk.updateMerkleRoot(merkleInfo.merkleRoot);
-      await sdk.unfreeze();
-    } catch (error) {
-      console.log("error", error);
     }
-  }
 
-  console.log(
-    "new merkleInfo tokenTotal",
-    BigNumber.from(merkleInfo.tokenTotal).toString()
-  );
+    if (prevMerkleFile) {
+      const mnemonic = process.env.MNEMONIC_FOR_ADMIN;
+      if (!mnemonic) {
+        throw new Error("No mnemonic set!");
+      }
 
-  console.log(
-    "merkleInfo",
-    Object.keys(merkleInfo.claims).length + " total claims"
-  );
-  console.log("liq diff", t2 - t1);
-  console.log("fee diff", t3 - t2);
-  try {
-    fs.writeFileSync(
-      createMerkleRootFileName(args.epoch),
-      JSON.stringify(merkleInfo)
+      const provider = new providers.JsonRpcProvider(args.rpcUrl);
+      const account = ethers.utils.HDNode.fromMnemonic(mnemonic);
+      const walletWithProvider = new ethers.Wallet(account, provider);
+      walletWithProvider.connect(provider);
+      const signer = provider.getSigner();
+      const sdk = new DistributorSdk(
+        // eslint-disable-next-line
+        // @ts-ignore
+        signer,
+        31337,
+        "token-address-not-needed-to-freeze",
+        args.distributorAddress
+      );
+      try {
+        const prevMerkleInfo: MerkleDistributorInfo =
+          JSON.parse(prevMerkleFile);
+        const previousClaims = await sdk.getClaimedStatus(prevMerkleInfo);
+
+        console.log(
+          "prevMerkleInfo tokenTotal",
+          BigNumber.from(prevMerkleInfo.tokenTotal).toString()
+        );
+        merkleInfo = combineMerkleInfo(previousClaims, currentEpochUserMap);
+        //   console.log("merkleInfo", merkleInfo);
+        await sdk.freeze();
+        await sdk.updateMerkleRoot(merkleInfo.merkleRoot);
+        await sdk.unfreeze();
+      } catch (error) {
+        console.log("error", error);
+      }
+    }
+    console.log(
+      "new merkleInfo tokenTotal",
+      BigNumber.from(merkleInfo.tokenTotal).toString()
     );
-  } catch (error) {
-    console.log("write merkle snapshot", error);
-  }
-
-  const usersForStrapi = formatClaimsForStrapi(merkleInfo, args.epoch);
-  const userSampleSize = 1000;
-  console.log(
-    "splitting user chunks into ",
-    (usersForStrapi.length % userSampleSize) + " samples"
-  );
-
-  while (usersForStrapi.length > 0) {
-    const sample = usersForStrapi.splice(0, 1000);
+    console.log(
+      "merkleInfo",
+      Object.keys(merkleInfo.claims).length + " total claims"
+    );
+    console.log("liq diff", t2 - t1);
+    console.log("fee diff", t3 - t2);
     try {
-      await fetch(`${args.strapiUrl}/reward-users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(sample),
-      });
+      fs.writeFileSync(
+        createMerkleRootFileName(args.epoch, token),
+        JSON.stringify(merkleInfo)
+      );
     } catch (error) {
-      console.log("error", error);
+      console.log("write merkle snapshot", error);
     }
-  }
+    const usersForStrapi = formatClaimsForStrapi(merkleInfo, args.epoch);
+    const userSampleSize = 1000;
+    console.log(
+      "splitting user chunks into ",
+      (usersForStrapi.length % userSampleSize) + " samples"
+    );
+    while (usersForStrapi.length > 0) {
+      const sample = usersForStrapi.splice(0, 1000);
+      try {
+        await fetch(`${args.strapiUrl}/reward-users`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(sample),
+        });
+      } catch (error) {
+        console.log("error", error);
+      }
+    }
+  });
 })(args);
