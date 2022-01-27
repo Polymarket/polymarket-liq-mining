@@ -88,44 +88,77 @@ describe("clean and separate epoch per token", () => {
   });
 
   it("should not fail if only adding an extra token for fees", () => {
-    const secondFees = {
+    const thirdToken = {
       id: 3,
       reward_token: {
         id: 3,
         symbol: token3,
         name: token3,
-        icon: { id: 3 },
+        icon: {
+          id: 1,
+        },
       },
-      fees_token_supply: "11000",
+      fees_token_supply: "500000",
     };
 
-    mockEpochInfo.reward_markets.push(secondFees);
+    mockEpochInfo.reward_tokens.push(thirdToken);
+
+    const expected = cleanAndSeparateEpochPerToken(mockEpochInfo);
+    expect(expected.tokenMap[token3].markets.length).to.eq(0);
+    expect(expected.tokenMap[token3].feeTokenSupply).to.eq(
+      BigNumber.from("500000").toNumber()
+    );
+  });
+
+  it("should not fail if only adding an extra liq token to an existing market", () => {
+    const thirdSupply = "110000";
+
+    const thirdLiq = {
+      id: 3,
+      reward_token: {
+        id: 3,
+        symbol: token3,
+        name: token3,
+      },
+      token_calculation: "perMarket",
+      lp_token_supply: thirdSupply,
+    };
+
+    mockEpochInfo.reward_markets[0].reward_tokens_liquidity.push(thirdLiq);
 
     const expected = cleanAndSeparateEpochPerToken(mockEpochInfo);
     expect(expected.tokenMap[token3].markets.length).to.eq(1);
     expect(expected.tokenMap[token3].feeTokenSupply).to.eq(0);
   });
 
-  it("should not fail if only adding an extra token only for fees", () => {
+  it("should not fail if only adding an extra liq token to an existing market", () => {
     const thirdSupply = "110000";
 
-    const secondFees = {
-      id: 3,
-      reward_token: {
-        id: 3,
-        symbol: token3,
-        name: token3,
-        icon: { id: 3 },
+    const thirdMarket = {
+      id: 4,
+      reward_epoch: 2,
+      market: {
+        marketMakerAddress: "0x1000000000000000000000000000000000000000",
       },
-      fees_token_supply: thirdSupply,
+      reward_tokens_liquidity: [
+        {
+          id: 3,
+          reward_token: {
+            id: 3,
+            symbol: token3,
+            name: token3,
+          },
+          token_calculation: "perMarket",
+          lp_token_supply: thirdSupply,
+        },
+      ],
     };
 
-    mockEpochInfo.reward_tokens.push(secondFees);
+    mockEpochInfo.reward_markets.push(thirdMarket);
 
     const expected = cleanAndSeparateEpochPerToken(mockEpochInfo);
-    expect(expected.tokenMap[token3].markets.length).to.eq(0);
-    expect(expected.tokenMap[token3].feeTokenSupply).to.eq(
-      BigNumber.from(thirdSupply).toNumber()
-    );
+    expect(expected.tokenMap[token3].markets.length).to.eq(1);
+    expect(expected.tokenMap[token3].markets[0].amount).to.eq(BigNumber.from(thirdSupply).toNumber());
+    expect(expected.tokenMap[token3].feeTokenSupply).to.eq(0);
   });
 });
