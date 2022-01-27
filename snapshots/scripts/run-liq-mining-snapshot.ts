@@ -19,9 +19,6 @@ import { ReturnType, MapOfCount } from "../src/interfaces";
 import {
   RewardEpochFromStrapi,
   ensureGoodDataFromStrapi,
-  //   cleanEpochInfoFromStrapi,
-  LpMarketInfo,
-  //   separateEpochPerToken,
   cleanAndSeparateEpochPerToken,
 } from "../src/lp-helpers";
 import { BigNumber, ethers, providers } from "ethers";
@@ -78,8 +75,6 @@ const args = yargs.options({
     throw new Error("Epochs do not match!");
   }
 
-  //   const { startTimestamp, endTimestamp, markets, feeTokenSupply } =
-  // cleanEpochInfoFromStrapi(epochInfo);
   const { startTimestamp, endTimestamp, tokenMap } =
     cleanAndSeparateEpochPerToken(epochInfo);
 
