@@ -56,11 +56,15 @@ const args = yargs.options({
     demandOption: false,
     default: "http://127.0.0.1:8545/",
   },
+  // ------------------------------------------------
+  // ------------------------------------------------
   epoch: {
     type: "number",
     demandOption: false,
     default: 0, // MANUALLY INCREMENT EPOCH HERE!
   },
+  // ------------------------------------------------
+  // ------------------------------------------------
 }).argv;
 
 (async (args: any) => {
