@@ -56,7 +56,7 @@ export async function resetLocal(collection: string): Promise<boolean> {
         let batch = [];
         const originalLength = recordsJson.length;
         let batchIndex = 0;
-        const batchSize = 100;
+        const batchSize = 250;
         while (recordsJson.length > 0) {
             batch = recordsJson.splice(0, Math.min(batchSize, recordsJson.length));
             await Promise.all(batch.map(async (each, index) => {

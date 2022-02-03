@@ -4,11 +4,11 @@ pragma solidity 0.6.9;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "./interfaces/IMerkleDistributor.sol";
-import "./Ownable.sol";
+import "../interfaces/IMerkleDistributor.sol";
+import "../Ownable.sol";
 
 
-contract MerkleDistributor is IMerkleDistributor, Ownable {
+contract UMA_MerkleDistributor is IMerkleDistributor, Ownable {
     address public immutable override token;
     bytes32 public override merkleRoot;
     uint32 public override week;
