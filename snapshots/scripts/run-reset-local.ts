@@ -4,11 +4,10 @@ import * as inquirer from "inquirer";
 
 
 import {
-    fetchRewardEpochsCount,
-    fetchRewardMarketsCount,
-    fetchRewardUsersCount,
     resetLocal
 } from "../src/reset-local";
+import {fetchRewardEpochsCount, fetchRewardMarketsCount, fetchRewardUsersCount} from "../src/strapi-helpers";
+import {LOCAL_STRAPI_URL} from "../src/constants";
 
 dotenv.config();
 
@@ -29,9 +28,9 @@ const confirmRisky = async (collection: string) => {
 };
 
 const resetLocalCollection = async () => {
-    const rewardUserCount = await fetchRewardUsersCount();
-    const rewardMarketCount = await fetchRewardMarketsCount();
-    const rewardEpochCount = await fetchRewardEpochsCount();
+    const rewardUserCount = await fetchRewardUsersCount(LOCAL_STRAPI_URL);
+    const rewardMarketCount = await fetchRewardMarketsCount(LOCAL_STRAPI_URL);
+    const rewardEpochCount = await fetchRewardEpochsCount(LOCAL_STRAPI_URL);
 
     const {collectionToDelete} = await inquirer.prompt([{
             name: "collectionToDelete",

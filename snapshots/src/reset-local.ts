@@ -1,6 +1,5 @@
 import fetch from "cross-fetch";
-
-const localStrapiBaseUrl = "http://localhost:1337";
+import {LOCAL_STRAPI_URL} from "./constants";
 
 export async function resetLocal(collection: string): Promise<boolean> {
     const collectionMap = {
@@ -11,9 +10,7 @@ export async function resetLocal(collection: string): Promise<boolean> {
     const endpointSuffix = collectionMap[collection];
     // clear reward-users collection
     // login using http://localhost:1337/admin/login
-    console.log("hey")
-
-    const url = `${localStrapiBaseUrl}/admin/login`;
+    const url = `${LOCAL_STRAPI_URL}/admin/login`;
     const strapiEmail = process.env.STRAPI_ADMIN_EMAIL;
     const strapiPassword = process.env.STRAPI_ADMIN_PASSWORD;
 
@@ -33,7 +30,7 @@ export async function resetLocal(collection: string): Promise<boolean> {
         console.log({loginJson});
 
         const {data: {token}} = loginJson;
-        const recordResponse = await fetch(`${localStrapiBaseUrl}/reward-${endpointSuffix}?_limit=-1`);
+        const recordResponse = await fetch(`${LOCAL_STRAPI_URL}/reward-${endpointSuffix}?_limit=-1`);
 
         console.log({recordResponse});
 
@@ -47,7 +44,7 @@ export async function resetLocal(collection: string): Promise<boolean> {
 
         console.log("Deleting one record as a test of permissions...")
 
-        await fetch(`${localStrapiBaseUrl}/reward-${endpointSuffix}/${firstOne.id}`, {
+        await fetch(`${LOCAL_STRAPI_URL}/reward-${endpointSuffix}/${firstOne.id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -66,7 +63,7 @@ export async function resetLocal(collection: string): Promise<boolean> {
 
                 console.log(`Deleting ${batchIndex * batchSize + index + 1} of ${originalLength} ${collection} records`);
 
-                await fetch(`${localStrapiBaseUrl}/reward-users/${each.id}`, {
+                await fetch(`${LOCAL_STRAPI_URL}/reward-users/${each.id}`, {
                     method: "DELETE",
                     headers: {
                         "Authorization": `Bearer ${token}`
@@ -84,18 +81,3 @@ export async function resetLocal(collection: string): Promise<boolean> {
     }
 }
 
-export async function fetchRewardUsersCount(): Promise<number> {
-    const response = await fetch(`${localStrapiBaseUrl}/reward-users/count`);
-    return await response.json();
-}
-
-export async function fetchRewardMarketsCount(): Promise<number> {
-    const response = await fetch(`${localStrapiBaseUrl}/reward-markets/count`);
-    return await response.json();
-
-}
-
-export async function fetchRewardEpochsCount(): Promise<number> {
-    const response = await fetch(`${localStrapiBaseUrl}/reward-epoches/count`);
-    return await response.json();
-}
