@@ -159,7 +159,6 @@ export const ensureGoodDataFromStrapi = (
 export const cleanAndSeparateEpochPerToken = (
   epochInfo: RewardEpochFromStrapi
 ): CleanEpochInfo => {
-  console.log("epochInfo", epochInfo);
   const feeMap = epochInfo.reward_tokens.reduce((acc, curr) => {
     if (!acc[curr.reward_token.id]) {
       acc[curr.reward_token.id] = {
@@ -168,7 +167,6 @@ export const cleanAndSeparateEpochPerToken = (
     }
     return acc;
   }, {});
-  console.log("feeMap", feeMap);
 
   const liqMap = epochInfo.reward_markets.reduce((acc, curr) => {
     curr.reward_tokens_liquidity.forEach((token) => {
@@ -185,10 +183,8 @@ export const cleanAndSeparateEpochPerToken = (
     });
     return acc;
   }, {});
-  console.log("liqMap", liqMap);
 
   const keys = [...new Set(Object.keys(feeMap).concat(Object.keys(liqMap)))];
-  console.log("keys", keys);
 
   const tokenMap = keys.reduce((acc, tokenId) => {
     if (!acc[tokenId]) {
