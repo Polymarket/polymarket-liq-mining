@@ -6,7 +6,6 @@ var ethers_1 = require("ethers");
 var MerkleDistributor_json_1 = tslib_1.__importDefault(require("./abi/MerkleDistributor.json"));
 var claims_1 = require("./claims");
 var ethers_2 = require("ethers");
-var types_1 = require("./types");
 var admin_1 = require("./admin");
 var networks_1 = require("./networks");
 var erc20_1 = require("./erc20");
@@ -19,13 +18,21 @@ var DistributorSdk = /** @class */ (function () {
      * @param distributorAddress - a local address to the distributor token - only used for testing.
      */
     function DistributorSdk(signer, chainID, token, distributorAddress) {
+        var _a;
         if (!signer.provider) {
             throw new Error("Signer must be connected to a provider.");
         }
         this.signer = signer;
         this.chainID = chainID;
-        this.token = token;
-        this.distributor = new ethers_1.Contract(distributorAddress !== null && distributorAddress !== void 0 ? distributorAddress : networks_1.getContracts(chainID).distributor, MerkleDistributor_json_1.default, signer.provider);
+        var network = networks_1.getContracts(chainID)[token];
+        if (!distributorAddress && !network) {
+            throw new Error("Distributor contract must be set!");
+        }
+        if (!network && token.slice(0, 2) !== "0x") {
+            throw new Error("ERC20 contract must be set!");
+        }
+        this.token = (_a = network === null || network === void 0 ? void 0 : network.erc20) !== null && _a !== void 0 ? _a : token;
+        this.distributor = new ethers_1.Contract(distributorAddress !== null && distributorAddress !== void 0 ? distributorAddress : network.distributor, MerkleDistributor_json_1.default, signer.provider);
     }
     /**
      * returns an array of what leafs have been claimed
@@ -233,9 +240,7 @@ var DistributorSdk = /** @class */ (function () {
                     case 0: return [4 /*yield*/, this.signer.sendTransaction(claims_1.claimTx(this.distributor.address, claimIndex, account, amount, merkleProof))];
                     case 1:
                         claimResponse = _a.sent();
-                        return [4 /*yield*/, this.signer.sendTransaction(erc20_1.erc20TransferTransaction(this.token in types_1.Token
-                                ? networks_1.getContracts(this.chainID)[this.token]
-                                : this.token, recipient, amount))];
+                        return [4 /*yield*/, this.signer.sendTransaction(erc20_1.erc20TransferTransaction(this.token, recipient, amount))];
                     case 2:
                         transferResponse = _a.sent();
                         return [2 /*return*/, [claimResponse, transferResponse]];
@@ -264,7 +269,7 @@ var DistributorSdk = /** @class */ (function () {
      */
     DistributorSdk.prototype.populateClaimAndTransferTx = function (claimIndex, amount, merkleProof, account, recipient) {
         var txA = claims_1.claimTx(this.distributor.address, claimIndex, account, amount, merkleProof);
-        var txB = erc20_1.erc20TransferTransaction(this.token in types_1.Token ? networks_1.getContracts(this.chainID)[this.token] : this.token, recipient, amount);
+        var txB = erc20_1.erc20TransferTransaction(this.token, recipient, amount);
         return [txA, txB];
     };
     return DistributorSdk;

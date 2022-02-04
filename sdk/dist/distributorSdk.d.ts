@@ -1,11 +1,11 @@
 import { JsonRpcSigner } from "@ethersproject/providers";
 import { ethers, Contract, BigNumberish } from "ethers";
-import { IsClaimed, Token, MerkleDistributorInfo } from "./types";
+import { IsClaimed, MerkleDistributorInfo } from "./types";
 import { Transaction } from "./types";
 export declare class DistributorSdk {
     readonly chainID: number;
     readonly signer: JsonRpcSigner;
-    readonly token: Token | string;
+    readonly token: string;
     distributor: Contract;
     /**
      * returns an array of what leafs have been claimed
@@ -14,7 +14,7 @@ export declare class DistributorSdk {
      * @param token - our Token TS enum which maps to a an ERC20 address OR an ERC20 token address for testing
      * @param distributorAddress - a local address to the distributor token - only used for testing.
      */
-    constructor(signer: JsonRpcSigner, chainID: number, token: Token | string, distributorAddress?: string);
+    constructor(signer: JsonRpcSigner, chainID: number, token: string, distributorAddress?: string);
     /**
      * returns an array of what leafs have been claimed
      * @param merkleInfo - merkle distributor info. which claims to iterate over

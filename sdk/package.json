@@ -1,5 +1,5 @@
 {
-  "name": "@polymarket/distributor-v0-sdk",
+  "name": "@polymarket/distributor-sdk",
   "version": "1.0.0",
   "description": "SDK to simplify common interactions with the Polymarket Merkle Distributor",
   "author": "Matt Walker <matt@polymarket.com>",
