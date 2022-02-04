@@ -7,15 +7,21 @@ import {
 } from "../src/helpers";
 
 describe("updateTokens on a PerBlockReward", () => {
-  let mockFees;
+  let mockFees, alan, brian, carrie, devon, earl;
 
   beforeEach(() => {
+    alan = "0x00D3BB55A6259416BB8DeF0EB46818aD178326eB";
+    brian = "0x0322c202691B2f1Eb4c4aB01Ee0813796392a3f2";
+    carrie = "0x0364E487CCd5a61d3c83848a420846848aE08061";
+    devon = "0x03d47623592049d5B402694E205AB12318d53a91";
+    earl = "0x04004b2A058F38df685dB22496c36dc4598F3F07";
+
     mockFees = [
-      { user: "0xa", amount: "1959999" },
-      { user: "0xb", amount: "204" },
-      { user: "0xc", amount: "161130" },
-      { user: "0xd", amount: "51912313" },
-      { user: "0xe", amount: "200000000" },
+      { user: alan, amount: "1959999" },
+      { user: brian, amount: "204" },
+      { user: carrie, amount: "161130" },
+      { user: devon, amount: "51912313" },
+      { user: earl, amount: "200000000" },
     ];
   });
 
@@ -49,8 +55,8 @@ describe("updateTokens on a PerBlockReward", () => {
     const pointsMap = makePointsMap(cleanedUserAmounts);
     const feeSum = sumValues(pointsMap);
     const payoutMap = makePayoutsMap(pointsMap, feeSum, totalSupply);
-    expect(payoutMap["0xa"]).to.eq((pointsMap["0xa"] / feeSum) * totalSupply);
-    expect(payoutMap["0xc"]).to.eq((pointsMap["0xc"] / feeSum) * totalSupply);
-    expect(payoutMap["0xe"]).to.eq((pointsMap["0xe"] / feeSum) * totalSupply);
+    expect(payoutMap[alan]).to.eq((pointsMap[alan] / feeSum) * totalSupply);
+    expect(payoutMap[carrie]).to.eq((pointsMap[carrie] / feeSum) * totalSupply);
+    expect(payoutMap[earl]).to.eq((pointsMap[earl] / feeSum) * totalSupply);
   });
 });

@@ -1,5 +1,6 @@
 import { sumValues, combineMaps, makePayoutsMap } from "./helpers";
 import { MapOfCount } from "./interfaces";
+import { BigNumber } from "@ethersproject/bignumber";
 
 // TYPES
 export interface IStartAndEndBlock {
@@ -11,7 +12,6 @@ export interface IStartAndEndBlock {
 
 export interface LpMarketInfo {
   marketMaker: string;
-  slug: string;
   howToCalculate: LpCalculation;
   amount: number;
 }
@@ -20,6 +20,194 @@ export enum LpCalculation {
   PerBlock = "perBlock",
   PerMarket = "perMarket",
 }
+
+export interface RewardTokenLiquidity {
+  reward_token: RewardToken;
+  token_calculation: LpCalculation;
+  lp_token_supply: string;
+}
+
+export interface RewardMarketFromStrapi {
+  reward_epoch: number;
+  reward_tokens_liquidity: RewardTokenLiquidity[];
+  market: {
+    marketMakerAddress: string;
+  };
+}
+
+interface StrapiFormat {
+  name: string;
+  hash: string;
+  ext: string;
+  mime: string;
+  width: number;
+  height: number;
+  size: number;
+  path: string;
+  url: string;
+}
+
+interface StrapiIcon {
+  //   id: number;
+  //   alternativeText: string;
+  //   caption: string;
+  //   hash: string;
+  //   ext: string;
+  //   mime: string;
+  //   previewUrl: null;
+  //   provider: string;
+  //   created_at: string;
+  //   updated_at: string;
+  name: string;
+  width: number;
+  height: number;
+  size: number;
+  url: string;
+  formats: {
+    thumbnail: StrapiFormat;
+    large: StrapiFormat;
+    medium: StrapiFormat;
+    small: StrapiFormat;
+  };
+}
+
+export interface RewardToken {
+  id: number;
+  symbol: string;
+  name: string;
+  icon: StrapiIcon;
+}
+
+export interface RewardTokenFromStrapi {
+//   id: number;
+  reward_token: RewardToken;
+  fees_token_supply: string;
+}
+
+export interface RewardEpochFromStrapi {
+  start: string;
+  end: string;
+  epoch: number;
+  reward_tokens: RewardTokenFromStrapi[];
+  reward_markets: RewardMarketFromStrapi[];
+}
+
+interface TokenMap {
+  [tokenName: string]: {
+    markets: LpMarketInfo[];
+    feeTokenSupply: number;
+  };
+}
+
+interface CleanEpochInfo {
+  startTimestamp: number;
+  endTimestamp: number;
+  epoch: number;
+  tokenMap: TokenMap;
+}
+/**
+ * Throws errors if properties we need from Strapi are not present
+ * @param epochInfo
+ * @returns boolean
+ */
+export const ensureGoodDataFromStrapi = (
+  epochInfo: RewardEpochFromStrapi
+): boolean => {
+  if (!epochInfo) {
+    throw new Error("Epoch Info Error!");
+  }
+  const { start, end, epoch, reward_tokens, reward_markets } = epochInfo;
+  if (!start || !end) {
+    throw new Error("Dates not set!");
+  }
+  if (typeof epoch !== "number") {
+    throw new Error("Epoch not set!");
+  }
+
+  if (!reward_tokens || reward_tokens.length === 0) {
+    throw new Error("No Reward Tokens!");
+  }
+
+  if (!reward_markets || reward_markets.length === 0) {
+    throw new Error("No Reward Markets!");
+  }
+
+  if (!reward_tokens[0].fees_token_supply) {
+    throw new Error("No Fee Token Supply Set");
+  }
+
+  if (!reward_tokens[0].reward_token || !reward_tokens[0].reward_token.name) {
+    throw new Error("No Reward Token Set!");
+  }
+
+  if (
+    !reward_markets[0].market ||
+    !reward_markets[0].market.marketMakerAddress
+  ) {
+    throw new Error("No Market Maker Address!");
+  }
+
+  return true;
+};
+
+/**
+ * Takes liquidity payout info for markets and fee payout info for the epoch
+ * cleans all info and creates a single map by token of markets liquidity payout and fee payouts
+ * @param epochInfoFromStrapi
+ * @returns cleanEpochInfo
+ */
+export const cleanAndSeparateEpochPerToken = (
+  epochInfo: RewardEpochFromStrapi
+): CleanEpochInfo => {
+  console.log("epochInfo", epochInfo);
+  const feeMap = epochInfo.reward_tokens.reduce((acc, curr) => {
+    if (!acc[curr.reward_token.id]) {
+      acc[curr.reward_token.id] = {
+        feeTokenSupply: BigNumber.from(curr.fees_token_supply).toNumber(),
+      };
+    }
+    return acc;
+  }, {});
+  console.log("feeMap", feeMap);
+
+  const liqMap = epochInfo.reward_markets.reduce((acc, curr) => {
+    curr.reward_tokens_liquidity.forEach((token) => {
+      if (!acc[token.reward_token.id]) {
+        acc[token.reward_token.id] = {
+          markets: [],
+        };
+      }
+      acc[token.reward_token.id].markets.push({
+        amount: BigNumber.from(token.lp_token_supply).toNumber(),
+        howToCalculate: token.token_calculation,
+        marketMaker: curr.market.marketMakerAddress.toLowerCase(),
+      });
+    });
+    return acc;
+  }, {});
+  console.log("liqMap", liqMap);
+
+  const keys = [...new Set(Object.keys(feeMap).concat(Object.keys(liqMap)))];
+  console.log("keys", keys);
+
+  const tokenMap = keys.reduce((acc, tokenId) => {
+    if (!acc[tokenId]) {
+      acc[tokenId] = {
+        markets: liqMap[tokenId]?.markets ?? [],
+        feeTokenSupply: feeMap[tokenId]?.feeTokenSupply ?? 0,
+      };
+    }
+
+    return acc;
+  }, {} as TokenMap);
+
+  return {
+    startTimestamp: new Date(epochInfo.start).getTime(),
+    endTimestamp: new Date(epochInfo.end).getTime(),
+    epoch: epochInfo.epoch,
+    tokenMap,
+  };
+};
 
 /**
  * Iterates over blocks and updates the userTokensPerEpoch map
@@ -46,7 +234,6 @@ export const updateTokensPerBlockReward = (
   }
   return updatedMap;
 };
-
 
 /**
  * Takes in epoch and market start blocks and end blocks

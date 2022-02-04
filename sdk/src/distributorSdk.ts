@@ -3,19 +3,29 @@ import { ethers, Contract, BigNumberish } from "ethers";
 import MerkleDistributorAbi from "./abi/MerkleDistributor.json";
 import { claimToTx, claimTx } from "./claims";
 import { utils } from "ethers";
-import { IsClaimed } from "./types";
-import { MerkleDistributorInfo } from "../merkle-distributor/src/parse-balance-map";
+import { IsClaimed, Token, MerkleDistributorInfo } from "./types";
 import { freezeTx, unfreezeTx, updateMerkleRootTx } from "./admin";
 import { getContracts } from "./networks";
+import { erc20TransferTransaction } from "./erc20";
+import { Transaction } from "./types";
 
 export class DistributorSdk {
   readonly chainID: number;
   readonly signer: JsonRpcSigner;
+  readonly token: Token | string;
   distributor: Contract;
 
+  /**
+   * returns an array of what leafs have been claimed
+   * @param signer - a JsonRpcSigner to sign transactions
+   * @param chainID - the chain ID
+   * @param token - our Token TS enum which maps to a an ERC20 address OR an ERC20 token address for testing
+   * @param distributorAddress - a local address to the distributor token - only used for testing.
+   */
   constructor(
     signer: JsonRpcSigner,
     chainID: number,
+    token: Token | string,
     distributorAddress?: string
   ) {
     if (!signer.provider) {
@@ -23,6 +33,7 @@ export class DistributorSdk {
     }
     this.signer = signer;
     this.chainID = chainID;
+    this.token = token;
 
     this.distributor = new Contract(
       distributorAddress ?? getContracts(chainID).distributor,
@@ -86,7 +97,7 @@ export class DistributorSdk {
   /**
    * gets current week
    */
-  public async getWeek(): Promise<ethers.providers.TransactionResponse> {
+  public async getWeek(): Promise<number> {
     const tx = await this.distributor.week();
     return tx;
   }
@@ -94,9 +105,7 @@ export class DistributorSdk {
   /**
    * @param claimIndex - claim index to check if an amount has been claimed
    */
-  public async isClaimed(
-    claimIndex: BigNumberish
-  ): Promise<ethers.providers.TransactionResponse> {
+  public async isClaimed(claimIndex: BigNumberish): Promise<boolean> {
     const tx = await this.distributor.isClaimed(claimIndex);
     return tx;
   }
@@ -175,5 +184,99 @@ export class DistributorSdk {
 
     const response = await this.signer.sendTransaction(tx);
     return response;
+  }
+
+  /**
+   * @param claimIndex - claim index
+   * @param amount - amount of tokens to be transferred
+   * @param merkleProof - proof of claim
+   * @param account - who can claim the token
+   * @param recipient - where token will be transferred to
+   */
+  public async claimAndTransfer(
+    claimIndex: BigNumberish,
+    amount: BigNumberish,
+    merkleProof: string[],
+    account: string,
+    recipient: string
+  ): Promise<
+    [ethers.providers.TransactionResponse, ethers.providers.TransactionResponse]
+  > {
+    const claimResponse = await this.signer.sendTransaction(
+      claimTx(
+        this.distributor.address,
+        claimIndex,
+        account,
+        amount,
+        merkleProof
+      )
+    );
+
+    const transferResponse = await this.signer.sendTransaction(
+      erc20TransferTransaction(
+        this.token in Token
+          ? getContracts(this.chainID)[this.token]
+          : this.token,
+        recipient,
+        amount
+      )
+    );
+
+    return [claimResponse, transferResponse];
+  }
+
+  /**
+   * THIS DOES NOT SIGN TX, JUST POPULATES THE TX
+   * @param claimIndex - claim index
+   * @param account - account included in the proof + where token will be transferred to
+   * @param amount - amount of tokens to be transferred
+   * @param merkleProof - proof of claim
+   */
+  public populateClaimTx(
+    claimIndex: BigNumberish,
+    account: string,
+    amount: BigNumberish,
+    merkleProof: string[]
+  ): Transaction {
+    const tx = claimTx(
+      this.distributor.address,
+      claimIndex,
+      account,
+      amount,
+      merkleProof
+    );
+    return tx;
+  }
+
+  /**
+   * THIS DOES NOT SIGN TX, JUST POPULATES THE TX
+   * @param claimIndex - claim index
+   * @param amount - amount of tokens to be transferred
+   * @param merkleProof - proof of claim
+   * @param account - who can claim the token
+   * @param recipient - where token will be transferred to
+   */
+  public populateClaimAndTransferTx(
+    claimIndex: BigNumberish,
+    amount: BigNumberish,
+    merkleProof: string[],
+    account: string,
+    recipient: string
+  ): [Transaction, Transaction] {
+    const txA = claimTx(
+      this.distributor.address,
+      claimIndex,
+      account,
+      amount,
+      merkleProof
+    );
+
+    const txB = erc20TransferTransaction(
+      this.token in Token ? getContracts(this.chainID)[this.token] : this.token,
+      recipient,
+      amount
+    );
+
+    return [txA, txB];
   }
 }

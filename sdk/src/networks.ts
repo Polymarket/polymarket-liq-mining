@@ -1,13 +1,20 @@
+import { Token } from './types';
 type RegistryContracts = {
   distributor: string;
+  [Token.Uma]: string,
+  [Token.Matic]: string,
 };
 
 export const MAINNET_CONTRACTS: RegistryContracts = {
   distributor: "",
+  [Token.Uma]: "",
+  [Token.Matic]: "",
 };
 
 export const MUMBAI_CONTRACTS: RegistryContracts = {
   distributor: "",
+  [Token.Uma]: "",
+  [Token.Matic]: "",
 };
 
 export const getContracts = (network: number): RegistryContracts => {

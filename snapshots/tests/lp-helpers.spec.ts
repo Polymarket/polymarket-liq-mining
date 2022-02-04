@@ -12,20 +12,21 @@ describe("calculate samples correctly", () => {
   let markets: LpMarketInfo[];
   let blocksPerSample: number;
   let numSamplesInMarket: number;
+  let alan, brian;
 
   beforeEach(() => {
     blocksPerSample = 30;
     numSamplesInMarket = 420;
+    alan = "0x00D3BB55A6259416BB8DeF0EB46818aD178326eB";
+    brian = "0x0322c202691B2f1Eb4c4aB01Ee0813796392a3f2";
     markets = [
       {
-        marketMaker: "0xa",
-        slug: "hello",
+        marketMaker: alan,
         howToCalculate: LpCalculation.PerBlock,
         amount: 2,
       },
       {
-        marketMaker: "0xb",
-        slug: "world",
+        marketMaker: brian,
         howToCalculate: LpCalculation.PerMarket,
         amount: 20000,
       },
@@ -52,30 +53,36 @@ describe("calculate samples correctly", () => {
 });
 
 describe("updateTokens on a PerBlockReward", () => {
-  let initialState;
+  let initialState, alan, brian, carrie, devon, earl;
 
   beforeEach(() => {
+    alan = "0x00D3BB55A6259416BB8DeF0EB46818aD178326eB";
+    brian = "0x0322c202691B2f1Eb4c4aB01Ee0813796392a3f2";
+    carrie = "0x0364E487CCd5a61d3c83848a420846848aE08061";
+    devon = "0x03d47623592049d5B402694E205AB12318d53a91";
+    earl = "0x04004b2A058F38df685dB22496c36dc4598F3F07";
+
     initialState = {
-      "0xa": 0.0000361591034695245,
-      "0xb": 106.91813466183105,
-      "0xc": 80.34668192769267,
-      "0xd": 186.31548306498135,
-      "0xe": 51023.12194929194422,
+      [alan]: 0.0000361591034695245,
+      [brian]: 106.91813466183105,
+      [carrie]: 80.34668192769267,
+      [devon]: 186.31548306498135,
+      [earl]: 51023.12194929194422,
     };
   });
 
   it("should not erase existing state", async () => {
-    const liquidity = [{ "0xa": 69 }];
+    const liquidity = [{ [alan]: 69 }];
     const newState = updateTokensPerBlockReward(initialState, liquidity, 1);
-    expect(newState["0xb"]).to.eq(initialState["0xb"]);
+    expect(newState[devon]).to.eq(initialState[devon]);
   });
 
   it("should work with no initial state", async () => {
     const newAmount = 100;
-    const liquidity = [{ "0xa": newAmount, "0xb": newAmount }];
+    const liquidity = [{ [alan]: newAmount, [brian]: newAmount }];
     const newState = updateTokensPerBlockReward({}, liquidity, newAmount);
-    expect(newState["0xa"]).to.eq(newAmount / 2);
-    expect(newState["0xb"]).to.eq(newAmount / 2);
+    expect(newState[alan]).to.eq(newAmount / 2);
+    expect(newState[brian]).to.eq(newAmount / 2);
   });
 
   it("should work correctly with multiple blocks", async () => {
@@ -87,19 +94,19 @@ describe("updateTokens on a PerBlockReward", () => {
     const numOfBlocks = 3;
     const liquidity = [
       {
-        "0xa": perBlockLiquidity * aPercent,
-        "0xb": perBlockLiquidity * bPercent,
-        "0xe": perBlockLiquidity * ePercent,
+        [alan]: perBlockLiquidity * aPercent,
+        [brian]: perBlockLiquidity * bPercent,
+        [earl]: perBlockLiquidity * ePercent,
       },
       {
-        "0xa": perBlockLiquidity * aPercent,
-        "0xb": perBlockLiquidity * bPercent,
-        "0xe": perBlockLiquidity * ePercent,
+        [alan]: perBlockLiquidity * aPercent,
+        [brian]: perBlockLiquidity * bPercent,
+        [earl]: perBlockLiquidity * ePercent,
       },
       {
-        "0xa": perBlockLiquidity * aPercent,
-        "0xb": perBlockLiquidity * bPercent,
-        "0xe": perBlockLiquidity * ePercent,
+        [alan]: perBlockLiquidity * aPercent,
+        [brian]: perBlockLiquidity * bPercent,
+        [earl]: perBlockLiquidity * ePercent,
       },
     ];
     const newState = updateTokensPerBlockReward(
@@ -107,85 +114,17 @@ describe("updateTokens on a PerBlockReward", () => {
       liquidity,
       perBlockReward
     );
-    expect(newState["0xa"]).to.eq(
-      initialState["0xa"] + perBlockReward * aPercent * numOfBlocks
+    expect(newState[alan]).to.eq(
+      initialState[alan] + perBlockReward * aPercent * numOfBlocks
     );
-    expect(newState["0xb"]).to.eq(
-      initialState["0xb"] + perBlockReward * bPercent * numOfBlocks
+    expect(newState[brian]).to.eq(
+      initialState[brian] + perBlockReward * bPercent * numOfBlocks
     );
-    expect(newState["0xe"]).to.eq(
-      initialState["0xe"] + perBlockReward * ePercent * numOfBlocks
+    expect(newState[earl]).to.eq(
+      initialState[earl] + perBlockReward * ePercent * numOfBlocks
     );
   });
 });
-
-// describe("updateTokens on a PerEpochReward", () => {
-//   let initialState;
-//   beforeEach(() => {
-//     initialState = {
-//       "0xa": 0.0000361591034695245,
-//       "0xb": 106.91813466183105,
-//       "0xc": 80.34668192769267,
-//       "0xd": 186.31548306498135,
-//       "0xe": 51023.12194929194422,
-//     };
-//   });
-
-//   it("should not erase existing values", async () => {
-//     const liquidity = [{ "0xa": 420 }];
-//     const newState = updateTokensPerEpochReward(initialState, liquidity, 200);
-//     expect(newState["0xb"]).to.eq(initialState["0xb"]);
-//   });
-
-//   it("should work with no initial state", async () => {
-//     const perEpochReward = 200;
-//     const liquidity = [{ "0xa": 100 }];
-//     const newState = updateTokensPerEpochReward({}, liquidity, perEpochReward);
-//     expect(newState["0xa"]).to.eq(perEpochReward);
-//   });
-
-//   it("should work correctly with multiple blocks", async () => {
-//     const perEpochReward = 2000;
-//     const liquidity = [
-//       {
-//         "0xa": 10,
-//         "0xb": 20,
-//         "0xc": 50,
-//       },
-//       {
-//         "0xa": 60,
-//         "0xb": 20,
-//         "0xc": 5,
-//       },
-//       {
-//         "0xa": 60,
-//         "0xb": 40,
-//         "0xc": 100,
-//       },
-//     ];
-
-//     const newState = updateTokensPerEpochReward(
-//       initialState,
-//       liquidity,
-//       perEpochReward
-//     );
-
-// 	const aSum = liquidity[0]["0xa"] + liquidity[1]["0xa"] + liquidity[2]["0xa"]
-// 	const bSum = liquidity[0]["0xb"] + liquidity[1]["0xb"] + liquidity[2]["0xb"]
-// 	const cSum = liquidity[0]["0xc"] + liquidity[1]["0xc"] + liquidity[2]["0xc"]
-// 	const total = aSum + bSum + cSum;
-
-//     expect(newState["0xa"]).to.eq(
-//       initialState["0xa"] + perEpochReward * (aSum/total)
-//     );
-//     expect(newState["0xb"]).to.eq(
-//       initialState["0xb"] + perEpochReward * (bSum/total)
-//     );
-//     expect(newState["0xc"]).to.eq(
-//       initialState["0xc"] + perEpochReward * (cSum/total)
-//     );
-//   });
-// });
 
 const mockState = {
   epochStartBlock: 21000000,

@@ -82,9 +82,6 @@ const config: HardhatUserConfig = {
       saveDeployments: true,
       tags: ["test", "local"],
       blockGasLimit: 12450000,
-      accounts: {
-        mnemonic: "horn horn horn horn horn horn horn horn horn horn horn horn",
-      },
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`,
