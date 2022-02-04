@@ -3,12 +3,15 @@ import { cleanAndSeparateEpochPerToken } from "../src/lp-helpers";
 import { BigNumber } from "ethers";
 
 describe("clean and separate epoch per token", () => {
-  let mockEpochInfo, token1, token2, token3;
+  let mockEpochInfo, token1Symbol, token1Id, token2Symbol, token2Id, token3Symbol, token3Id;
 
   beforeEach(() => {
-    token1 = "USDC";
-    token2 = "UMA";
-    token3 = "LOL";
+    token1Symbol = "usdc";
+    token1Id = 1;
+    token2Symbol = "uma";
+    token2Id = 2;
+    token3Symbol = "lol";
+    token3Id = 3;
 
     mockEpochInfo = {
       id: 2,
@@ -19,9 +22,9 @@ describe("clean and separate epoch per token", () => {
         {
           id: 1,
           reward_token: {
-            id: 1,
-            symbol: token1,
-            name: token1,
+            id: token1Id,
+            symbol: token1Symbol,
+            name: "USDC",
             icon: {
               id: 1,
             },
@@ -31,9 +34,9 @@ describe("clean and separate epoch per token", () => {
         {
           id: 2,
           reward_token: {
-            id: 2,
-            symbol: token2,
-            name: token2,
+            id: token2Id,
+            symbol: token2Symbol,
+            name: "UMA",
             icon: {
               id: 1,
             },
@@ -55,9 +58,9 @@ describe("clean and separate epoch per token", () => {
             {
               id: 1,
               reward_token: {
-                id: 1,
-                symbol: token1,
-                name: token1,
+                id: token1Id,
+                symbol: token1Symbol,
+                name: "USDC",
               },
               token_calculation: "perBlock",
               lp_token_supply: "2",
@@ -65,9 +68,9 @@ describe("clean and separate epoch per token", () => {
             {
               id: 2,
               reward_token: {
-                id: 2,
-                symbol: token2,
-                name: token2,
+                id: token2Id,
+                symbol: token2Symbol,
+                name: "UMA",
               },
               token_calculation: "perMarket",
               lp_token_supply: "10000",
@@ -79,10 +82,10 @@ describe("clean and separate epoch per token", () => {
   });
   it("should work", () => {
     const x = cleanAndSeparateEpochPerToken(mockEpochInfo);
-    expect(x.tokenMap[token1].feeTokenSupply).to.eq(
+    expect(x.tokenMap["1"].feeTokenSupply).to.eq(
       BigNumber.from("100000").toNumber()
     );
-    expect(x.tokenMap[token2].feeTokenSupply).to.eq(
+    expect(x.tokenMap["2"].feeTokenSupply).to.eq(
       BigNumber.from("50000").toNumber()
     );
   });
@@ -92,8 +95,8 @@ describe("clean and separate epoch per token", () => {
       id: 3,
       reward_token: {
         id: 3,
-        symbol: token3,
-        name: token3,
+        symbol: token3Symbol,
+        name: "LOL",
         icon: {
           id: 1,
         },
@@ -104,8 +107,8 @@ describe("clean and separate epoch per token", () => {
     mockEpochInfo.reward_tokens.push(thirdToken);
 
     const expected = cleanAndSeparateEpochPerToken(mockEpochInfo);
-    expect(expected.tokenMap[token3].markets.length).to.eq(0);
-    expect(expected.tokenMap[token3].feeTokenSupply).to.eq(
+    expect(expected.tokenMap[token3Id].markets.length).to.eq(0);
+    expect(expected.tokenMap[token3Id].feeTokenSupply).to.eq(
       BigNumber.from("500000").toNumber()
     );
   });
@@ -116,9 +119,9 @@ describe("clean and separate epoch per token", () => {
     const thirdLiq = {
       id: 3,
       reward_token: {
-        id: 3,
-        symbol: token3,
-        name: token3,
+        id: token3Id,
+        symbol: token3Symbol,
+        name: "LOL",
       },
       token_calculation: "perMarket",
       lp_token_supply: thirdSupply,
@@ -127,8 +130,8 @@ describe("clean and separate epoch per token", () => {
     mockEpochInfo.reward_markets[0].reward_tokens_liquidity.push(thirdLiq);
 
     const expected = cleanAndSeparateEpochPerToken(mockEpochInfo);
-    expect(expected.tokenMap[token3].markets.length).to.eq(1);
-    expect(expected.tokenMap[token3].feeTokenSupply).to.eq(0);
+    expect(expected.tokenMap[token3Id].markets.length).to.eq(1);
+    expect(expected.tokenMap[token3Id].feeTokenSupply).to.eq(0);
   });
 
   it("should not fail if only adding an extra liq token to an existing market", () => {
@@ -144,9 +147,9 @@ describe("clean and separate epoch per token", () => {
         {
           id: 3,
           reward_token: {
-            id: 3,
-            symbol: token3,
-            name: token3,
+            id: token3Id,
+            symbol: token3Symbol,
+            name: "LOL",
           },
           token_calculation: "perMarket",
           lp_token_supply: thirdSupply,
@@ -157,8 +160,8 @@ describe("clean and separate epoch per token", () => {
     mockEpochInfo.reward_markets.push(thirdMarket);
 
     const expected = cleanAndSeparateEpochPerToken(mockEpochInfo);
-    expect(expected.tokenMap[token3].markets.length).to.eq(1);
-    expect(expected.tokenMap[token3].markets[0].amount).to.eq(BigNumber.from(thirdSupply).toNumber());
-    expect(expected.tokenMap[token3].feeTokenSupply).to.eq(0);
+    expect(expected.tokenMap[token3Id].markets.length).to.eq(1);
+    expect(expected.tokenMap[token3Id].markets[0].amount).to.eq(BigNumber.from(thirdSupply).toNumber());
+    expect(expected.tokenMap[token3Id].feeTokenSupply).to.eq(0);
   });
 });
