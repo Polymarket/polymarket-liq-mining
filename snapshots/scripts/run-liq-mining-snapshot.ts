@@ -266,7 +266,7 @@ const confirmRiskyWithMessage = async (message: string) => {
             Object.keys(currentEpochUserMap).length + " total users"
         );
         const createMerkleRootFileName = (epoch: number, tokenSymbol: string) => {
-            return `${SNAPSHOT_BASE_FILE_PATH}epoch${chosenEpoch}-token${tokenSymbol}-merkle-info.json`;
+            return `${SNAPSHOT_BASE_FILE_PATH}epoch${chosenEpoch}-token${tokenSymbol.toUpperCase()}-merkle-info.json`;
         };
 
         let merkleInfo: MerkleDistributorInfo;
@@ -278,8 +278,6 @@ const confirmRiskyWithMessage = async (message: string) => {
         } catch (error) {
             prevMerkleFile = false;
         }
-        // console.log("prevMerkleFile", prevMerkleFile);
-
         if (!prevMerkleFile) {
             const normalizedEarnings =
                 normalizeEarningsNewFormat(currentEpochUserMap);
