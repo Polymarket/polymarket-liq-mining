@@ -14,7 +14,6 @@ import {
   normalizeEarningsNewFormat,
 } from "../../snapshots/src/helpers";
 import { MapOfCount } from "../../snapshots/src/interfaces";
-import { Token } from "../../sdk/src/types";
 
 const { solidity, provider, deployContract } = waffle;
 
@@ -46,6 +45,9 @@ describe("Distributor SDK", () => {
   let merkleDistributor: Contract;
   let sdk: DistributorSdk;
 
+  //   const tokenForNotTransfering = "usdc"
+  const tokenForNotTransfering = "0x0000000000000000000000000000000000000000";
+
   beforeEach("deploy token", async () => {
     const mockPayout = createMockPayoutMap(wallets, deployer.address);
     merkleInfo = parseBalanceMap(normalizeEarningsNewFormat(mockPayout));
@@ -71,7 +73,7 @@ describe("Distributor SDK", () => {
     sdk = new DistributorSdk(
       aliceSignerWithAddress._signer,
       31337,
-      Token.Matic,
+      tokenForNotTransfering,
       merkleDistributor.address
     );
   });
@@ -101,7 +103,7 @@ describe("Distributor SDK", () => {
     sdk = new DistributorSdk(
       bobSigner._signer,
       31337,
-      Token.Matic,
+      tokenForNotTransfering,
       merkleDistributor.address
     );
     const bobMerkleInfo = merkleInfo.claims[bobSigner.address];
@@ -161,7 +163,7 @@ describe("Distributor SDK", () => {
     const darylSdk = new DistributorSdk(
       darylSigner._signer,
       31337,
-      Token.Matic,
+      tokenForNotTransfering,
       merkleDistributor.address
     );
 
@@ -185,7 +187,7 @@ describe("Distributor SDK", () => {
     const deployerSdk = new DistributorSdk(
       deployerSigner._signer,
       31337,
-      Token.Matic,
+      tokenForNotTransfering,
       merkleDistributor.address
     );
 
@@ -211,7 +213,7 @@ describe("Distributor SDK", () => {
     const ivanSdk = new DistributorSdk(
       ivanSigner._signer,
       31337,
-      Token.Matic,
+      tokenForNotTransfering,
       merkleDistributor.address
     );
     const ivanMerkle = nextMerkleInfo.claims[ivanSigner.address];
@@ -307,7 +309,7 @@ describe("Distributor SDK", () => {
     const gregSdk = new DistributorSdk(
       gregSigner._signer,
       31337,
-      Token.Matic,
+      tokenForNotTransfering,
       merkleDistributor.address
     );
     const ivanMerkle = nextMerkleInfo.claims[gregSigner.address];
@@ -339,7 +341,9 @@ describe("Distributor SDK", () => {
       hankSigner.address
     );
 
-    expect(await token.balanceOf(hankSigner.address)).to.eq(frankMerkleAfter.amount);
+    expect(await token.balanceOf(hankSigner.address)).to.eq(
+      frankMerkleAfter.amount
+    );
 
     // frank total claims should be both merkle amounts
     expect(await frankSdk.isClaimed(frankMerkleAfter.index)).to.eq(true);

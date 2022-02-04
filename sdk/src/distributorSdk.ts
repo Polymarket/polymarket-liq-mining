@@ -1,9 +1,9 @@
-import { JsonRpcSigner, JsonRpcProvider } from "@ethersproject/providers";
+import { JsonRpcSigner } from "@ethersproject/providers";
 import { ethers, Contract, BigNumberish } from "ethers";
 import MerkleDistributorAbi from "./abi/MerkleDistributor.json";
 import { claimToTx, claimTx } from "./claims";
 import { utils } from "ethers";
-import { IsClaimed, Token, MerkleDistributorInfo } from "./types";
+import { IsClaimed, MerkleDistributorInfo } from "./types";
 import { freezeTx, unfreezeTx, updateMerkleRootTx } from "./admin";
 import { getContracts } from "./networks";
 import { erc20TransferTransaction } from "./erc20";
@@ -12,7 +12,7 @@ import { Transaction } from "./types";
 export class DistributorSdk {
   readonly chainID: number;
   readonly signer: JsonRpcSigner;
-  readonly token: Token | string;
+  readonly token: string;
   distributor: Contract;
 
   /**
@@ -25,18 +25,30 @@ export class DistributorSdk {
   constructor(
     signer: JsonRpcSigner,
     chainID: number,
-    token: Token | string,
+    token: string,
     distributorAddress?: string
   ) {
     if (!signer.provider) {
       throw new Error("Signer must be connected to a provider.");
     }
+
     this.signer = signer;
     this.chainID = chainID;
-    this.token = token;
+
+    const network = getContracts(chainID)[token];
+
+    if (!distributorAddress && !network) {
+      throw new Error("Distributor contract must be set!");
+    }
+
+    if (!network && token.slice(0, 2) !== "0x") {
+      throw new Error("ERC20 contract must be set!");
+    }
+
+    this.token = network?.erc20 ?? token;
 
     this.distributor = new Contract(
-      distributorAddress ?? getContracts(chainID).distributor,
+      distributorAddress ?? network.distributor,
       MerkleDistributorAbi,
       signer.provider
     );
@@ -213,13 +225,7 @@ export class DistributorSdk {
     );
 
     const transferResponse = await this.signer.sendTransaction(
-      erc20TransferTransaction(
-        this.token in Token
-          ? getContracts(this.chainID)[this.token]
-          : this.token,
-        recipient,
-        amount
-      )
+      erc20TransferTransaction(this.token, recipient, amount)
     );
 
     return [claimResponse, transferResponse];
@@ -271,11 +277,7 @@ export class DistributorSdk {
       merkleProof
     );
 
-    const txB = erc20TransferTransaction(
-      this.token in Token ? getContracts(this.chainID)[this.token] : this.token,
-      recipient,
-      amount
-    );
+    const txB = erc20TransferTransaction(this.token, recipient, amount);
 
     return [txA, txB];
   }
