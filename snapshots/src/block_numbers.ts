@@ -69,7 +69,7 @@ export async function convertTimestampToBlockNumber(
   const timestampInSeconds = normalizeTimestamp(timestamp);
   const nowInSeconds = normalizeTimestamp(Date.now());
 
-  const averageBlockTime = 2.1; //polygon avg blocktime
+  const averageBlockTime = 2.4; //polygon avg blocktime
   const lowerLimitStamp = timestampInSeconds;
   const step = 1000;
 
