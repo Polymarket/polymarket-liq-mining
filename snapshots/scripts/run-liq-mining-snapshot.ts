@@ -310,7 +310,7 @@ const confirmRiskyWithMessage = async (message: string) => {
                 // @ts-ignore
                 signer,
                 CHAIN_ID,
-                "token-address-not-needed-to-freeze",
+                "0xtoken-address-not-needed-to-freeze",
                 DISTRIBUTOR_ADDRESS
             );
             try {

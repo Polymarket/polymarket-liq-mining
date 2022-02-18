@@ -35,15 +35,6 @@ describe("calculate samples correctly", () => {
     ];
   });
 
-  it("should calculate tokens per sample based off tokens per block", async () => {
-    const tokensPerSample = calculateTokensPerSample(
-      markets[0],
-      420,
-      blocksPerSample
-    );
-    expect(tokensPerSample).to.eq(markets[0].amount * blocksPerSample);
-  });
-
   it("should calculate tokens per sample based off tokens per market", async () => {
     const tokensPerSample = calculateTokensPerSample(
       markets[1],
@@ -154,12 +145,6 @@ describe("calculate correct start and end blocks", () => {
   });
 
   it("if the epoch starts before the market, start block is market block", async () => {
-    const { startBlock } = getStartAndEndBlock(initialState);
-    expect(startBlock).to.eq(initialState.marketStartBlock);
-  });
-
-  it("if the market started and the epoch has not started, start block is market", async () => {
-    initialState.epochStartBlock = null;
     const { startBlock } = getStartAndEndBlock(initialState);
     expect(startBlock).to.eq(initialState.marketStartBlock);
   });
