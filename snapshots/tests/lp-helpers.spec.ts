@@ -24,11 +24,13 @@ describe("calculate samples correctly", () => {
         marketMaker: alan,
         howToCalculate: LpCalculation.PerBlock,
         amount: 2,
+        rewardMarketEndDate: null,
       },
       {
         marketMaker: brian,
         howToCalculate: LpCalculation.PerMarket,
         amount: 20000,
+        rewardMarketEndDate: "2022-01-18T19:27:13.523Z",
       },
     ];
   });
@@ -131,6 +133,7 @@ const mockState = {
   marketStartBlock: 21400000,
   marketEndBlock: 21600000,
   epochEndBlock: 21900000,
+  rewardMarketEndBlock: null,
 };
 
 // - if the END BLOCK is the END OF MARKET => TOTAL SUPPLY CALCULATION
@@ -210,5 +213,11 @@ describe("calculate correct start and end blocks", () => {
     initialState.marketEndBlock = null;
     const { endBlock } = getStartAndEndBlock(initialState);
     expect(endBlock).to.eq(initialState.epochEndBlock);
+  });
+
+  it("if there is a rewardMarketEndBlock, use it", async () => {
+    initialState.rewardMarketEndBlock = 21500000;
+    const { endBlock } = getStartAndEndBlock(initialState);
+    expect(endBlock).to.eq(initialState.rewardMarketEndBlock);
   });
 });

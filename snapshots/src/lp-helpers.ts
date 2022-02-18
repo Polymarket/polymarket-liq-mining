@@ -8,12 +8,14 @@ export interface IStartAndEndBlock {
   epochEndBlock: number | null;
   marketStartBlock: number | null;
   marketEndBlock: number | null;
+  rewardMarketEndBlock: number | null;
 }
 
 export interface LpMarketInfo {
   marketMaker: string;
   howToCalculate: LpCalculation;
   amount: number;
+  rewardMarketEndDate: string;
 }
 
 export enum LpCalculation {
@@ -29,6 +31,7 @@ export interface RewardTokenLiquidity {
 
 export interface RewardMarketFromStrapi {
   reward_epoch: number;
+  reward_end_date: string;
   reward_tokens_liquidity: RewardTokenLiquidity[];
   market: {
     marketMakerAddress: string;
@@ -79,7 +82,7 @@ export interface RewardToken {
 }
 
 export interface RewardTokenFromStrapi {
-//   id: number;
+  //   id: number;
   reward_token: RewardToken;
   fees_token_supply: string;
 }
@@ -179,6 +182,7 @@ export const cleanAndSeparateEpochPerToken = (
         amount: BigNumber.from(token.lp_token_supply).toNumber(),
         howToCalculate: token.token_calculation,
         marketMaker: curr.market.marketMakerAddress.toLowerCase(),
+        rewardMarketEndDate: curr.reward_end_date,
       });
     });
     return acc;
@@ -245,11 +249,11 @@ export const getStartAndEndBlock = ({
   epochEndBlock,
   marketStartBlock,
   marketEndBlock,
+  rewardMarketEndBlock,
 }: IStartAndEndBlock): {
   startBlock: number;
   endBlock: number | null;
 } => {
-  //
   if (!epochStartBlock && !marketStartBlock) {
     throw new Error("The market and epoch have not started!");
   }
@@ -277,7 +281,7 @@ export const getStartAndEndBlock = ({
   let endBlock;
 
   // market is live, epoch is live...
-  if (!epochEndBlock && !marketEndBlock) {
+  if (!epochEndBlock && !marketEndBlock && !rewardMarketEndBlock) {
     // get current block in case market has not ended and epoch end is in the future
     endBlock = null;
   }
@@ -296,6 +300,11 @@ export const getStartAndEndBlock = ({
     (!epochEndBlock && marketEndBlock)
   ) {
     endBlock = marketEndBlock;
+  }
+
+  // if rewardMarket has a specific end date, use it
+  if (rewardMarketEndBlock) {
+    endBlock = rewardMarketEndBlock;
   }
 
   return {

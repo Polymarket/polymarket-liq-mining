@@ -40,11 +40,13 @@ export async function generateLpSnapshot(
     const { marketMaker } = market;
     const marketStartBlock = await getStartBlock(marketMaker);
     const marketEndBlock = await getEndBlock(marketMaker);
+    const rewardMarketEndBlock = await getEndBlock(market.rewardMarketEndDate);
     const { startBlock, endBlock: eb } = getStartAndEndBlock({
       epochStartBlock,
       epochEndBlock,
       marketStartBlock,
       marketEndBlock,
+      rewardMarketEndBlock,
     });
 
     const currentBlock = await getCurrentBlockNumber();
