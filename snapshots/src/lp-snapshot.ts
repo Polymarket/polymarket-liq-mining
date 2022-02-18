@@ -49,8 +49,13 @@ export async function generateLpSnapshot(
     let rewardMarketEndBlock = null;
 
     if (market.rewardMarketEndDate) {
-		console.log('reward market end date exists, getting block!')
-      rewardMarketEndBlock = await convertTimestampToBlockNumber(market.rewardMarketEndDate);
+      console.log("reward market end date exists, getting block!");
+      while (!rewardMarketEndBlock) {
+        console.log("reward market end block was not found. trying again!");
+        rewardMarketEndBlock = await convertTimestampToBlockNumber(
+          market.rewardMarketEndDate
+        );
+      }
     }
 
     const { startBlock, endBlock: eb } = getStartAndEndBlock({
@@ -62,7 +67,7 @@ export async function generateLpSnapshot(
     });
 
     const currentBlock = await getCurrentBlockNumber();
-    // if epoch has not ended and market has not resolved, get current block?
+    // if epoch has not ended and market has not resolved, get current block
     const endBlock = !eb ? currentBlock : eb;
     console.log({
       epochStartBlock,
