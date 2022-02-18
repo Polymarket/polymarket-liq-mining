@@ -342,8 +342,7 @@ export const calculateTokensPerSample = (
   numSamples: number,
   blocksPerSample: number
 ): number => {
-    return market.amount / numSamples
-//   return market.howToCalculate === LpCalculation.PerMarket
-    // ? market.amount / numSamples
-    // : market.amount * blocksPerSample;
+  return market.howToCalculate === LpCalculation.PerMarket
+    ? market.amount / numSamples
+    : market.amount * blocksPerSample;
 };
