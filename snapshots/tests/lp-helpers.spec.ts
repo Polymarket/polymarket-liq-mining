@@ -22,15 +22,15 @@ describe("calculate samples correctly", () => {
     markets = [
       {
         marketMaker: alan,
-        howToCalculate: LpCalculation.PerBlock,
-        amount: 2,
+		howToCalculate: LpCalculation.PerMarket,
+        amount: 1000,
         rewardMarketEndDate: null,
       },
       {
         marketMaker: brian,
         howToCalculate: LpCalculation.PerMarket,
         amount: 20000,
-        rewardMarketEndDate: "2022-01-18T19:27:13.523Z",
+        rewardMarketEndDate: 1645214223584,
       },
     ];
   });
