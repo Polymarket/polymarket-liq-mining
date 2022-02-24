@@ -1,108 +1,142 @@
-import { getProvider } from "./provider"; 
+import { getProvider } from "./provider";
 import { normalizeTimestamp } from "./utils";
-import { queryGqlClient } from "./gql_client"; 
+import { queryGqlClient } from "./gql_client";
 import { firstLiquidityAddedQuery, marketResolutionTxnQuery } from "./queries";
 
 export const getCurrentBlockNumber = async (): Promise<number> => {
-    const provider = getProvider();
-    return provider.getBlockNumber();
-}
+  const provider = getProvider();
+  return provider.getBlockNumber();
+};
 
 export const getStartBlock = async (marketAddress: string): Promise<number> => {
-    let blockNumber: number;
-    const provider = getProvider();
-    const txnHash = await getFirstAddedLiquidity(marketAddress);
-    if(txnHash != null){
-        const txn = await provider.getTransaction(txnHash);
-        blockNumber = txn.blockNumber;
-    }
-    return blockNumber;
-}
+  let blockNumber: number;
+  const provider = getProvider();
+  const txnHash = await getFirstAddedLiquidity(marketAddress);
+  if (txnHash != null) {
+    const txn = await provider.getTransaction(txnHash);
+    blockNumber = txn.blockNumber;
+  }
+  return blockNumber;
+};
 
 export async function getEndBlock(marketAddress: string): Promise<number> {
-    let blockNumber: number;
-    const provider = getProvider();
-    const txnHash = await getMarketResolutionTransaction(marketAddress);
-    if(txnHash != null){
-        const txn = await provider.getTransaction(txnHash);
-        blockNumber = txn.blockNumber;
-    }
-    return blockNumber;
+  let blockNumber: number;
+  const provider = getProvider();
+  const txnHash = await getMarketResolutionTransaction(marketAddress);
+  if (txnHash != null) {
+    const txn = await provider.getTransaction(txnHash);
+    blockNumber = txn.blockNumber;
+  }
+  return blockNumber;
 }
 
-async function getFirstAddedLiquidity(marketAddress: string) : Promise<string> {
-    const { data } = await queryGqlClient(firstLiquidityAddedQuery, {market: marketAddress});
-    const fpmmFundingAdditions = data.fpmmFundingAdditions;
-    let liquidityAddTxnHash;
+async function getFirstAddedLiquidity(marketAddress: string): Promise<string> {
+  const { data } = await queryGqlClient(firstLiquidityAddedQuery, {
+    market: marketAddress,
+  });
+  const fpmmFundingAdditions = data.fpmmFundingAdditions;
+  let liquidityAddTxnHash;
 
-    if(fpmmFundingAdditions.length > 0){
-        liquidityAddTxnHash = fpmmFundingAdditions[0].id;
-    }
-    return liquidityAddTxnHash;
+  if (fpmmFundingAdditions.length > 0) {
+    liquidityAddTxnHash = fpmmFundingAdditions[0].id;
+  }
+  return liquidityAddTxnHash;
 }
 
-async function getMarketResolutionTransaction(marketAddress: string) : Promise<string> {
-    const { data } = await queryGqlClient(marketResolutionTxnQuery, {market: marketAddress});
-    const resolutionConditions = data.fixedProductMarketMaker.conditions;
-    let resolutionHash: string;
+async function getMarketResolutionTransaction(
+  marketAddress: string
+): Promise<string> {
+  const { data } = await queryGqlClient(marketResolutionTxnQuery, {
+    market: marketAddress,
+  });
+  const resolutionConditions = data.fixedProductMarketMaker.conditions;
+  let resolutionHash: string;
 
-    if(resolutionConditions.length > 0){
-        resolutionHash = resolutionConditions[0].resolutionHash;
-    }
-    return resolutionHash;
+  if (resolutionConditions.length > 0) {
+    resolutionHash = resolutionConditions[0].resolutionHash;
+  }
+  return resolutionHash;
 }
-
 
 /**
  * Get an estimation of a block number, given a timestamp
- * @param timestamp 
- * @returns 
+ * @param timestamp
+ * @returns
  */
-export async function convertTimestampToBlockNumber(timestamp: number) : Promise<number> {
-    const timestampInSeconds = normalizeTimestamp(timestamp);
+export async function convertTimestampToBlockNumber(
+  timestamp: number
+): Promise<number> {
+  const timestampInSeconds = normalizeTimestamp(timestamp);
+  const nowInSeconds = normalizeTimestamp(Date.now());
 
-    const averageBlockTime = 2.1; //polygon avg blocktime
-    const lowerLimitStamp = timestampInSeconds;
-    const step = 1000;
-    
-    const provider = getProvider();
-    
-    //get current block number
-    const currentBlockNumber = await provider.getBlockNumber();
-	console.log('currentBlockNumber', currentBlockNumber)
-    let block = await provider.getBlock(currentBlockNumber)
+  const averageBlockTime = 2.4; //polygon avg blocktime
+  const lowerLimitStamp = timestampInSeconds;
+  const step = 1000;
 
-    let requestsMade = 0;
-    
-    let blockNumber = currentBlockNumber;
+  const provider = getProvider();
 
-	console.log('block.timestamp', block?.timestamp ?? 0)
-    const timestampDiff = block?.timestamp ?? 0 - timestampInSeconds;
-    
+  const currentBlockNumber = await provider.getBlockNumber();
+  console.log("currentBlockNumber", currentBlockNumber);
+  let block = await provider.getBlock(currentBlockNumber);
+
+  if (!block && timestampInSeconds > nowInSeconds) {
+    console.log("block does not exist because timestamp is in the future");
+    return currentBlockNumber;
+  }
+
+  let requestsMade = 0;
+
+  let blockNumber = currentBlockNumber;
+
+  if (!block) {
+    block = await provider.getBlock(blockNumber);
+      requestsMade += 1;
+    console.log(
+      "no block found. trying again. number of requests made so far:",
+      requestsMade
+    );
+
+  } else {
+    const timestampDiff = block.timestamp - timestampInSeconds;
+
     //If current block timestamp and given timestamp within 50s of each other, return
-    if(timestampDiff < 50){
-        return currentBlockNumber;
+    if (timestampDiff < 50) {
+      return currentBlockNumber;
     }
 
-    while(block.timestamp > timestampInSeconds){
-        const decreaseBlocks = (block.timestamp - timestampInSeconds) / averageBlockTime;
-        if(decreaseBlocks < 1){
-            break
-        }
-    
-        blockNumber -= Math.floor(decreaseBlocks);
-        block = await provider.getBlock(blockNumber) 
-        requestsMade += 1
+    while (block.timestamp > timestampInSeconds) {
+      const decreaseBlocks =
+        (block.timestamp - timestampInSeconds) / averageBlockTime;
+
+      console.log(
+        "current block is in the future, walking down the chain:",
+        blockNumber
+      );
+
+      if (decreaseBlocks < 1) {
+        break;
+      }
+
+      blockNumber -= Math.floor(decreaseBlocks);
+      block = await provider.getBlock(blockNumber);
+      requestsMade += 1;
     }
 
     //If we undershoot, walk back up the chain till we reach the lowerLimitStamp
-    if(block.timestamp < lowerLimitStamp) {
-        while(block.timestamp < lowerLimitStamp){
-            blockNumber += step; //step size
-            block = await provider.getBlock(blockNumber);
-            requestsMade += 1;
-        }
+    if (block.timestamp < lowerLimitStamp) {
+      while (block.timestamp < lowerLimitStamp) {
+        console.log(
+          "current block is in the past, walking up the chain:",
+          blockNumber
+        );
+        blockNumber += step; //step size
+        block = await provider.getBlock(blockNumber);
+        requestsMade += 1;
+      }
     }
-    console.log(`Number of requests made to get block number from timestamp: ${requestsMade}`);
+    console.log(
+      `Number of requests made to get block number from timestamp: ${requestsMade}`
+    );
     return blockNumber;
+  }
 }

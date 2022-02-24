@@ -34,22 +34,50 @@ export async function generateLpSnapshot(
   const markets = lowerCaseMarketMakers(marketMakers);
 
   const epochEndBlock = await convertTimestampToBlockNumber(endTimestamp);
-  const epochStartBlock = await convertTimestampToBlockNumber(startTimestamp);
+
+  let epochStartBlock = await convertTimestampToBlockNumber(startTimestamp);
+  while (!epochStartBlock) {
+    console.log("epochStartBlock was not found. trying again!");
+    epochStartBlock = await convertTimestampToBlockNumber(startTimestamp);
+  }
 
   for (const market of markets) {
     const { marketMaker } = market;
     const marketStartBlock = await getStartBlock(marketMaker);
     const marketEndBlock = await getEndBlock(marketMaker);
+
+    let rewardMarketEndBlock = null;
+
+    if (market.rewardMarketEndDate) {
+      console.log("reward market end date exists, getting block!");
+      while (!rewardMarketEndBlock) {
+        console.log("reward market end block was not found. trying again!");
+        rewardMarketEndBlock = await convertTimestampToBlockNumber(
+          market.rewardMarketEndDate
+        );
+      }
+    }
+
     const { startBlock, endBlock: eb } = getStartAndEndBlock({
       epochStartBlock,
       epochEndBlock,
       marketStartBlock,
       marketEndBlock,
+      rewardMarketEndBlock,
     });
 
     const currentBlock = await getCurrentBlockNumber();
-    // if epoch has not ended and market has not resolved, get current block?
+    // if epoch has not ended and market has not resolved, get current block
     const endBlock = !eb ? currentBlock : eb;
+    console.log({
+      epochStartBlock,
+      marketStartBlock,
+      rewardMarketEndBlock,
+      epochEndBlock,
+      marketEndBlock,
+      currentBlock,
+      endBlock,
+    });
 
     //Ensure that the market occured within the blocks being checked
     if (startBlock !== null && endBlock > startBlock) {

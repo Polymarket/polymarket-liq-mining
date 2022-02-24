@@ -8,12 +8,14 @@ export interface IStartAndEndBlock {
   epochEndBlock: number | null;
   marketStartBlock: number | null;
   marketEndBlock: number | null;
+  rewardMarketEndBlock: number | null;
 }
 
 export interface LpMarketInfo {
   marketMaker: string;
   howToCalculate: LpCalculation;
   amount: number;
+  rewardMarketEndDate: number | null;
 }
 
 export enum LpCalculation {
@@ -29,6 +31,7 @@ export interface RewardTokenLiquidity {
 
 export interface RewardMarketFromStrapi {
   reward_epoch: number;
+  reward_end_date: null | string;
   reward_tokens_liquidity: RewardTokenLiquidity[];
   market: {
     marketMakerAddress: string;
@@ -48,16 +51,14 @@ interface StrapiFormat {
 }
 
 interface StrapiIcon {
-  //   id: number;
-  //   alternativeText: string;
-  //   caption: string;
-  //   hash: string;
-  //   ext: string;
-  //   mime: string;
-  //   previewUrl: null;
-  //   provider: string;
-  //   created_at: string;
-  //   updated_at: string;
+  id: number;
+  alternativeText: string;
+  caption: string;
+  hash: string;
+  ext: string;
+  mime: string;
+  previewUrl: null;
+  provider: string;
   name: string;
   width: number;
   height: number;
@@ -79,7 +80,6 @@ export interface RewardToken {
 }
 
 export interface RewardTokenFromStrapi {
-//   id: number;
   reward_token: RewardToken;
   fees_token_supply: string;
 }
@@ -179,6 +179,10 @@ export const cleanAndSeparateEpochPerToken = (
         amount: BigNumber.from(token.lp_token_supply).toNumber(),
         howToCalculate: token.token_calculation,
         marketMaker: curr.market.marketMakerAddress.toLowerCase(),
+        rewardMarketEndDate:
+          typeof curr.reward_end_date === "string"
+            ? new Date(curr.reward_end_date).getTime()
+            : curr.reward_end_date,
       });
     });
     return acc;
@@ -245,18 +249,17 @@ export const getStartAndEndBlock = ({
   epochEndBlock,
   marketStartBlock,
   marketEndBlock,
+  rewardMarketEndBlock,
 }: IStartAndEndBlock): {
   startBlock: number;
   endBlock: number | null;
 } => {
-  //
-  if (!epochStartBlock && !marketStartBlock) {
-    throw new Error("The market and epoch have not started!");
-  }
-
-  // the market has not started!
   if (!marketStartBlock) {
     throw new Error("The market has not started!");
+  }
+
+  if (!epochStartBlock) {
+    throw new Error("The epoch has not started!");
   }
 
   let startBlock;
@@ -277,7 +280,7 @@ export const getStartAndEndBlock = ({
   let endBlock;
 
   // market is live, epoch is live...
-  if (!epochEndBlock && !marketEndBlock) {
+  if (!epochEndBlock && !marketEndBlock && !rewardMarketEndBlock) {
     // get current block in case market has not ended and epoch end is in the future
     endBlock = null;
   }
@@ -296,6 +299,11 @@ export const getStartAndEndBlock = ({
     (!epochEndBlock && marketEndBlock)
   ) {
     endBlock = marketEndBlock;
+  }
+
+  // if rewardMarket has a specific end date, use it
+  if (rewardMarketEndBlock) {
+    endBlock = rewardMarketEndBlock;
   }
 
   return {

@@ -1,20 +1,5 @@
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
 
-export const MAINNET_CONTRACTS = {
-  usdc: {
-    distributor: ADDRESS_ZERO,
-    erc20: ADDRESS_ZERO,
-  },
-  uma: {
-    distributor: ADDRESS_ZERO,
-    erc20: ADDRESS_ZERO,
-  },
-  matic: {
-    distributor: ADDRESS_ZERO,
-    erc20: ADDRESS_ZERO,
-  },
-};
-
 export const MUMBAI_CONTRACTS = {
   usdc: {
     distributor: ADDRESS_ZERO,
@@ -27,6 +12,21 @@ export const MUMBAI_CONTRACTS = {
   matic: {
     distributor: ADDRESS_ZERO,
     erc20: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+  },
+};
+
+export const POLYGON_CONTRACTS = {
+  usdc: {
+    distributor: ADDRESS_ZERO,
+    erc20: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+  },
+  uma: {
+    distributor: ADDRESS_ZERO,
+    erc20: "0x3066818837c5e6ed6601bd5a91b0762877a6b731",
+  },
+  matic: {
+    distributor: ADDRESS_ZERO,
+    erc20: "0x0000000000000000000000000000000000001010",
   },
 };
 
@@ -47,16 +47,16 @@ export const LOCAL_CONTRACTS = {
 
 export const getContracts = (network: number) => {
   switch (network) {
-    case 1:
-      return MAINNET_CONTRACTS;
+    case 137:
+      return POLYGON_CONTRACTS;
     case 31337:
       return LOCAL_CONTRACTS;
     case 80001:
       return MUMBAI_CONTRACTS;
     default:
       console.log(
-        `WARNING: running on network id ${network} with mainnet contract addresses. Ignore this warning if you are testing.`
+        `WARNING: running on network id ${network} with polygon contract addresses. Ignore this warning if you are testing.`
       );
-      return MAINNET_CONTRACTS;
+      return POLYGON_CONTRACTS;
   }
 };

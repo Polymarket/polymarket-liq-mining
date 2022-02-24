@@ -22,24 +22,17 @@ describe("calculate samples correctly", () => {
     markets = [
       {
         marketMaker: alan,
-        howToCalculate: LpCalculation.PerBlock,
-        amount: 2,
+		howToCalculate: LpCalculation.PerMarket,
+        amount: 1000,
+        rewardMarketEndDate: null,
       },
       {
         marketMaker: brian,
         howToCalculate: LpCalculation.PerMarket,
         amount: 20000,
+        rewardMarketEndDate: 1645214223584,
       },
     ];
-  });
-
-  it("should calculate tokens per sample based off tokens per block", async () => {
-    const tokensPerSample = calculateTokensPerSample(
-      markets[0],
-      420,
-      blocksPerSample
-    );
-    expect(tokensPerSample).to.eq(markets[0].amount * blocksPerSample);
   });
 
   it("should calculate tokens per sample based off tokens per market", async () => {
@@ -131,6 +124,7 @@ const mockState = {
   marketStartBlock: 21400000,
   marketEndBlock: 21600000,
   epochEndBlock: 21900000,
+  rewardMarketEndBlock: null,
 };
 
 // - if the END BLOCK is the END OF MARKET => TOTAL SUPPLY CALCULATION
@@ -151,12 +145,6 @@ describe("calculate correct start and end blocks", () => {
   });
 
   it("if the epoch starts before the market, start block is market block", async () => {
-    const { startBlock } = getStartAndEndBlock(initialState);
-    expect(startBlock).to.eq(initialState.marketStartBlock);
-  });
-
-  it("if the market started and the epoch has not started, start block is market", async () => {
-    initialState.epochStartBlock = null;
     const { startBlock } = getStartAndEndBlock(initialState);
     expect(startBlock).to.eq(initialState.marketStartBlock);
   });
@@ -210,5 +198,11 @@ describe("calculate correct start and end blocks", () => {
     initialState.marketEndBlock = null;
     const { endBlock } = getStartAndEndBlock(initialState);
     expect(endBlock).to.eq(initialState.epochEndBlock);
+  });
+
+  it("if there is a rewardMarketEndBlock, use it", async () => {
+    initialState.rewardMarketEndBlock = 21500000;
+    const { endBlock } = getStartAndEndBlock(initialState);
+    expect(endBlock).to.eq(initialState.rewardMarketEndBlock);
   });
 });
