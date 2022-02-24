@@ -51,16 +51,14 @@ interface StrapiFormat {
 }
 
 interface StrapiIcon {
-  //   id: number;
-  //   alternativeText: string;
-  //   caption: string;
-  //   hash: string;
-  //   ext: string;
-  //   mime: string;
-  //   previewUrl: null;
-  //   provider: string;
-  //   created_at: string;
-  //   updated_at: string;
+  id: number;
+  alternativeText: string;
+  caption: string;
+  hash: string;
+  ext: string;
+  mime: string;
+  previewUrl: null;
+  provider: string;
   name: string;
   width: number;
   height: number;
@@ -82,7 +80,6 @@ export interface RewardToken {
 }
 
 export interface RewardTokenFromStrapi {
-  //   id: number;
   reward_token: RewardToken;
   fees_token_supply: string;
 }
