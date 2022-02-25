@@ -362,47 +362,51 @@ const confirmRiskyWithMessage = async (message: string) => {
             "splitting user chunks into ",
             (usersForStrapi.length / userSampleSize) + " samples"
         );
-        // Login to strapi
-        const url = `${STRAPI_URL}/admin/login`;
-        const strapiEmail = process.env.STRAPI_ADMIN_EMAIL;
-        const strapiPassword = process.env.STRAPI_ADMIN_PASSWORD;
-        let token;
+        const WRITE_TO_STRAPI = process.env.WRITE_TO_STRAPI;
+        console.log({WRITE_TO_STRAPI})
+        if (WRITE_TO_STRAPI) {
+            // Login to strapi
+            const url = `${STRAPI_URL}/admin/login`;
+            const strapiEmail = process.env.STRAPI_ADMIN_EMAIL;
+            const strapiPassword = process.env.STRAPI_ADMIN_PASSWORD;
+            let token;
 
-        try {
-            const loginResult = await fetch(url, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({email: strapiEmail, password: strapiPassword}),
-                method: "POST"
-            },);
-
-            console.log({loginResult});
-
-            const loginJson = await loginResult.json();
-
-            console.log({loginJson});
-
-            ({data: {token}} = loginJson);
-
-        } catch (error) {
-            console.log("error", error);
-        }
-
-        while (usersForStrapi.length > 0) {
-            const sample = usersForStrapi.splice(0, 1000);
             try {
-                // Create reward-users record as admin
-                await fetch(`${STRAPI_URL}/reward-users`, {
-                    method: "POST",
+                const loginResult = await fetch(url, {
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
                     },
-                    body: JSON.stringify(sample),
-                });
+                    body: JSON.stringify({email: strapiEmail, password: strapiPassword}),
+                    method: "POST"
+                },);
+
+                console.log({loginResult});
+
+                const loginJson = await loginResult.json();
+
+                console.log({loginJson});
+
+                ({data: {token}} = loginJson);
+
             } catch (error) {
                 console.log("error", error);
+            }
+
+            while (usersForStrapi.length > 0) {
+                const sample = usersForStrapi.splice(0, 1000);
+                try {
+                    // Create reward-users record as admin
+                    await fetch(`${STRAPI_URL}/reward-users`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        },
+                        body: JSON.stringify(sample),
+                    });
+                } catch (error) {
+                    console.log("error", error);
+                }
             }
         }
     }

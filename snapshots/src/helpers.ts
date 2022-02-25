@@ -44,7 +44,7 @@ export const sumValues = (block: MapOfCount): number => {
 export const cleanUserAmounts = (userAmounts: UserAmount[], banMap: BanMap): UserAmount[] => {
   return userAmounts
     .filter(({user}) => {
-		console.log('user', user)
+		// console.log('user', user)
 		if (banMap[user.toLowerCase()]) {
 			return false
 		}
