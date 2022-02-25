@@ -22,18 +22,23 @@ import { addEoaToUserPayoutMap } from "./helpers";
  * @returns
  */
 export async function generateLpSnapshot(
-  returnType: ReturnType,
-  startTimestamp: number,
-  endTimestamp: number,
-  marketMakers: LpMarketInfo[],
-  blocksPerSample: number
+    returnType: ReturnType,
+    startTimestamp: number,
+    endTimestamp: number,
+    marketMakers: LpMarketInfo[],
+    blocksPerSample: number
 ): Promise<ReturnSnapshot[] | MapOfCount> {
   console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
   let userTokensPerEpoch: { [proxyWallet: string]: number } = {};
   const markets = lowerCaseMarketMakers(marketMakers);
 
-  const epochEndBlock = await convertTimestampToBlockNumber(endTimestamp);
+  let epochEndBlock = await convertTimestampToBlockNumber(endTimestamp);
+  while (!epochEndBlock) {
+    console.log("epochEndBlock was not found. trying again!");
+    epochEndBlock = await convertTimestampToBlockNumber(endTimestamp);
+  }
+
 
   let epochStartBlock = await convertTimestampToBlockNumber(startTimestamp);
   while (!epochStartBlock) {
@@ -53,7 +58,7 @@ export async function generateLpSnapshot(
       while (!rewardMarketEndBlock) {
         console.log("reward market end block was not found. trying again!");
         rewardMarketEndBlock = await convertTimestampToBlockNumber(
-          market.rewardMarketEndDate
+            market.rewardMarketEndDate
         );
       }
     }
@@ -83,9 +88,9 @@ export async function generateLpSnapshot(
     if (startBlock !== null && endBlock > startBlock) {
       const samples: number[] = [];
       for (
-        let block = startBlock;
-        block <= endBlock;
-        block += blocksPerSample
+          let block = startBlock;
+          block <= endBlock;
+          block += blocksPerSample
       ) {
         samples.push(block);
       }
@@ -93,31 +98,31 @@ export async function generateLpSnapshot(
       console.log(`Using ${market.howToCalculate} calculation`);
 
       const tokensPerSample = calculateTokensPerSample(
-        market,
-        samples.length,
-        blocksPerSample
+          market,
+          samples.length,
+          blocksPerSample
       );
       console.log(`Using ${tokensPerSample} tokens per sample`);
       console.log(
-        `Using ${tokensPerSample / blocksPerSample} tokens per block`
+          `Using ${tokensPerSample / blocksPerSample} tokens per block`
       );
 
       console.log(
-        `Diff between now and endBlock is ${
-          currentBlock - endBlock
-        } blocks. (43,200 = 1 day; 1,800 = 1 hour; 30 = 1 minute)`
+          `Diff between now and endBlock is ${
+              currentBlock - endBlock
+          } blocks. (43,200 = 1 day; 1,800 = 1 hour; 30 = 1 minute)`
       );
 
       // get liquidity state across many blocks for a market
       const liquidityAcrossBlocks = await calculateValOfLpPositionsAcrossBlocks(
-        marketMaker,
-        samples
+          marketMaker,
+          samples
       );
 
       userTokensPerEpoch = updateTokensPerBlockReward(
-        userTokensPerEpoch,
-        liquidityAcrossBlocks,
-        tokensPerSample
+          userTokensPerEpoch,
+          liquidityAcrossBlocks,
+          tokensPerSample
       );
     }
   }

@@ -359,7 +359,7 @@ const confirmRiskyWithMessage = async (message: string) => {
             Number(tokenId)
         );
 
-        // console.log("usersForStrapi", usersForStrapi);
+        console.log("usersForStrapi", usersForStrapi);
         const userSampleSize = 1000;
         console.log(
             "splitting user chunks into ",
@@ -367,7 +367,7 @@ const confirmRiskyWithMessage = async (message: string) => {
         );
         const WRITE_TO_STRAPI = process.env.WRITE_TO_STRAPI;
         console.log({WRITE_TO_STRAPI})
-        if (WRITE_TO_STRAPI) {
+        // if (WRITE_TO_STRAPI) {
             // Login to strapi
             const url = `${STRAPI_URL}/admin/login`;
             const strapiEmail = process.env.STRAPI_ADMIN_EMAIL;
@@ -394,12 +394,14 @@ const confirmRiskyWithMessage = async (message: string) => {
             } catch (error) {
                 console.log("error", error);
             }
+            console.log("token 2", token);
 
             while (usersForStrapi.length > 0) {
-                const sample = usersForStrapi.splice(0, 1000);
+                const sample = usersForStrapi.splice(0, userSampleSize);
+                console.log("sample", sample);
                 try {
                     // Create reward-users record as admin
-                    await fetch(`${STRAPI_URL}/reward-users`, {
+                    const response = await fetch(`${STRAPI_URL}/reward-users`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -407,10 +409,12 @@ const confirmRiskyWithMessage = async (message: string) => {
                         },
                         body: JSON.stringify(sample),
                     });
+                    console.log({response});
+                    console.log("responseJson", await response.json())
                 } catch (error) {
                     console.log("error", error);
                 }
             }
-        }
+        // }
     }
 })(args);
