@@ -26,7 +26,7 @@ describe("updateTokens on a PerBlockReward", () => {
   });
 
   it("should turn string fees into number and divide by 10^6", async () => {
-    const cleanedUserAmounts = cleanUserAmounts(mockFees);
+    const cleanedUserAmounts = cleanUserAmounts(mockFees, {});
     const expected0 = parseInt(mockFees[0].amount) / Math.pow(10, 6);
     const expected1 = parseInt(mockFees[1].amount) / Math.pow(10, 6);
     expect(cleanedUserAmounts[0].amount).to.eq(expected0);
@@ -34,7 +34,7 @@ describe("updateTokens on a PerBlockReward", () => {
   });
 
   it("should make a map", async () => {
-    const cleanedUserAmounts = cleanUserAmounts(mockFees);
+    const cleanedUserAmounts = cleanUserAmounts(mockFees, {});
     const pointsMap = makePointsMap(cleanedUserAmounts);
     expect(pointsMap[cleanedUserAmounts[2].user]).to.eq(
       parseInt(mockFees[2].amount) / Math.pow(10, 6)
@@ -42,7 +42,7 @@ describe("updateTokens on a PerBlockReward", () => {
   });
 
   it("should sum the map", async () => {
-    const cleanedUserAmounts = cleanUserAmounts(mockFees);
+    const cleanedUserAmounts = cleanUserAmounts(mockFees, {});
     const pointsMap = makePointsMap(cleanedUserAmounts);
     const feeSum = sumValues(pointsMap);
     const expected = Object.values(pointsMap).reduce((a, c) => (a += c), 0);
@@ -51,7 +51,7 @@ describe("updateTokens on a PerBlockReward", () => {
 
   it("should make payout map", async () => {
     const totalSupply = 100000;
-    const cleanedUserAmounts = cleanUserAmounts(mockFees);
+    const cleanedUserAmounts = cleanUserAmounts(mockFees, {});
     const pointsMap = makePointsMap(cleanedUserAmounts);
     const feeSum = sumValues(pointsMap);
     const payoutMap = makePayoutsMap(pointsMap, feeSum, totalSupply);
