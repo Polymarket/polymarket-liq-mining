@@ -42,8 +42,6 @@ export const sumValues = (block: MapOfCount): number => {
  * @returns userAmounts
  */
 export const cleanUserAmounts = (userAmounts: UserAmount[], banMap: BanMap): UserAmount[] => {
-	console.log('userAmounts', userAmounts)
-	console.log('banMap', banMap)
   return userAmounts
     .filter(({user}) => {
 		console.log('user', user)
