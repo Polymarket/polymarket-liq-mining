@@ -7,6 +7,7 @@ import {
   cleanUserAmounts,
   addEoaToUserPayoutMap,
 } from "./helpers";
+import { EXCLUDED_ACCOUNT_MAP } from "./ban_list";
 
 export async function generateFeesSnapshot(
   returnType: ReturnType,
@@ -23,7 +24,7 @@ export async function generateFeesSnapshot(
   );
 
   const fees = await getAllFeesInEpoch(startTimestamp, endTimestamp);
-  const cleanedUserAmounts = cleanUserAmounts(fees);
+  const cleanedUserAmounts = cleanUserAmounts(fees, EXCLUDED_ACCOUNT_MAP);
   const pointsMap = makePointsMap(cleanedUserAmounts);
   const feeSum = sumValues(pointsMap);
   const payoutMap = makePayoutsMap(pointsMap, feeSum, tokensPerEpoch);

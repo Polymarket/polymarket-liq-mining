@@ -1,9 +1,18 @@
-
 /**
  * A list of addresses currently excluded from the snapshot calculation
  */
+
 export const EXCLUDED_ACCOUNTS = [
-    "0x40cf9693426945c02d964f87e29e29ff7b943bdd", 
-    "0x57ea53b3cf624d1030b2d5f62ca93f249adc95ba", 
-    "0xfae93a6c3b825861c0a4b781f0e0c7bcddf2f9f9"
+  "0x684592063acf613e2d0d5887256a0c16cb48c125",
+  "0x782186952ef2ca75ea91c95aef25bbdcffb4bb1a",
+  "0xacebab2569ce6e5b660793b76e54d79eb7360c6a",
+  "0x8e60d10f3b34fb1698dd6e97b8e357db65bc7fdb",
+  "0xacebab1a14ae28db67b6e1ea4194a96a34602909",
 ];
+
+export const EXCLUDED_ACCOUNT_MAP = EXCLUDED_ACCOUNTS.reduce((acc, curr) => {
+  if (!acc[curr.toLowerCase()]) {
+    acc[curr.toLowerCase()] = true;
+  }
+  return acc;
+}, {});
