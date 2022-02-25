@@ -1,4 +1,4 @@
-export declare const MAINNET_CONTRACTS: {
+export declare const MUMBAI_CONTRACTS: {
     usdc: {
         distributor: string;
         erc20: string;
@@ -12,7 +12,7 @@ export declare const MAINNET_CONTRACTS: {
         erc20: string;
     };
 };
-export declare const MUMBAI_CONTRACTS: {
+export declare const POLYGON_CONTRACTS: {
     usdc: {
         distributor: string;
         erc20: string;
