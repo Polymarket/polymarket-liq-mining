@@ -1,4 +1,4 @@
-import { Transaction } from "./types";
+import {CallType, Transaction} from "./types";
 
 import { Interface } from "@ethersproject/abi";
 import MerkleDistributorAbi from "./abi/MerkleDistributor.json";
@@ -9,6 +9,7 @@ import MerkleDistributorAbi from "./abi/MerkleDistributor.json";
 export const freezeTx = (merkleDistributorAddress: string): Transaction => {
   return {
     to: merkleDistributorAddress,
+    typeCode: CallType.Call,
     data: new Interface(MerkleDistributorAbi).encodeFunctionData("freeze"),
     value: "0x0",
   };
@@ -20,6 +21,7 @@ export const freezeTx = (merkleDistributorAddress: string): Transaction => {
 export const unfreezeTx = (merkleDistributorAddress: string): Transaction => {
   return {
     to: merkleDistributorAddress,
+    typeCode: CallType.Call,
     data: new Interface(MerkleDistributorAbi).encodeFunctionData("unfreeze"),
     value: "0x0",
   };
@@ -32,6 +34,7 @@ export const unfreezeTx = (merkleDistributorAddress: string): Transaction => {
 export const updateMerkleRootTx = (merkleDistributorAddress: string, merkleRoot: string): Transaction => {
   return {
     to: merkleDistributorAddress,
+    typeCode: CallType.Call,
     data: new Interface(MerkleDistributorAbi).encodeFunctionData("updateMerkleRoot(bytes32)", [merkleRoot]),
     value: "0x0",
   };

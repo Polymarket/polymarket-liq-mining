@@ -210,6 +210,9 @@ const confirmRiskyWithMessage = async (message: string) => {
         console.log(`${tokenId} markets`, markets);
         console.log("start Date", new Date(startTimestamp));
         console.log("end Date", new Date(endTimestamp));
+        console.log("tokenData.symbol.toLowerCase()", tokenData.symbol.toLowerCase());
+        console.log("tokenData.symbol.toLowerCase() === usdc", (tokenData.symbol.toLowerCase() === "usdc"));
+        const isUSDC = tokenData.symbol.toLowerCase() === "usdc" ?? false;
         const t1 = Date.now();
         const liqMap = await generateLpSnapshot(
             ReturnType.Map,
@@ -280,7 +283,7 @@ const confirmRiskyWithMessage = async (message: string) => {
         }
         if (!prevMerkleFile) {
             const normalizedEarnings =
-                normalizeEarningsNewFormat(currentEpochUserMap);
+                normalizeEarningsNewFormat(currentEpochUserMap, isUSDC);
 
             console.log("normalizedEarnings length", normalizedEarnings.length);
             merkleInfo = parseBalanceMap(normalizedEarnings);
@@ -322,7 +325,7 @@ const confirmRiskyWithMessage = async (message: string) => {
                     "prevMerkleInfo tokenTotal",
                     BigNumber.from(prevMerkleInfo.tokenTotal).toString()
                 );
-                merkleInfo = combineMerkleInfo(previousClaims, currentEpochUserMap);
+                merkleInfo = combineMerkleInfo(previousClaims, currentEpochUserMap, isUSDC);
                 //   console.log("merkleInfo", merkleInfo);
                 await sdk.freeze();
                 await sdk.updateMerkleRoot(merkleInfo.merkleRoot);
@@ -356,54 +359,62 @@ const confirmRiskyWithMessage = async (message: string) => {
             Number(tokenId)
         );
 
-        // console.log("usersForStrapi", usersForStrapi);
+        console.log("usersForStrapi", usersForStrapi);
         const userSampleSize = 1000;
         console.log(
             "splitting user chunks into ",
             (usersForStrapi.length / userSampleSize) + " samples"
         );
-        // Login to strapi
-        const url = `${STRAPI_URL}/admin/login`;
-        const strapiEmail = process.env.STRAPI_ADMIN_EMAIL;
-        const strapiPassword = process.env.STRAPI_ADMIN_PASSWORD;
-        let token;
+        const WRITE_TO_STRAPI = process.env.WRITE_TO_STRAPI;
+        console.log({WRITE_TO_STRAPI})
+        // if (WRITE_TO_STRAPI) {
+            // Login to strapi
+            const url = `${STRAPI_URL}/admin/login`;
+            const strapiEmail = process.env.STRAPI_ADMIN_EMAIL;
+            const strapiPassword = process.env.STRAPI_ADMIN_PASSWORD;
+            let token;
 
-        try {
-            const loginResult = await fetch(url, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({email: strapiEmail, password: strapiPassword}),
-                method: "POST"
-            },);
-
-            console.log({loginResult});
-
-            const loginJson = await loginResult.json();
-
-            console.log({loginJson});
-
-            ({data: {token}} = loginJson);
-
-        } catch (error) {
-            console.log("error", error);
-        }
-
-        while (usersForStrapi.length > 0) {
-            const sample = usersForStrapi.splice(0, 1000);
             try {
-                // Create reward-users record as admin
-                await fetch(`${STRAPI_URL}/reward-users`, {
-                    method: "POST",
+                const loginResult = await fetch(url, {
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
                     },
-                    body: JSON.stringify(sample),
-                });
+                    body: JSON.stringify({email: strapiEmail, password: strapiPassword}),
+                    method: "POST"
+                },);
+
+                console.log({loginResult});
+
+                const loginJson = await loginResult.json();
+
+                console.log({loginJson});
+
+                ({data: {token}} = loginJson);
+
             } catch (error) {
                 console.log("error", error);
             }
-        }
+            console.log("token 2", token);
+
+            while (usersForStrapi.length > 0) {
+                const sample = usersForStrapi.splice(0, userSampleSize);
+                console.log("sample", sample);
+                try {
+                    // Create reward-users record as admin
+                    const response = await fetch(`${STRAPI_URL}/reward-users`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        },
+                        body: JSON.stringify(sample),
+                    });
+                    console.log({response});
+                    console.log("responseJson", await response.json())
+                } catch (error) {
+                    console.log("error", error);
+                }
+            }
+        // }
     }
 })(args);

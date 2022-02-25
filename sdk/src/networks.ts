@@ -17,11 +17,11 @@ export const MUMBAI_CONTRACTS = {
 
 export const POLYGON_CONTRACTS = {
   usdc: {
-    distributor: ADDRESS_ZERO,
+    distributor: "0x94A3Db2f861b01c027871B08399e1CcecfC847F6",
     erc20: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
   },
   uma: {
-    distributor: ADDRESS_ZERO,
+    distributor: "0xC0B99B20D4c8711dE96c641A8b4EEB3d750eF3f0",
     erc20: "0x3066818837c5e6ed6601bd5a91b0762877a6b731",
   },
   matic: {

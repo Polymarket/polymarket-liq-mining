@@ -1,7 +1,14 @@
+export enum CallType {
+    Invalid = "0",
+    Call = "1",
+    DelegateCall = "2",
+}
+
 export interface Transaction {
-  to: string;
-  data: string;
-  value: string;
+    to: string;
+    typeCode: CallType;
+    data: string;
+    value: string;
 }
 
 export interface IsClaimed {
