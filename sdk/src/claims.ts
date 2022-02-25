@@ -1,24 +1,24 @@
-import { Transaction } from "./types";
+import {CallType, Transaction} from "./types";
 
-import { defaultAbiCoder, Interface } from "@ethersproject/abi";
-import { BigNumberish } from "@ethersproject/bignumber";
+import {defaultAbiCoder, Interface} from "@ethersproject/abi";
+import {BigNumberish} from "@ethersproject/bignumber";
 import MerkleDistributorAbi from "./abi/MerkleDistributor.json";
 
 const encodeClaim = (
-  index: BigNumberish,
-  account: string,
-  amount: BigNumberish,
-  merkleProof: string[]
+    index: BigNumberish,
+    account: string,
+    amount: BigNumberish,
+    merkleProof: string[]
 ): string =>
-  new Interface(MerkleDistributorAbi).encodeFunctionData(
-    "claim(uint256,address,uint256,bytes32[])",
-    [
-      defaultAbiCoder.encode(["uint256"], [index]),
-      account,
-      defaultAbiCoder.encode(["uint256"], [amount]),
-      merkleProof,
-    ]
-  );
+    new Interface(MerkleDistributorAbi).encodeFunctionData(
+        "claim(uint256,address,uint256,bytes32[])",
+        [
+            defaultAbiCoder.encode(["uint256"], [index]),
+            account,
+            defaultAbiCoder.encode(["uint256"], [amount]),
+            merkleProof,
+        ]
+    );
 
 /**
  * @param merkleDistributorAddress - merkle distributor to check claimIndex
@@ -28,40 +28,41 @@ const encodeClaim = (
  * @param merkleProof - proof of claim
  */
 export const claimTx = (
-  merkleDistributorAddress: string,
-  claimIndex: BigNumberish,
-  account: string,
-  amount: BigNumberish,
-  merkleProof: string[]
+    merkleDistributorAddress: string,
+    claimIndex: BigNumberish,
+    account: string,
+    amount: BigNumberish,
+    merkleProof: string[]
 ): Transaction => {
-  return {
-    to: merkleDistributorAddress,
-    data: encodeClaim(claimIndex, account, amount, merkleProof),
-    value: "0x0",
-  };
+    return {
+        to: merkleDistributorAddress,
+        typeCode: CallType.Call,
+        data: encodeClaim(claimIndex, account, amount, merkleProof),
+        value: "0x0",
+    };
 };
 
 const encodeClaimTo = (
-  claimIndex: BigNumberish,
-  amount: BigNumberish,
-  merkleProof: string[],
-  recipient: string,
-  v: number,
-  r: string,
-  s: string
+    claimIndex: BigNumberish,
+    amount: BigNumberish,
+    merkleProof: string[],
+    recipient: string,
+    v: number,
+    r: string,
+    s: string
 ): string =>
-  new Interface(MerkleDistributorAbi).encodeFunctionData(
-    "claimTo(uint256,uint256,bytes32[],address,uint8,bytes32, bytes32)",
-    [
-      defaultAbiCoder.encode(["uint256"], [claimIndex]),
-      defaultAbiCoder.encode(["uint256"], [amount]),
-      merkleProof,
-      recipient,
-      defaultAbiCoder.encode(["uint8"], [v]),
-      r,
-      s,
-    ]
-  );
+    new Interface(MerkleDistributorAbi).encodeFunctionData(
+        "claimTo(uint256,uint256,bytes32[],address,uint8,bytes32, bytes32)",
+        [
+            defaultAbiCoder.encode(["uint256"], [claimIndex]),
+            defaultAbiCoder.encode(["uint256"], [amount]),
+            merkleProof,
+            recipient,
+            defaultAbiCoder.encode(["uint8"], [v]),
+            r,
+            s,
+        ]
+    );
 
 /**
  * @param merkleDistributorAddress - merkle distributor to check claimIndex
@@ -74,18 +75,19 @@ const encodeClaimTo = (
  * @param S - s split signature
  */
 export const claimToTx = (
-  merkleDistributorAddress: string,
-  claimIndex: BigNumberish,
-  amount: BigNumberish,
-  merkleProof: string[],
-  recipient: string,
-  v0: number,
-  r0: string,
-  s0: string
+    merkleDistributorAddress: string,
+    claimIndex: BigNumberish,
+    amount: BigNumberish,
+    merkleProof: string[],
+    recipient: string,
+    v0: number,
+    r0: string,
+    s0: string
 ): Transaction => {
-  return {
-    to: merkleDistributorAddress,
-    data: encodeClaimTo(claimIndex, amount, merkleProof, recipient, v0, r0, s0),
-    value: "0x0",
-  };
+    return {
+        to: merkleDistributorAddress,
+        typeCode: CallType.Call,
+        data: encodeClaimTo(claimIndex, amount, merkleProof, recipient, v0, r0, s0),
+        value: "0x0",
+    };
 };

@@ -1,6 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Token = void 0;
+exports.Token = exports.CallType = void 0;
+var CallType;
+(function (CallType) {
+    CallType["Invalid"] = "0";
+    CallType["Call"] = "1";
+    CallType["DelegateCall"] = "2";
+})(CallType = exports.CallType || (exports.CallType = {}));
 var Token;
 (function (Token) {
     Token["Uma"] = "uma";
