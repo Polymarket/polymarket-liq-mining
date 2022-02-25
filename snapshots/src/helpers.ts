@@ -191,15 +191,14 @@ const trimAndLowerCaseAddress = (address: string): string => {
  * @param number
  * @returns
  */
-export const getAmountInEther = (number: number, isUSDC: boolean = false): BigNumber => {
-  console.log("", );
+export const getAmountInEther = (number: number, isUSDC: boolean): BigNumber => {
   let n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
 
   if (n.includes("e")) {
     const eIndex = n.indexOf("e");
     n = n.slice(0, eIndex);
   }
-  return isUSDC ? ethers.utils.parseEther(n).div(BigNumber.from(10).mul(12)) : ethers.utils.parseEther(n);
+  return isUSDC ? ethers.utils.parseEther(n).div(BigNumber.from(10).pow(12)) : ethers.utils.parseEther(n);
 };
 
 /**
@@ -210,7 +209,7 @@ export const getAmountInEther = (number: number, isUSDC: boolean = false): BigNu
  */
 export const normalizeEarningsNewFormat = (
   map: MapOfCount | BigNumberMapOfCount,
-  isUSDC: boolean = false
+  isUSDC: boolean
 ): NewFormat[] => {
   return positiveAddressesOnly(map).map((addr) => {
     return {
