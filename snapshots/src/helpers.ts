@@ -191,14 +191,15 @@ const trimAndLowerCaseAddress = (address: string): string => {
  * @param number
  * @returns
  */
-export const getAmountInEther = (number: number): BigNumber => {
+export const getAmountInEther = (number: number, isUSDC: boolean = false): BigNumber => {
+  console.log("", );
   let n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
 
   if (n.includes("e")) {
     const eIndex = n.indexOf("e");
     n = n.slice(0, eIndex);
   }
-  return ethers.utils.parseEther(n);
+  return isUSDC ? ethers.utils.parseEther(n).div(BigNumber.from(10).mul(12)) : ethers.utils.parseEther(n);
 };
 
 /**
@@ -208,14 +209,15 @@ export const getAmountInEther = (number: number): BigNumber => {
  * @returns todo - getAmountInEther
  */
 export const normalizeEarningsNewFormat = (
-  map: MapOfCount | BigNumberMapOfCount
+  map: MapOfCount | BigNumberMapOfCount,
+  isUSDC: boolean = false
 ): NewFormat[] => {
   return positiveAddressesOnly(map).map((addr) => {
     return {
       address: validateAddress(addr), // NOTICE THE VALIDATE ADDRESS FROM ETHERS
       earnings: BigNumber.isBigNumber(map[addr])
         ? map[addr].toString()
-        : getAmountInEther(map[addr] as number).toString(),
+        : getAmountInEther(map[addr] as number, isUSDC).toString(),
       reasons: "",
     };
   });
@@ -249,12 +251,13 @@ export const combineBigNumberMaps = (
  * @returns todo - update getAmountInEther
  */
 export const normalizeMapForMultipleEpochs = (
-  map: MapOfCount
+  map: MapOfCount,
+  isUSDC: boolean = false
 ): BigNumberMapOfCount => {
   return positiveAddressesOnly(map).reduce((acc, curr) => {
     const lowerCase = trimAndLowerCaseAddress(curr);
     if (!acc[lowerCase]) {
-      acc[lowerCase] = getAmountInEther(map[curr]);
+      acc[lowerCase] = getAmountInEther(map[curr], isUSDC);
     }
     return acc;
   }, {});
@@ -264,12 +267,14 @@ export const normalizeMapForMultipleEpochs = (
  * Takes in a isClaimed array from the sdk, filters out claimed amounts,
  * combines with a new payout map and returns the new merkle claims + root
  * @param prevClaims
- * @param mapOfCount
+ * @param newClaimMap
+ * @param isUSDC
  * @returns merkleDistributorInfo
  */
 export const combineMerkleInfo = (
   prevClaims: IsClaimed[],
-  newClaimMap: MapOfCount
+  newClaimMap: MapOfCount,
+  isUSDC: boolean = false,
 ): MerkleDistributorInfo => {
   const mapOfUnpaidClaims: BigNumberMapOfCount = prevClaims
     .filter((c) => !c.isClaimed)
@@ -281,9 +286,9 @@ export const combineMerkleInfo = (
       return acc;
     }, {});
 
-  const newMap = normalizeMapForMultipleEpochs(newClaimMap);
+  const newMap = normalizeMapForMultipleEpochs(newClaimMap, isUSDC);
   const combined = combineBigNumberMaps([newMap, mapOfUnpaidClaims]);
-  const normalized = normalizeEarningsNewFormat(combined);
+  const normalized = normalizeEarningsNewFormat(combined, isUSDC);
   return parseBalanceMap(normalized);
 };
 

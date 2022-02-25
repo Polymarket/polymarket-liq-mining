@@ -210,6 +210,9 @@ const confirmRiskyWithMessage = async (message: string) => {
         console.log(`${tokenId} markets`, markets);
         console.log("start Date", new Date(startTimestamp));
         console.log("end Date", new Date(endTimestamp));
+        console.log("tokenData.symbol.toLowerCase()", tokenData.symbol.toLowerCase());
+        console.log("tokenData.symbol.toLowerCase() === usdc", (tokenData.symbol.toLowerCase() === "usdc"));
+        const isUSDC = tokenData.symbol.toLowerCase() === "usdc" ?? false;
         const t1 = Date.now();
         const liqMap = await generateLpSnapshot(
             ReturnType.Map,
@@ -280,7 +283,7 @@ const confirmRiskyWithMessage = async (message: string) => {
         }
         if (!prevMerkleFile) {
             const normalizedEarnings =
-                normalizeEarningsNewFormat(currentEpochUserMap);
+                normalizeEarningsNewFormat(currentEpochUserMap, isUSDC);
 
             console.log("normalizedEarnings length", normalizedEarnings.length);
             merkleInfo = parseBalanceMap(normalizedEarnings);
@@ -322,7 +325,7 @@ const confirmRiskyWithMessage = async (message: string) => {
                     "prevMerkleInfo tokenTotal",
                     BigNumber.from(prevMerkleInfo.tokenTotal).toString()
                 );
-                merkleInfo = combineMerkleInfo(previousClaims, currentEpochUserMap);
+                merkleInfo = combineMerkleInfo(previousClaims, currentEpochUserMap, isUSDC);
                 //   console.log("merkleInfo", merkleInfo);
                 await sdk.freeze();
                 await sdk.updateMerkleRoot(merkleInfo.merkleRoot);
