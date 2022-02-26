@@ -32,21 +32,21 @@ describe("combine merkle info", () => {
     merkle0Claims = [
       {
         index: 0,
-        amount: getAmountInEther(alanAmount).toHexString(),
+        amount: getAmountInEther(alanAmount, false).toHexString(),
         proof: [],
         isClaimed: false,
         address: alan,
       },
       {
         index: 1,
-        amount: getAmountInEther(brianAmount).toHexString(),
+        amount: getAmountInEther(brianAmount, false).toHexString(),
         proof: [],
         isClaimed: true,
         address: brian,
       },
       {
         index: 2,
-        amount: getAmountInEther(devonAmount).toHexString(),
+        amount: getAmountInEther(devonAmount, false).toHexString(),
         proof: [],
         isClaimed: false,
         address: devon,
@@ -91,19 +91,19 @@ describe("combine merkle info", () => {
     const result = combineMerkleInfo(randomlyCasedMerkle0Claims, randomlyCasedMerkle1Claims);
 
     expect(result.claims[alan].amount).to.eq(
-      getAmountInEther(alanAmount * 2).toHexString()
+      getAmountInEther(alanAmount * 2, false).toHexString()
     );
 
     expect(result.claims[brian].amount).to.eq(
-      getAmountInEther(brianAmount).toHexString()
+      getAmountInEther(brianAmount, false).toHexString()
     );
 
     expect(result.claims[devon].amount).to.eq(
-      getAmountInEther(devonAmount * 2).toHexString()
+      getAmountInEther(devonAmount * 2, false).toHexString()
     );
 
     expect(result.claims[earl].amount).to.eq(
-      getAmountInEther(earlAmount).toHexString()
+      getAmountInEther(earlAmount, false).toHexString()
     );
   });
 });
