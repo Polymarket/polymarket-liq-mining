@@ -12,9 +12,12 @@ describe("updateTokens on a PerBlockReward", () => {
     const numC = getAmountInEther(420420.0000050069, false);
     expect(numC.toString()).to.eq("420420000005006900000000");
 
-    const numD = getAmountInEther(420, true);
-    expect(numD.toString()).to.eq("420000000");
   });
+
+  it('should handle USDC', async () => {
+    const num = getAmountInEther(420, true);
+    expect(num.toString()).to.eq("420000000");
+  })
 
   it("should handle when decimals are longer than 18 decimal places", async () => {
     const numD = getAmountInEther(3022.0001000050069111111111111, false);
