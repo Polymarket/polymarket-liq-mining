@@ -86,7 +86,7 @@ describe("Distributor SDK", () => {
   it("should allow a user to claim", async () => {
     const aliceMerkleInfo = merkleInfo.claims[alice.address];
     expect(await sdk.isClaimed(aliceMerkleInfo.index)).to.eq(false);
-    const x = await sdk.claim(
+    await sdk.claim(
       aliceMerkleInfo.index,
       alice.address,
       aliceMerkleInfo.amount,
