@@ -23,7 +23,6 @@ export const erc20TransferTransaction = (
     amount: BigNumberish
 ): Transaction => ({
     to: tokenAddress,
-    typeCode: CallType.Call,
     data: encodeTokenTransfer(recipient, amount),
     value: "0x0",
 });

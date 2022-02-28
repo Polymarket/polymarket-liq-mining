@@ -86,7 +86,7 @@ describe("Distributor SDK", () => {
   it("should allow a user to claim", async () => {
     const aliceMerkleInfo = merkleInfo.claims[alice.address];
     expect(await sdk.isClaimed(aliceMerkleInfo.index)).to.eq(false);
-    await sdk.claim(
+    const x = await sdk.claim(
       aliceMerkleInfo.index,
       alice.address,
       aliceMerkleInfo.amount,
@@ -352,5 +352,35 @@ describe("Distributor SDK", () => {
         BigNumber.from(frankMerkleAfter.amount)
       )
     );
+  });
+
+  it("should add typeCode when populating transactions", async () => {
+    const carolSigner = await ethers.getNamedSigner("carol");
+
+    const carolSdk = new DistributorSdk(
+      carolSigner._signer,
+      31337,
+      token.address,
+      merkleDistributor.address
+    );
+
+    const carolMerkle = merkleInfo.claims[carolSigner.address];
+    const tx = carolSdk.populateClaimTx(
+      carolMerkle.index,
+      carolSigner.address,
+      carolMerkle.amount,
+      carolMerkle.proof
+    );
+    const tx2 = carolSdk.populateClaimAndTransferTx(
+      carolMerkle.index,
+      carolMerkle.amount,
+      carolMerkle.proof,
+      carolSigner.address,
+      carolSigner.address
+    );
+
+    expect(tx).to.have.property("typeCode");
+    expect(tx2[0]).to.have.property("typeCode");
+    expect(tx2[1]).to.have.property("typeCode");
   });
 });

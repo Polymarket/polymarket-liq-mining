@@ -8,6 +8,7 @@ import { freezeTx, unfreezeTx, updateMerkleRootTx } from "./admin";
 import { getContracts } from "./networks";
 import { erc20TransferTransaction } from "./erc20";
 import { Transaction } from "./types";
+import { CallType } from ".";
 
 export class DistributorSdk {
   readonly chainID: number;
@@ -251,7 +252,8 @@ export class DistributorSdk {
       amount,
       merkleProof
     );
-    return tx;
+
+    return { ...tx, typeCode: CallType.Call };
   }
 
   /**
@@ -279,6 +281,9 @@ export class DistributorSdk {
 
     const txB = erc20TransferTransaction(this.token, recipient, amount);
 
-    return [txA, txB];
+    return [
+      { ...txA, typeCode: CallType.Call },
+      { ...txB, typeCode: CallType.Call },
+    ];
   }
 }
