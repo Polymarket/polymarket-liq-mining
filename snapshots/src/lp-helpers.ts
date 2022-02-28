@@ -9,6 +9,7 @@ export interface IStartAndEndBlock {
   marketStartBlock: number | null;
   marketEndBlock: number | null;
   rewardMarketEndBlock: number | null;
+  rewardMarketStartBlock: number | null;
 }
 
 export interface LpMarketInfo {
@@ -16,6 +17,7 @@ export interface LpMarketInfo {
   howToCalculate: LpCalculation;
   amount: number;
   rewardMarketEndDate: number | null;
+  rewardMarketStartDate: number | null;
 }
 
 export enum LpCalculation {
@@ -32,6 +34,7 @@ export interface RewardTokenLiquidity {
 export interface RewardMarketFromStrapi {
   reward_epoch: number;
   reward_end_date: null | string;
+  reward_start_date: null | string;
   reward_tokens_liquidity: RewardTokenLiquidity[];
   market: {
     marketMakerAddress: string;
@@ -182,7 +185,11 @@ export const cleanAndSeparateEpochPerToken = (
         rewardMarketEndDate:
           typeof curr.reward_end_date === "string"
             ? new Date(curr.reward_end_date).getTime()
-            : curr.reward_end_date,
+            : null,
+        rewardMarketStartDate:
+          typeof curr.reward_start_date === "string"
+            ? new Date(curr.reward_end_date)
+            : null,
       });
     });
     return acc;
@@ -250,6 +257,7 @@ export const getStartAndEndBlock = ({
   marketStartBlock,
   marketEndBlock,
   rewardMarketEndBlock,
+  rewardMarketStartBlock,
 }: IStartAndEndBlock): {
   startBlock: number;
   endBlock: number | null;
@@ -275,6 +283,10 @@ export const getStartAndEndBlock = ({
     !epochStartBlock
   ) {
     startBlock = marketStartBlock;
+  }
+
+  if (rewardMarketStartBlock) {
+    startBlock = rewardMarketStartBlock;
   }
 
   let endBlock;

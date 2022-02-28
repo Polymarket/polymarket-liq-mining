@@ -22,15 +22,17 @@ describe("calculate samples correctly", () => {
     markets = [
       {
         marketMaker: alan,
-		howToCalculate: LpCalculation.PerMarket,
+        howToCalculate: LpCalculation.PerMarket,
         amount: 1000,
         rewardMarketEndDate: null,
+        rewardMarketStartDate: null,
       },
       {
         marketMaker: brian,
         howToCalculate: LpCalculation.PerMarket,
         amount: 20000,
         rewardMarketEndDate: 1645214223584,
+        rewardMarketStartDate: 1645209039584,
       },
     ];
   });
@@ -125,10 +127,8 @@ const mockState = {
   marketEndBlock: 21600000,
   epochEndBlock: 21900000,
   rewardMarketEndBlock: null,
+  rewardMarketStartBlock: null,
 };
-
-// - if the END BLOCK is the END OF MARKET => TOTAL SUPPLY CALCULATION
-// - if the END BLOCK is the END OF EPOCH => PER BLOCK CALCULATION
 
 describe("calculate correct start and end blocks", () => {
   let initialState: IStartAndEndBlock = mockState;
@@ -147,6 +147,13 @@ describe("calculate correct start and end blocks", () => {
   it("if the epoch starts before the market, start block is market block", async () => {
     const { startBlock } = getStartAndEndBlock(initialState);
     expect(startBlock).to.eq(initialState.marketStartBlock);
+  });
+
+  it("if there is a reward start date, use it", async () => {
+    const rmsb = 21500000;
+    initialState.rewardMarketStartBlock = rmsb;
+    const { startBlock } = getStartAndEndBlock(initialState);
+    expect(startBlock).to.eq(rmsb);
   });
 
   // ERRORS
