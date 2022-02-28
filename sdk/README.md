@@ -4,15 +4,15 @@ This repo contains an SDK that helps interact with our Merkle Distributor contra
 
 ### Instantiate the SDK
 
-```
+```typescript
 const sdk = new DistributorSdk(
-    your-signer
-    chainID (137 is Polygon),
-    "usdc" or "uma"
+    yourSigner, // signer from ethers or web3, etc.
+    137, // this is the chainId for Polygon
+    "usdc", // can be "usdc" or "uma"
 );
 ```
 
-note: Contract addresses and supported chains can be found in `.src/networks`
+> **Note**: Contract addresses and supported chains can be found in `.src/networks`
 
 ### Distributor Info:
 
@@ -22,7 +22,7 @@ The information about the amounts, claim index and merkle proofs for each accoun
 
 You may claim to the proxy address associated with your Polymarket account by using...
 
-```
+```typescript
 await sdk.claim(
 	claimIndex,
 	address,
@@ -33,7 +33,7 @@ await sdk.claim(
 
 You may claim and transfer from your proxy address to the recipient address of your choice using...
 
-```
+```typescript
 await sdk.claimAndTransfer(
 	claimIndex,
 	amount,
@@ -45,15 +45,21 @@ await sdk.claimAndTransfer(
 
 You may also populate these transactions and sign them yourself by calling these methods. Note, these will also return a `typeCode: "1"` property as well as `to`, `data` and `value` properties.
 
-```
-sdk.populateClaimTx(
+```typescript
+const sdk = new DistributorSdk(
+    yourSigner, // signer from ethers or web3, etc.
+    137, // this is the chainId for Polygon
+    "usdc", // can be "usdc" or "uma"
+);
+
+const claimTx = sdk.populateClaimTx(
 	claimIndex,
 	address,
 	amount,
 	proof
 );
 
-sdk.populateClaimAndTransferTx(
+const claimAndTransferTx = sdk.populateClaimAndTransferTx(
 	claimIndex,
 	amount,
 	proof,

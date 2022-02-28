@@ -1,7 +1,7 @@
 {
   "name": "@polymarket/distributor-sdk",
   "version": "1.0.4",
-  "description": "SDK to simplify common interactions with the Polymarket Merkle Distributor",
+  "description": "SDK to simplify common interactions with the Polymarket Merkle Distributors",
   "author": "Matt Walker <matt@polymarket.com>",
   "license": "MIT",
   "contributors": [
