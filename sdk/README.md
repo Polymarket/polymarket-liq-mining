@@ -16,7 +16,7 @@ note: Contract addresses and supported chains can be found in `.src/networks`
 
 ### Distributor Info:
 
-The information about the claim index and merkle proofs for each account is stored in `../snapshots/snapshots/`
+The information about the amounts, claim index and merkle proofs for each account is stored in `../snapshots/snapshots/`
 
 ### To Claim:
 
@@ -43,7 +43,7 @@ await sdk.claimAndTransfer(
 )
 ```
 
-You may also populate these transactions and sign them yourself by calling
+You may also populate these transactions and sign them yourself by calling these methods. Note, these will also return a `typeCode: "1"` property as well as `to`, `data` and `value` properties.
 
 ```
 sdk.populateClaimTx(
