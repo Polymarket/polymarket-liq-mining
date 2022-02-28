@@ -4,7 +4,6 @@ exports.erc20TransferTransaction = void 0;
 var tslib_1 = require("tslib");
 var abi_1 = require("@ethersproject/abi");
 var ERC20_json_1 = tslib_1.__importDefault(require("./abi/ERC20.json"));
-var types_1 = require("./types");
 var encodeTokenTransfer = function (recipientAddress, amount) {
     return new abi_1.Interface(ERC20_json_1.default).encodeFunctionData("transfer(address,uint256)", [
         recipientAddress,
@@ -18,7 +17,6 @@ var encodeTokenTransfer = function (recipientAddress, amount) {
  */
 var erc20TransferTransaction = function (tokenAddress, recipient, amount) { return ({
     to: tokenAddress,
-    typeCode: types_1.CallType.Call,
     data: encodeTokenTransfer(recipient, amount),
     value: "0x0",
 }); };
