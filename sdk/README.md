@@ -49,7 +49,7 @@ You may also populate these transactions and sign them yourself by calling these
 const sdk = new DistributorSdk(
     yourSigner, // signer from ethers or web3, etc.
     137, // this is the chainId for Polygon
-    "usdc", // can be "usdc" or "uma"
+    tokenToClaim, // can be "usdc" or "uma"
 );
 
 const claimTx = sdk.populateClaimTx(
