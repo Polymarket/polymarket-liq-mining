@@ -64,7 +64,7 @@ describe("combine merkle info", () => {
 
   it("should not fail", async () => {
     try {
-      combineMerkleInfo(merkle0Claims, merkle1Claims);
+      combineMerkleInfo(merkle0Claims, merkle1Claims, false);
     } catch (error) {
       expect(2).to.eq(4);
     }
@@ -88,7 +88,7 @@ describe("combine merkle info", () => {
       {}
     );
 
-    const result = combineMerkleInfo(randomlyCasedMerkle0Claims, randomlyCasedMerkle1Claims);
+    const result = combineMerkleInfo(randomlyCasedMerkle0Claims, randomlyCasedMerkle1Claims, false);
 
     expect(result.claims[alan].amount).to.eq(
       getAmountInEther(alanAmount * 2, false).toHexString()

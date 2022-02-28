@@ -50,7 +50,7 @@ describe("Distributor SDK", () => {
 
   beforeEach("deploy token", async () => {
     const mockPayout = createMockPayoutMap(wallets, deployer.address);
-    merkleInfo = parseBalanceMap(normalizeEarningsNewFormat(mockPayout));
+    merkleInfo = parseBalanceMap(normalizeEarningsNewFormat(mockPayout, false));
 
     token = await deployContract(
       deployer,
@@ -198,7 +198,7 @@ describe("Distributor SDK", () => {
     // deployer updates merkle root with new claims + previous unpaid claims
     const previousClaims = await sdk.getClaimedStatus(merkleInfo);
     const nextMockPayout = createMockPayoutMap(wallets, deployer.address);
-    const nextMerkleInfo = combineMerkleInfo(previousClaims, nextMockPayout);
+    const nextMerkleInfo = combineMerkleInfo(previousClaims, nextMockPayout, false);
     await deployerSdk.updateMerkleRoot(nextMerkleInfo.merkleRoot);
     expect(await merkleDistributor.merkleRoot()).to.eq(
       nextMerkleInfo.merkleRoot
@@ -294,7 +294,7 @@ describe("Distributor SDK", () => {
     // deployer updates merkle root with new claims + previous unpaid claims
     const previousClaims = await sdk.getClaimedStatus(merkleInfo);
     const nextMockPayout = createMockPayoutMap(wallets, deployer.address);
-    const nextMerkleInfo = combineMerkleInfo(previousClaims, nextMockPayout);
+    const nextMerkleInfo = combineMerkleInfo(previousClaims, nextMockPayout, false);
     await deployerSdk.updateMerkleRoot(nextMerkleInfo.merkleRoot);
     expect(await merkleDistributor.merkleRoot()).to.eq(
       nextMerkleInfo.merkleRoot
