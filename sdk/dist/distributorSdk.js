@@ -9,6 +9,7 @@ var ethers_2 = require("ethers");
 var admin_1 = require("./admin");
 var networks_1 = require("./networks");
 var erc20_1 = require("./erc20");
+var _1 = require(".");
 var DistributorSdk = /** @class */ (function () {
     /**
      * returns an array of what leafs have been claimed
@@ -257,7 +258,7 @@ var DistributorSdk = /** @class */ (function () {
      */
     DistributorSdk.prototype.populateClaimTx = function (claimIndex, account, amount, merkleProof) {
         var tx = claims_1.claimTx(this.distributor.address, claimIndex, account, amount, merkleProof);
-        return tx;
+        return tslib_1.__assign(tslib_1.__assign({}, tx), { typeCode: _1.CallType.Call });
     };
     /**
      * THIS DOES NOT SIGN TX, JUST POPULATES THE TX
@@ -270,7 +271,10 @@ var DistributorSdk = /** @class */ (function () {
     DistributorSdk.prototype.populateClaimAndTransferTx = function (claimIndex, amount, merkleProof, account, recipient) {
         var txA = claims_1.claimTx(this.distributor.address, claimIndex, account, amount, merkleProof);
         var txB = erc20_1.erc20TransferTransaction(this.token, recipient, amount);
-        return [txA, txB];
+        return [
+            tslib_1.__assign(tslib_1.__assign({}, txA), { typeCode: _1.CallType.Call }),
+            tslib_1.__assign(tslib_1.__assign({}, txB), { typeCode: _1.CallType.Call }),
+        ];
     };
     return DistributorSdk;
 }());

@@ -5,7 +5,7 @@ export declare enum CallType {
 }
 export interface Transaction {
     to: string;
-    typeCode: CallType;
+    typeCode?: CallType;
     data: string;
     value: string;
 }

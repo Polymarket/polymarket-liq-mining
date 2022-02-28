@@ -1,1 +1,1 @@
-{"version":3,"file":"erc20.d.ts","sourceRoot":"","sources":["../src/erc20.ts"],"names":[],"mappings":"AACA,OAAO,EAAC,YAAY,EAAC,MAAM,0BAA0B,CAAC;AAEtD,OAAO,EAAW,WAAW,EAAC,MAAM,SAAS,CAAC;AAW9C;;;;GAIG;AACH,eAAO,MAAM,wBAAwB,iBACnB,MAAM,aACT,MAAM,UACT,YAAY,KACrB,WAKD,CAAC"}
+{"version":3,"file":"erc20.d.ts","sourceRoot":"","sources":["../src/erc20.ts"],"names":[],"mappings":"AACA,OAAO,EAAC,YAAY,EAAC,MAAM,0BAA0B,CAAC;AAEtD,OAAO,EAAW,WAAW,EAAC,MAAM,SAAS,CAAC;AAW9C;;;;GAIG;AACH,eAAO,MAAM,wBAAwB,iBACnB,MAAM,aACT,MAAM,UACT,YAAY,KACrB,WAID,CAAC"}

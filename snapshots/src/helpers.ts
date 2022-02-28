@@ -251,7 +251,7 @@ export const combineBigNumberMaps = (
  */
 export const normalizeMapForMultipleEpochs = (
   map: MapOfCount,
-  isUSDC: boolean = false
+  isUSDC: boolean,
 ): BigNumberMapOfCount => {
   return positiveAddressesOnly(map).reduce((acc, curr) => {
     const lowerCase = trimAndLowerCaseAddress(curr);
@@ -273,7 +273,7 @@ export const normalizeMapForMultipleEpochs = (
 export const combineMerkleInfo = (
   prevClaims: IsClaimed[],
   newClaimMap: MapOfCount,
-  isUSDC: boolean = false,
+  isUSDC: boolean,
 ): MerkleDistributorInfo => {
   const mapOfUnpaidClaims: BigNumberMapOfCount = prevClaims
     .filter((c) => !c.isClaimed)

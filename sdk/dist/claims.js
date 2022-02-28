@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.claimToTx = exports.claimTx = void 0;
 var tslib_1 = require("tslib");
-var types_1 = require("./types");
 var abi_1 = require("@ethersproject/abi");
 var MerkleDistributor_json_1 = tslib_1.__importDefault(require("./abi/MerkleDistributor.json"));
 var encodeClaim = function (index, account, amount, merkleProof) {
@@ -23,7 +22,6 @@ var encodeClaim = function (index, account, amount, merkleProof) {
 var claimTx = function (merkleDistributorAddress, claimIndex, account, amount, merkleProof) {
     return {
         to: merkleDistributorAddress,
-        typeCode: types_1.CallType.Call,
         data: encodeClaim(claimIndex, account, amount, merkleProof),
         value: "0x0",
     };
@@ -53,7 +51,6 @@ var encodeClaimTo = function (claimIndex, amount, merkleProof, recipient, v, r, 
 var claimToTx = function (merkleDistributorAddress, claimIndex, amount, merkleProof, recipient, v0, r0, s0) {
     return {
         to: merkleDistributorAddress,
-        typeCode: types_1.CallType.Call,
         data: encodeClaimTo(claimIndex, amount, merkleProof, recipient, v0, r0, s0),
         value: "0x0",
     };

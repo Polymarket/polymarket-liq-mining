@@ -50,7 +50,7 @@ describe("Distributor SDK", () => {
 
   beforeEach("deploy token", async () => {
     const mockPayout = createMockPayoutMap(wallets, deployer.address);
-    merkleInfo = parseBalanceMap(normalizeEarningsNewFormat(mockPayout));
+    merkleInfo = parseBalanceMap(normalizeEarningsNewFormat(mockPayout, false));
 
     token = await deployContract(
       deployer,
@@ -198,7 +198,7 @@ describe("Distributor SDK", () => {
     // deployer updates merkle root with new claims + previous unpaid claims
     const previousClaims = await sdk.getClaimedStatus(merkleInfo);
     const nextMockPayout = createMockPayoutMap(wallets, deployer.address);
-    const nextMerkleInfo = combineMerkleInfo(previousClaims, nextMockPayout);
+    const nextMerkleInfo = combineMerkleInfo(previousClaims, nextMockPayout, false);
     await deployerSdk.updateMerkleRoot(nextMerkleInfo.merkleRoot);
     expect(await merkleDistributor.merkleRoot()).to.eq(
       nextMerkleInfo.merkleRoot
@@ -294,7 +294,7 @@ describe("Distributor SDK", () => {
     // deployer updates merkle root with new claims + previous unpaid claims
     const previousClaims = await sdk.getClaimedStatus(merkleInfo);
     const nextMockPayout = createMockPayoutMap(wallets, deployer.address);
-    const nextMerkleInfo = combineMerkleInfo(previousClaims, nextMockPayout);
+    const nextMerkleInfo = combineMerkleInfo(previousClaims, nextMockPayout, false);
     await deployerSdk.updateMerkleRoot(nextMerkleInfo.merkleRoot);
     expect(await merkleDistributor.merkleRoot()).to.eq(
       nextMerkleInfo.merkleRoot
@@ -352,5 +352,35 @@ describe("Distributor SDK", () => {
         BigNumber.from(frankMerkleAfter.amount)
       )
     );
+  });
+
+  it("should add typeCode when populating transactions", async () => {
+    const carolSigner = await ethers.getNamedSigner("carol");
+
+    const carolSdk = new DistributorSdk(
+      carolSigner._signer,
+      31337,
+      token.address,
+      merkleDistributor.address
+    );
+
+    const carolMerkle = merkleInfo.claims[carolSigner.address];
+    const tx = carolSdk.populateClaimTx(
+      carolMerkle.index,
+      carolSigner.address,
+      carolMerkle.amount,
+      carolMerkle.proof
+    );
+    const tx2 = carolSdk.populateClaimAndTransferTx(
+      carolMerkle.index,
+      carolMerkle.amount,
+      carolMerkle.proof,
+      carolSigner.address,
+      carolSigner.address
+    );
+
+    expect(tx).to.have.property("typeCode");
+    expect(tx2[0]).to.have.property("typeCode");
+    expect(tx2[1]).to.have.property("typeCode");
   });
 });

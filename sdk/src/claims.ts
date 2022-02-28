@@ -36,7 +36,6 @@ export const claimTx = (
 ): Transaction => {
     return {
         to: merkleDistributorAddress,
-        typeCode: CallType.Call,
         data: encodeClaim(claimIndex, account, amount, merkleProof),
         value: "0x0",
     };
@@ -86,7 +85,6 @@ export const claimToTx = (
 ): Transaction => {
     return {
         to: merkleDistributorAddress,
-        typeCode: CallType.Call,
         data: encodeClaimTo(claimIndex, amount, merkleProof, recipient, v0, r0, s0),
         value: "0x0",
     };
