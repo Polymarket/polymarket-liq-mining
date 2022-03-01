@@ -68,7 +68,7 @@ export async function generateLpSnapshot(
       while (!rewardMarketStartBlock) {
         console.log("reward market end block was not found. trying again!");
         rewardMarketStartBlock = await convertTimestampToBlockNumber(
-          market.rewardMarketEndDate
+          market.rewardMarketStartDate
         );
       }
     }
@@ -96,6 +96,16 @@ export async function generateLpSnapshot(
       startBlockBeingUsed: startBlock,
       endBlockBeingUsed: endBlock,
     });
+
+    // roughly, if our systems can handle 168 samples per epoch(24 samples per day * 7 day epoch)
+    // then we should take reward_market_start & reward_market_end diff and divide by 168
+
+    if (rewardMarketStartBlock && rewardMarketEndBlock) {
+      const diff = rewardMarketEndBlock - rewardMarketStartBlock;
+      const samples = Math.floor(diff / 168);
+      console.log( `Reward market start and end block exist. Custom sample size: ${samples}`);
+      blocksPerSample = samples;
+    }
 
     //Ensure that the market occured within the blocks being checked
     if (startBlock !== null && endBlock > startBlock) {
