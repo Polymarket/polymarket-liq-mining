@@ -196,8 +196,8 @@ export const cleanAndSeparateEpochPerToken = (
                 rewardMarketStartDate: getDateMs(curr.reward_start_date),
                 eventStartDate: getDateMs(curr.event_start_date),
                 preEventPercent:
-                    typeof curr.pre_event_percent === "string"
-                        ? Number(curr.pre_event_percent) / 100
+                    typeof curr.pre_event_percent === "number"
+                        ? curr.pre_event_percent / 100
                         : null,
             });
         });
@@ -360,10 +360,16 @@ export const calculateTokensPerSample = (
     market: LpMarketInfo,
     numSamples: number,
     blocksPerSample: number,
+    preEventPercent: number | null,
 ): number => {
-    return market.howToCalculate === LpCalculation.PerMarket
-        ? market.amount / numSamples
-        : market.amount * blocksPerSample;
+    const tokensPerSample =
+        market.howToCalculate === LpCalculation.PerMarket
+            ? market.amount / numSamples
+            : market.amount * blocksPerSample;
+
+    return preEventPercent
+        ? tokensPerSample * (1 + (preEventPercent - 0.5))
+        : tokensPerSample;
 };
 
 /**
@@ -388,14 +394,40 @@ export const calculateSamplesPerEvent = (
     return samples;
 };
 
-export const validateEventStartBlock = (startBlock: number, eventBlock: number, endBlock: number): void => {
-	if (!startBlock || !eventBlock || !endBlock) {
+export const validateEventStartBlock = (
+    startBlock: number,
+    eventBlock: number,
+    endBlock: number,
+): void => {
+    if (!startBlock || !eventBlock || !endBlock) {
         throw new Error("all blocks are not set!");
-	}
+    }
     if (startBlock > eventBlock) {
         throw new Error("reward market start block is after event block!");
     }
     if (endBlock < eventBlock) {
         throw new Error("reward market end block is before event block!");
     }
+};
+
+export const createArrayOfSamples = (
+    startBlock: number,
+    endBlock: number,
+    eventStartBlock: number | null,
+    blocksPerSample: number,
+): number[][] => {
+    const arrayOfSamples: number[][] = [[]];
+
+    for (let block = startBlock; block <= endBlock; block += blocksPerSample) {
+        if (eventStartBlock && block >= eventStartBlock) {
+            if (!arrayOfSamples[1]) {
+                arrayOfSamples.push([]);
+            }
+            arrayOfSamples[1].push(block);
+        } else {
+            arrayOfSamples[0].push(block);
+        }
+    }
+
+    return arrayOfSamples;
 };

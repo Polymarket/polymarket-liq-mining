@@ -198,8 +198,6 @@ const createMerkleRootFileName = (
         cleanAndSeparateEpochPerToken(epochInfo);
     console.log("epochInfo", epochInfo);
 
-    console.log("tokenMap", tokenMap);
-
     for (const tokenId of Object.keys(tokenMap)) {
         const { markets, feeTokenSupply } = tokenMap[tokenId];
         const tokenDataResponse = await fetch(
@@ -211,14 +209,6 @@ const createMerkleRootFileName = (
         console.log(`${tokenId} markets`, markets);
         console.log("start Date", new Date(startTimestamp));
         console.log("end Date", new Date(endTimestamp));
-        console.log(
-            "tokenData.symbol.toLowerCase()",
-            tokenData.symbol.toLowerCase(),
-        );
-        console.log(
-            "tokenData.symbol.toLowerCase() === usdc",
-            tokenData.symbol.toLowerCase() === "usdc",
-        );
         const isUSDC = tokenData.symbol.toLowerCase() === "usdc" ?? false;
         const t1 = Date.now();
         const liqMap = await generateLpSnapshot(
@@ -289,7 +279,7 @@ const createMerkleRootFileName = (
                 )
                 .toString();
         } catch (error) {
-            console.log("prevMerkleFile error:", error);
+			console.log('no prevMerkleFile found!')
             prevMerkleFile = false;
         }
         if (!prevMerkleFile) {

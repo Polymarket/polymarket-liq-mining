@@ -7,7 +7,12 @@ import {
 } from "../src/lp-helpers";
 
 import { expect } from "chai";
-import { getStartAndEndBlock, LpMarketInfo, validateEventStartBlock } from '../src/lp-helpers';
+import { createArrayOfSamples } from "../src/lp-helpers";
+import {
+    getStartAndEndBlock,
+    LpMarketInfo,
+    validateEventStartBlock,
+} from "../src/lp-helpers";
 
 describe("calculate samples correctly", () => {
     let markets: LpMarketInfo[];
@@ -34,21 +39,62 @@ describe("calculate samples correctly", () => {
                 marketMaker: brian,
                 howToCalculate: LpCalculation.PerMarket,
                 amount: 20000,
-                rewardMarketEndDate: 1645214223584,
-                rewardMarketStartDate: 1645209039584,
-                eventStartDate: null,
-                preEventPercent: null,
+                rewardMarketEndDate: 1649000000000,
+                rewardMarketStartDate: 1642000000000,
+                eventStartDate: 1647000000000,
+                preEventPercent: 0.6,
             },
         ];
     });
 
     it("should calculate tokens per sample based off tokens per market", async () => {
         const tokensPerSample = calculateTokensPerSample(
+            markets[0],
+            numSamplesInMarket,
+            blocksPerSample,
+            markets[0].preEventPercent,
+        );
+        expect(tokensPerSample).to.eq(markets[0].amount / numSamplesInMarket);
+    });
+
+    it("should calculate weighted tokens per sample if preEventPercent is included", async () => {
+        const expectedA = calculateTokensPerSample(
             markets[1],
             numSamplesInMarket,
             blocksPerSample,
+            markets[1].preEventPercent,
         );
-        expect(tokensPerSample).to.eq(markets[1].amount / numSamplesInMarket);
+
+        expect(expectedA).to.eq(
+            (markets[1].amount / numSamplesInMarket) *
+                (1 + (markets[1].preEventPercent - 0.5)),
+        );
+
+        const expectedB = calculateTokensPerSample(
+            markets[1],
+            numSamplesInMarket,
+            blocksPerSample,
+            0.4,
+        );
+
+        expect(expectedB).to.eq(
+            (markets[1].amount / numSamplesInMarket) * (1 + (0.4 - 0.5)),
+        );
+    });
+});
+
+describe("create array of samples", () => {
+    it("should create two arrays of samples if the event start date is present", async () => {
+        const expected = createArrayOfSamples(123456, 234567, 198765, 10000);
+        expect(expected[0].length).to.eq(8);
+        expect(expected[1].length).to.eq(4);
+    });
+
+    it("should create one array of samples if the event start date does not exist", async () => {
+        const expected = createArrayOfSamples(123456, 234567, null, 10000);
+		console.log('expected', expected)
+        expect(expected[0].length).to.eq(12);
+        expect(expected[1]).to.be.undefined;
     });
 });
 
@@ -82,7 +128,7 @@ describe("validate event blocks", () => {
         const eventStartBlock = 2110000;
         const endBlock = 2120000;
         expect(() =>
-            validateEventStartBlock(startBlock,eventStartBlock, endBlock)
+            validateEventStartBlock(startBlock, eventStartBlock, endBlock),
         ).to.not.throw();
     });
 
@@ -91,7 +137,7 @@ describe("validate event blocks", () => {
         const eventStartBlock = 2090000;
         const endBlock = 2120000;
         expect(() =>
-            validateEventStartBlock(startBlock,eventStartBlock, endBlock)
+            validateEventStartBlock(startBlock, eventStartBlock, endBlock),
         ).to.throw();
     });
 
@@ -100,7 +146,7 @@ describe("validate event blocks", () => {
         const eventStartBlock = 2110000;
         const endBlock = 2105000;
         expect(() =>
-            validateEventStartBlock(startBlock,eventStartBlock, endBlock)
+            validateEventStartBlock(startBlock, eventStartBlock, endBlock),
         ).to.throw();
     });
 });
