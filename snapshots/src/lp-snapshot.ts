@@ -11,7 +11,7 @@ import {
     lowerCaseMarketMakers,
     LpMarketInfo,
     updateTokensPerBlockReward,
-	validateEventStartBlock,
+    validateEventStartBlock,
 } from "./lp-helpers";
 import { getStartAndEndBlock } from "./lp-helpers";
 import { MapOfCount, ReturnSnapshot, ReturnType } from "./interfaces";
@@ -118,7 +118,7 @@ export async function generateLpSnapshot(
             endBlockBeingUsed: endBlock,
         });
 
-        // roughly, if our systems can handle ~150 samples per epoch 
+        // roughly, if our systems can handle ~150 samples per epoch
         // then we should take reward_market_start & reward_market_end diff and divide by 150
         if (rewardMarketStartBlock && rewardMarketEndBlock) {
             blocksPerSample = calculateSamplesPerEvent(
@@ -130,9 +130,13 @@ export async function generateLpSnapshot(
                 `Reward market start and end block exist. Custom sample size: ${blocksPerSample}`,
             );
 
-			if (eventStartBlock) {
-				validateEventStartBlock(rewardMarketStartBlock, eventStartBlock, rewardMarketEndBlock)
-			}
+            if (eventStartBlock) {
+                validateEventStartBlock(
+                    rewardMarketStartBlock,
+                    eventStartBlock,
+                    rewardMarketEndBlock,
+                );
+            }
         }
 
         if (startBlock !== null && endBlock > startBlock) {
@@ -176,6 +180,10 @@ export async function generateLpSnapshot(
                 liquidityAcrossBlocks,
                 tokensPerSample,
             );
+        }
+
+        if (returnType === ReturnType.Map) {
+            return userTokensPerEpoch;
         }
 
         return addEoaToUserPayoutMap(userTokensPerEpoch);
