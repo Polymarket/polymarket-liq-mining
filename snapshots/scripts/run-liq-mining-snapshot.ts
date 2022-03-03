@@ -236,7 +236,7 @@ const createMerkleRootFileName = (
             Object.keys(feeMap).length + " users who paid fees",
         );
         const t3 = Date.now();
-        const currentEpochUserMap = combineMaps([
+        let currentEpochUserMap = combineMaps([
             liqMap as MapOfCount,
             feeMap as MapOfCount,
         ]);
