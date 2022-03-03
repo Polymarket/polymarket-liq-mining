@@ -150,7 +150,16 @@ export async function generateLpSnapshot(
 
         // console.log(`arrayOfSamples length: ${arrayOfSamples.length}`);
 
-        arrayOfSamples.forEach(async (samples, idx, arr) => {
+        if (
+            arrayOfSamples.length === 2 &&
+            typeof market.preEventPercent !== "number"
+        ) {
+            throw new Error(
+                "If you specify an event, you must also add percents for pre event and event!",
+            );
+        }
+
+        arrayOfSamples.forEach(async (samples, idx) => {
             const liquidityAcrossBlocks =
                 await calculateValOfLpPositionsAcrossBlocks(
                     marketMaker,
@@ -158,13 +167,9 @@ export async function generateLpSnapshot(
                 );
 
             console.log(`number of samples: ${samples.length}`);
-            const marketHasAnEvent = arr.length === 2;
             // if there are two arrays of blocks, the [1] blocks must be during the event
             let weight = 1;
-            if (
-                marketHasAnEvent &&
-                typeof market.preEventPercent === "number"
-            ) {
+            if (typeof market.preEventPercent === "number") {
                 weight =
                     idx === 0
                         ? market.preEventPercent
@@ -192,9 +197,6 @@ export async function generateLpSnapshot(
                 `Using ${tokensPerSample / blocksPerSample} tokens per block`,
             );
         });
-        console.log("******************************************");
-        console.log("***************END OF MARKET**************");
-        console.log("******************************************");
     }
 
     if (returnType === ReturnType.Map) {
