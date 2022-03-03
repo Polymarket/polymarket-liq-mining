@@ -4,106 +4,113 @@ import { BigNumber } from "@ethersproject/bignumber";
 
 // TYPES
 export interface IStartAndEndBlock {
-  epochStartBlock: number | null;
-  epochEndBlock: number | null;
-  marketStartBlock: number | null;
-  marketEndBlock: number | null;
-  rewardMarketEndBlock: number | null;
+    epochStartBlock: number | null;
+    epochEndBlock: number | null;
+    marketStartBlock: number | null;
+    marketEndBlock: number | null;
+    rewardMarketEndBlock: number | null;
+    rewardMarketStartBlock: number | null;
 }
 
 export interface LpMarketInfo {
-  marketMaker: string;
-  howToCalculate: LpCalculation;
-  amount: number;
-  rewardMarketEndDate: number | null;
+    marketMaker: string;
+    howToCalculate: LpCalculation;
+    amount: number;
+    rewardMarketEndDate: number | null;
+    rewardMarketStartDate: number | null;
+    eventStartDate: number | null;
+    preEventPercent: number | null;
 }
 
 export enum LpCalculation {
-  PerBlock = "perBlock",
-  PerMarket = "perMarket",
+    PerBlock = "perBlock",
+    PerMarket = "perMarket",
 }
 
 export interface RewardTokenLiquidity {
-  reward_token: RewardToken;
-  token_calculation: LpCalculation;
-  lp_token_supply: string;
+    reward_token: RewardToken;
+    token_calculation: LpCalculation;
+    lp_token_supply: string;
 }
 
 export interface RewardMarketFromStrapi {
-  reward_epoch: number;
-  reward_end_date: null | string;
-  reward_tokens_liquidity: RewardTokenLiquidity[];
-  market: {
-    marketMakerAddress: string;
-  };
+    reward_epoch: number;
+    reward_end_date: null | string;
+    reward_start_date: null | string;
+    reward_tokens_liquidity: RewardTokenLiquidity[];
+    event_start_date: null | string;
+    pre_event_percent: null | string;
+    market: {
+        marketMakerAddress: string;
+    };
 }
 
 interface StrapiFormat {
-  name: string;
-  hash: string;
-  ext: string;
-  mime: string;
-  width: number;
-  height: number;
-  size: number;
-  path: string;
-  url: string;
+    name: string;
+    hash: string;
+    ext: string;
+    mime: string;
+    width: number;
+    height: number;
+    size: number;
+    path: string;
+    url: string;
 }
 
 interface StrapiIcon {
-  id: number;
-  alternativeText: string;
-  caption: string;
-  hash: string;
-  ext: string;
-  mime: string;
-  previewUrl: null;
-  provider: string;
-  name: string;
-  width: number;
-  height: number;
-  size: number;
-  url: string;
-  formats: {
-    thumbnail: StrapiFormat;
-    large: StrapiFormat;
-    medium: StrapiFormat;
-    small: StrapiFormat;
-  };
+    id: number;
+    alternativeText: string;
+    caption: string;
+    hash: string;
+    ext: string;
+    mime: string;
+    previewUrl: null;
+    provider: string;
+    name: string;
+    width: number;
+    height: number;
+    size: number;
+    url: string;
+    formats: {
+        thumbnail: StrapiFormat;
+        large: StrapiFormat;
+        medium: StrapiFormat;
+        small: StrapiFormat;
+    };
 }
 
 export interface RewardToken {
-  id: number;
-  symbol: string;
-  name: string;
-  icon: StrapiIcon;
+    id: number;
+    symbol: string;
+    name: string;
+    icon: StrapiIcon;
 }
 
 export interface RewardTokenFromStrapi {
-  reward_token: RewardToken;
-  fees_token_supply: string;
+    reward_token: RewardToken;
+    fees_token_supply: string;
 }
 
 export interface RewardEpochFromStrapi {
-  start: string;
-  end: string;
-  epoch: number;
-  reward_tokens: RewardTokenFromStrapi[];
-  reward_markets: RewardMarketFromStrapi[];
+    start: string;
+    end: string;
+    epoch: number;
+    reward_tokens: RewardTokenFromStrapi[];
+    reward_markets: RewardMarketFromStrapi[];
 }
 
 interface TokenMap {
-  [tokenName: string]: {
-    markets: LpMarketInfo[];
-    feeTokenSupply: number;
-  };
+    [tokenName: string]: {
+        markets: LpMarketInfo[];
+        feeTokenSupply: number;
+    };
 }
 
 interface CleanEpochInfo {
-  startTimestamp: number;
-  endTimestamp: number;
-  epoch: number;
-  tokenMap: TokenMap;
+    startTimestamp: number;
+    endTimestamp: number;
+    epoch: number;
+    tokenMap: TokenMap;
 }
 /**
  * Throws errors if properties we need from Strapi are not present
@@ -111,43 +118,47 @@ interface CleanEpochInfo {
  * @returns boolean
  */
 export const ensureGoodDataFromStrapi = (
-  epochInfo: RewardEpochFromStrapi
+    epochInfo: RewardEpochFromStrapi,
 ): boolean => {
-  if (!epochInfo) {
-    throw new Error("Epoch Info Error!");
-  }
-  const { start, end, epoch, reward_tokens, reward_markets } = epochInfo;
-  if (!start || !end) {
-    throw new Error("Dates not set!");
-  }
-  if (typeof epoch !== "number") {
-    throw new Error("Epoch not set!");
-  }
+    if (!epochInfo) {
+        throw new Error("Epoch Info Error!");
+    }
+    const { start, end, epoch, reward_tokens, reward_markets } = epochInfo;
+    if (!start || !end) {
+        throw new Error("Dates not set!");
+    }
+    if (typeof epoch !== "number") {
+        throw new Error("Epoch not set!");
+    }
 
-  if (!reward_tokens || reward_tokens.length === 0) {
-    throw new Error("No Reward Tokens!");
-  }
+    if (!reward_tokens || reward_tokens.length === 0) {
+        throw new Error("No Reward Tokens!");
+    }
 
-  if (!reward_markets || reward_markets.length === 0) {
-    throw new Error("No Reward Markets!");
-  }
+    if (!reward_markets || reward_markets.length === 0) {
+        throw new Error("No Reward Markets!");
+    }
 
-  if (!reward_tokens[0].fees_token_supply) {
-    throw new Error("No Fee Token Supply Set");
-  }
+    if (!reward_tokens[0].fees_token_supply) {
+        throw new Error("No Fee Token Supply Set");
+    }
 
-  if (!reward_tokens[0].reward_token || !reward_tokens[0].reward_token.name) {
-    throw new Error("No Reward Token Set!");
-  }
+    if (!reward_tokens[0].reward_token || !reward_tokens[0].reward_token.name) {
+        throw new Error("No Reward Token Set!");
+    }
 
-  if (
-    !reward_markets[0].market ||
-    !reward_markets[0].market.marketMakerAddress
-  ) {
-    throw new Error("No Market Maker Address!");
-  }
+    if (
+        !reward_markets[0].market ||
+        !reward_markets[0].market.marketMakerAddress
+    ) {
+        throw new Error("No Market Maker Address!");
+    }
 
-  return true;
+    return true;
+};
+
+const getDateMs = (date: null | string): null | number => {
+    return typeof date === "string" ? new Date(date).getTime() : null;
 };
 
 /**
@@ -157,56 +168,61 @@ export const ensureGoodDataFromStrapi = (
  * @returns cleanEpochInfo
  */
 export const cleanAndSeparateEpochPerToken = (
-  epochInfo: RewardEpochFromStrapi
+    epochInfo: RewardEpochFromStrapi,
 ): CleanEpochInfo => {
-  const feeMap = epochInfo.reward_tokens.reduce((acc, curr) => {
-    if (!acc[curr.reward_token.id]) {
-      acc[curr.reward_token.id] = {
-        feeTokenSupply: BigNumber.from(curr.fees_token_supply).toNumber(),
-      };
-    }
-    return acc;
-  }, {});
+    const feeMap = epochInfo.reward_tokens.reduce((acc, curr) => {
+        if (!acc[curr.reward_token.id]) {
+            acc[curr.reward_token.id] = {
+                feeTokenSupply: BigNumber.from(
+                    curr.fees_token_supply,
+                ).toNumber(),
+            };
+        }
+        return acc;
+    }, {});
 
-  const liqMap = epochInfo.reward_markets.reduce((acc, curr) => {
-    curr.reward_tokens_liquidity.forEach((token) => {
-      if (!acc[token.reward_token.id]) {
-        acc[token.reward_token.id] = {
-          markets: [],
-        };
-      }
-      acc[token.reward_token.id].markets.push({
-        amount: BigNumber.from(token.lp_token_supply).toNumber(),
-        howToCalculate: token.token_calculation,
-        marketMaker: curr.market.marketMakerAddress.toLowerCase(),
-        rewardMarketEndDate:
-          typeof curr.reward_end_date === "string"
-            ? new Date(curr.reward_end_date).getTime()
-            : curr.reward_end_date,
-      });
-    });
-    return acc;
-  }, {});
+    const liqMap = epochInfo.reward_markets.reduce((acc, curr) => {
+        curr.reward_tokens_liquidity.forEach((token) => {
+            if (!acc[token.reward_token.id]) {
+                acc[token.reward_token.id] = {
+                    markets: [],
+                };
+            }
+            acc[token.reward_token.id].markets.push({
+                amount: BigNumber.from(token.lp_token_supply).toNumber(),
+                howToCalculate: token.token_calculation,
+                marketMaker: curr.market.marketMakerAddress.toLowerCase(),
+                rewardMarketEndDate: getDateMs(curr.reward_end_date),
+                rewardMarketStartDate: getDateMs(curr.reward_start_date),
+                eventStartDate: getDateMs(curr.event_start_date),
+                preEventPercent:
+                    typeof curr.pre_event_percent === "number"
+                        ? curr.pre_event_percent / 100
+                        : null,
+            });
+        });
+        return acc;
+    }, {});
 
-  const keys = [...new Set(Object.keys(feeMap).concat(Object.keys(liqMap)))];
+    const keys = [...new Set(Object.keys(feeMap).concat(Object.keys(liqMap)))];
 
-  const tokenMap = keys.reduce((acc, tokenId) => {
-    if (!acc[tokenId]) {
-      acc[tokenId] = {
-        markets: liqMap[tokenId]?.markets ?? [],
-        feeTokenSupply: feeMap[tokenId]?.feeTokenSupply ?? 0,
-      };
-    }
+    const tokenMap = keys.reduce((acc, tokenId) => {
+        if (!acc[tokenId]) {
+            acc[tokenId] = {
+                markets: liqMap[tokenId]?.markets ?? [],
+                feeTokenSupply: feeMap[tokenId]?.feeTokenSupply ?? 0,
+            };
+        }
 
-    return acc;
-  }, {} as TokenMap);
+        return acc;
+    }, {} as TokenMap);
 
-  return {
-    startTimestamp: new Date(epochInfo.start).getTime(),
-    endTimestamp: new Date(epochInfo.end).getTime(),
-    epoch: epochInfo.epoch,
-    tokenMap,
-  };
+    return {
+        startTimestamp: new Date(epochInfo.start).getTime(),
+        endTimestamp: new Date(epochInfo.end).getTime(),
+        epoch: epochInfo.epoch,
+        tokenMap,
+    };
 };
 
 /**
@@ -218,21 +234,21 @@ export const cleanAndSeparateEpochPerToken = (
  * @returns MapOfCount
  */
 export const updateTokensPerBlockReward = (
-  userTokensPerEpoch: MapOfCount | Record<string, never>,
-  liquidityAcrossBlocks: MapOfCount[],
-  perBlockReward: number
+    userTokensPerEpoch: MapOfCount | Record<string, never>,
+    liquidityAcrossBlocks: MapOfCount[],
+    perBlockReward: number,
 ): MapOfCount => {
-  let updatedMap = { ...userTokensPerEpoch };
-  for (const liquidityAtBlock of liquidityAcrossBlocks) {
-    const sumOfBlockLiquidity = sumValues(liquidityAtBlock);
-    const blockPoints = makePayoutsMap(
-      liquidityAtBlock,
-      sumOfBlockLiquidity,
-      perBlockReward
-    );
-    updatedMap = combineMaps([blockPoints, updatedMap]);
-  }
-  return updatedMap;
+    let updatedMap = { ...userTokensPerEpoch };
+    for (const liquidityAtBlock of liquidityAcrossBlocks) {
+        const sumOfBlockLiquidity = sumValues(liquidityAtBlock);
+        const blockPoints = makePayoutsMap(
+            liquidityAtBlock,
+            sumOfBlockLiquidity,
+            perBlockReward,
+        );
+        updatedMap = combineMaps([blockPoints, updatedMap]);
+    }
+    return updatedMap;
 };
 
 /**
@@ -245,71 +261,77 @@ export const updateTokensPerBlockReward = (
  * @returns howToCalculate, startBlock, endBlock
  */
 export const getStartAndEndBlock = ({
-  epochStartBlock,
-  epochEndBlock,
-  marketStartBlock,
-  marketEndBlock,
-  rewardMarketEndBlock,
+    epochStartBlock,
+    epochEndBlock,
+    marketStartBlock,
+    marketEndBlock,
+    rewardMarketEndBlock,
+    rewardMarketStartBlock,
 }: IStartAndEndBlock): {
-  startBlock: number;
-  endBlock: number | null;
+    startBlock: number;
+    endBlock: number | null;
 } => {
-  if (!marketStartBlock) {
-    throw new Error("The market has not started!");
-  }
+    if (!marketStartBlock) {
+        throw new Error("The market has not started!");
+    }
 
-  if (!epochStartBlock) {
-    throw new Error("The epoch has not started!");
-  }
+    if (!epochStartBlock) {
+        throw new Error("The epoch has not started!");
+    }
 
-  let startBlock;
+    let startBlock;
 
-  // epoch started after market
-  if (epochStartBlock && epochStartBlock >= marketStartBlock) {
-    startBlock = epochStartBlock;
-  }
+    // epoch started after market
+    if (epochStartBlock && epochStartBlock >= marketStartBlock) {
+        startBlock = epochStartBlock;
+    }
 
-  // epoch started before market or epoch has not started
-  if (
-    (epochStartBlock && epochStartBlock < marketStartBlock) ||
-    !epochStartBlock
-  ) {
-    startBlock = marketStartBlock;
-  }
+    // epoch started before market or epoch has not started
+    if (
+        (epochStartBlock && epochStartBlock < marketStartBlock) ||
+        !epochStartBlock
+    ) {
+        startBlock = marketStartBlock;
+    }
 
-  let endBlock;
+    // if rewardMarket has a specific start date, use it
+    if (rewardMarketStartBlock) {
+        startBlock = rewardMarketStartBlock;
+    }
 
-  // market is live, epoch is live...
-  if (!epochEndBlock && !marketEndBlock && !rewardMarketEndBlock) {
-    // get current block in case market has not ended and epoch end is in the future
-    endBlock = null;
-  }
+    let endBlock;
 
-  // epoch ended before market or epoch ended and market is still live
-  if (
-    (epochEndBlock && marketEndBlock && epochEndBlock <= marketEndBlock) ||
-    (epochEndBlock && !marketEndBlock)
-  ) {
-    endBlock = epochEndBlock;
-  }
+    // market is live, epoch is live...
+    if (!epochEndBlock && !marketEndBlock && !rewardMarketEndBlock) {
+        // get current block in case market has not ended and epoch end is in the future
+        endBlock = null;
+    }
 
-  // market ended before epoch or market ended and epoch has not finished
-  if (
-    (epochEndBlock && marketEndBlock && epochEndBlock > marketEndBlock) ||
-    (!epochEndBlock && marketEndBlock)
-  ) {
-    endBlock = marketEndBlock;
-  }
+    // epoch ended before market or epoch ended and market is still live
+    if (
+        (epochEndBlock && marketEndBlock && epochEndBlock <= marketEndBlock) ||
+        (epochEndBlock && !marketEndBlock)
+    ) {
+        endBlock = epochEndBlock;
+    }
 
-  // if rewardMarket has a specific end date, use it
-  if (rewardMarketEndBlock) {
-    endBlock = rewardMarketEndBlock;
-  }
+    // market ended before epoch or market ended and epoch has not finished
+    if (
+        (epochEndBlock && marketEndBlock && epochEndBlock > marketEndBlock) ||
+        (!epochEndBlock && marketEndBlock)
+    ) {
+        endBlock = marketEndBlock;
+    }
 
-  return {
-    startBlock,
-    endBlock,
-  };
+    // if rewardMarket has a specific end date, use it
+    if (rewardMarketEndBlock) {
+        endBlock = rewardMarketEndBlock;
+    }
+
+    return {
+        startBlock,
+        endBlock,
+    };
 };
 
 /**
@@ -318,12 +340,12 @@ export const getStartAndEndBlock = ({
  * @returns LpMarketInfo[]
  */
 export const lowerCaseMarketMakers = (
-  markets: LpMarketInfo[]
+    markets: LpMarketInfo[],
 ): LpMarketInfo[] => {
-  return markets.map((market) => ({
-    ...market,
-    marketMaker: market.marketMaker.toLowerCase(),
-  }));
+    return markets.map((market) => ({
+        ...market,
+        marketMaker: market.marketMaker.toLowerCase(),
+    }));
 };
 
 /**
@@ -335,11 +357,72 @@ export const lowerCaseMarketMakers = (
  * @returns tokensPerSample number
  */
 export const calculateTokensPerSample = (
-  market: LpMarketInfo,
-  numSamples: number,
-  blocksPerSample: number
+    market: LpMarketInfo,
+    numSamples: number,
+    blocksPerSample: number,
+    percentOfTokens: number,
 ): number => {
-  return market.howToCalculate === LpCalculation.PerMarket
-    ? market.amount / numSamples
-    : market.amount * blocksPerSample;
+    return market.howToCalculate === LpCalculation.PerMarket
+        ? (market.amount * percentOfTokens) / numSamples
+        : market.amount * percentOfTokens * blocksPerSample;
+};
+
+/**
+ * Calculates the number of samples per market given a start block and end block
+ * @param startBlock number
+ * @param endBlock number
+ * @param samplesPerMarket number
+ * @returns numberOfSamples number
+ */
+export const calculateSamplesPerEvent = (
+    startBlock: number,
+    endBlock: number,
+    samplesPerMarket: number,
+): number => {
+    if (startBlock > endBlock) {
+        throw new Error(
+            "reward market end block is after reward market start block!",
+        );
+    }
+    const diff = endBlock - startBlock;
+    const samples = Math.floor(diff / samplesPerMarket);
+    return samples;
+};
+
+export const validateEventStartBlock = (
+    startBlock: number,
+    eventBlock: number,
+    endBlock: number,
+): void => {
+    if (!startBlock || !eventBlock || !endBlock) {
+        throw new Error("all blocks are not set!");
+    }
+    if (startBlock > eventBlock) {
+        throw new Error("reward market start block is after event block!");
+    }
+    if (endBlock < eventBlock) {
+        throw new Error("reward market end block is before event block!");
+    }
+};
+
+export const createArrayOfSamples = (
+    startBlock: number,
+    endBlock: number,
+    eventStartBlock: number | null,
+    blocksPerSample: number,
+): number[][] => {
+    const arrayOfSamples: number[][] = [[]];
+
+    for (let block = startBlock; block <= endBlock; block += blocksPerSample) {
+        if (eventStartBlock && block >= eventStartBlock) {
+            if (!arrayOfSamples[1]) {
+                arrayOfSamples.push([]);
+            }
+            arrayOfSamples[1].push(block);
+        } else {
+            arrayOfSamples[0].push(block);
+        }
+    }
+
+    return arrayOfSamples;
 };

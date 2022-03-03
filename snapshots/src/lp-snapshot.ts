@@ -6,14 +6,19 @@ import {
     getCurrentBlockNumber,
 } from "./block_numbers";
 import {
+    calculateSamplesPerEvent,
     calculateTokensPerSample,
+    createArrayOfSamples,
     lowerCaseMarketMakers,
     LpMarketInfo,
     updateTokensPerBlockReward,
+    validateEventStartBlock,
 } from "./lp-helpers";
 import { getStartAndEndBlock } from "./lp-helpers";
 import { MapOfCount, ReturnSnapshot, ReturnType } from "./interfaces";
 import { addEoaToUserPayoutMap } from "./helpers";
+
+const NUMBER_OF_SAMPLES_PER_MARKET = 150;
 
 /**
  * Generate a lp weighted token snapshot
@@ -51,7 +56,6 @@ export async function generateLpSnapshot(
         const marketEndBlock = await getEndBlock(marketMaker);
 
         let rewardMarketEndBlock = null;
-
         if (market.rewardMarketEndDate) {
             console.log("reward market end date exists, getting block!");
             while (!rewardMarketEndBlock) {
@@ -64,12 +68,37 @@ export async function generateLpSnapshot(
             }
         }
 
+        let rewardMarketStartBlock = null;
+        if (market.rewardMarketStartDate) {
+            console.log("reward market start date exists, getting block!");
+            while (!rewardMarketStartBlock) {
+                console.log(
+                    "reward market end block was not found. trying again!",
+                );
+                rewardMarketStartBlock = await convertTimestampToBlockNumber(
+                    market.rewardMarketStartDate,
+                );
+            }
+        }
+
+        let eventStartBlock = null;
+        if (market.eventStartDate) {
+            console.log("event start date exists, getting block!");
+            while (!eventStartBlock) {
+                console.log("event start block was not found. trying again!");
+                eventStartBlock = await convertTimestampToBlockNumber(
+                    market.eventStartDate,
+                );
+            }
+        }
+
         const { startBlock, endBlock: eb } = getStartAndEndBlock({
             epochStartBlock,
             epochEndBlock,
             marketStartBlock,
             marketEndBlock,
             rewardMarketEndBlock,
+            rewardMarketStartBlock,
         });
 
         const currentBlock = await getCurrentBlockNumber();
@@ -79,57 +108,97 @@ export async function generateLpSnapshot(
         console.log({
             epochStartBlock,
             marketStartBlock,
+            rewardMarketStartBlock,
             rewardMarketEndBlock,
             marketEndBlock,
             epochEndBlock,
             currentBlock,
-            startBlock,
-            endBlock,
+            startBlockBeingUsed: startBlock,
+            eventStartBlock,
+            endBlockBeingUsed: endBlock,
+            diffBetweenNowAndEndBlock: currentBlock - endBlock,
         });
 
-        //Ensure that the market occured within the blocks being checked
-        if (startBlock !== null && endBlock > startBlock) {
-            const samples: number[] = [];
-            for (
-                let block = startBlock;
-                block <= endBlock;
-                block += blocksPerSample
-            ) {
-                samples.push(block);
+        // roughly, if our systems can handle ~150 samples per epoch
+        // then we should take reward_market_start & reward_market_end diff and divide by 150
+        if (rewardMarketStartBlock && rewardMarketEndBlock) {
+            blocksPerSample = calculateSamplesPerEvent(
+                rewardMarketStartBlock,
+                rewardMarketEndBlock,
+                NUMBER_OF_SAMPLES_PER_MARKET,
+            );
+            console.log(
+                `Reward market start and end block exist. Custom sample size: ${blocksPerSample}`,
+            );
+
+            if (eventStartBlock) {
+                validateEventStartBlock(
+                    rewardMarketStartBlock,
+                    eventStartBlock,
+                    rewardMarketEndBlock,
+                );
+                console.log("market maker of market with event", marketMaker);
             }
+        }
 
-            console.log(`Using ${market.howToCalculate} calculation`);
+        const arrayOfSamples = createArrayOfSamples(
+            startBlock,
+            endBlock,
+            eventStartBlock,
+            blocksPerSample,
+        );
 
-            const tokensPerSample = calculateTokensPerSample(
-                market,
-                samples.length,
-                blocksPerSample,
+        // console.log(`arrayOfSamples length: ${arrayOfSamples.length}`);
+
+        if (
+            arrayOfSamples.length === 2 &&
+            typeof market.preEventPercent !== "number"
+        ) {
+            throw new Error(
+                "If you specify an event, you must also add percents for pre event and event!",
             );
-            console.log(`Using ${tokensPerSample} tokens per sample`);
-            console.log(
-                `Using ${tokensPerSample / blocksPerSample} tokens per block`,
-            );
+        }
 
-            console.log(
-                `Diff between now and endBlock is ${
-                    currentBlock - endBlock
-                } blocks. (43,200 = 1 day; 1,800 = 1 hour; 30 = 1 minute)`,
-            );
-
-            // get liquidity state across many blocks for a market
+        arrayOfSamples.forEach(async (samples, idx) => {
             const liquidityAcrossBlocks =
                 await calculateValOfLpPositionsAcrossBlocks(
                     marketMaker,
                     samples,
                 );
 
+            console.log(`number of samples: ${samples.length}`);
+            // if there are two arrays of blocks, the [1] blocks must be during the event
+            let weight = 1;
+            if (typeof market.preEventPercent === "number") {
+                weight =
+                    idx === 0
+                        ? market.preEventPercent
+                        : 1 - market.preEventPercent;
+            }
+
+            const tokensPerSample = calculateTokensPerSample(
+                market,
+                samples.length,
+                blocksPerSample,
+                weight,
+            );
+
+            console.log(`Using ${market.howToCalculate} calculation`);
+            console.log(`Using ${weight} for weight`);
+
             userTokensPerEpoch = updateTokensPerBlockReward(
                 userTokensPerEpoch,
                 liquidityAcrossBlocks,
                 tokensPerSample,
             );
-        }
+
+            console.log(`Using ${tokensPerSample} tokens per sample`);
+            console.log(
+                `Using ${tokensPerSample / blocksPerSample} tokens per block`,
+            );
+        });
     }
+
     if (returnType === ReturnType.Map) {
         return userTokensPerEpoch;
     }
