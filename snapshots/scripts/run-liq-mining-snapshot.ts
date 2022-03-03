@@ -206,7 +206,7 @@ const createMerkleRootFileName = (
         const tokenData: RewardToken = await tokenDataResponse.json();
         console.log({ tokenData });
         console.log("feeTokenSupply", feeTokenSupply);
-        console.log(`${tokenId} markets`, markets);
+        console.log(`markets for token #${tokenId}`, markets);
         console.log("start Date", new Date(startTimestamp));
         console.log("end Date", new Date(endTimestamp));
         const isUSDC = tokenData.symbol.toLowerCase() === "usdc" ?? false;
@@ -236,11 +236,11 @@ const createMerkleRootFileName = (
             Object.keys(feeMap).length + " users who paid fees",
         );
         const t3 = Date.now();
-        let currentEpochUserMap = combineMaps([
+        const currentEpochUserMap = combineMaps([
             liqMap as MapOfCount,
             feeMap as MapOfCount,
         ]);
-        // console.log(`${tokenId} currentEpochUserMap`, feeMap);
+        
 
         // // ------------------------------------------------
         // // ------------------------------------------------

@@ -116,7 +116,7 @@ export async function generateLpSnapshot(
             startBlockBeingUsed: startBlock,
             eventStartBlock,
             endBlockBeingUsed: endBlock,
-			diffBetweenNowAndEndBlock: currentBlock - endBlock
+            diffBetweenNowAndEndBlock: currentBlock - endBlock,
         });
 
         // roughly, if our systems can handle ~150 samples per epoch
@@ -137,6 +137,7 @@ export async function generateLpSnapshot(
                     eventStartBlock,
                     rewardMarketEndBlock,
                 );
+                console.log("market maker of market with event", marketMaker);
             }
         }
 
@@ -147,7 +148,7 @@ export async function generateLpSnapshot(
             blocksPerSample,
         );
 
-        console.log(`number of samples: ${arrayOfSamples.length}`);
+        // console.log(`arrayOfSamples length: ${arrayOfSamples.length}`);
 
         arrayOfSamples.forEach(async (samples, idx, arr) => {
             const liquidityAcrossBlocks =
@@ -157,10 +158,11 @@ export async function generateLpSnapshot(
                 );
 
             console.log(`number of samples: ${samples.length}`);
+            const marketHasAnEvent = arr.length === 2;
             // if there are two arrays of blocks, the [1] blocks must be during the event
-            let weight: null | number = null;
+            let weight = 1;
             if (
-                arr.length === 2 &&
+                marketHasAnEvent &&
                 typeof market.preEventPercent === "number"
             ) {
                 weight =
@@ -189,13 +191,15 @@ export async function generateLpSnapshot(
             console.log(
                 `Using ${tokensPerSample / blocksPerSample} tokens per block`,
             );
-            console.log("***************END OF SAMPLE**************");
         });
-
-        if (returnType === ReturnType.Map) {
-            return userTokensPerEpoch;
-        }
-
-        return addEoaToUserPayoutMap(userTokensPerEpoch);
+        console.log("******************************************");
+        console.log("***************END OF MARKET**************");
+        console.log("******************************************");
     }
+
+    if (returnType === ReturnType.Map) {
+        return userTokensPerEpoch;
+    }
+
+    return addEoaToUserPayoutMap(userTokensPerEpoch);
 }

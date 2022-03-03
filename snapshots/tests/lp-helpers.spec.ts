@@ -52,34 +52,20 @@ describe("calculate samples correctly", () => {
             markets[0],
             numSamplesInMarket,
             blocksPerSample,
-            markets[0].preEventPercent,
+			1
         );
         expect(tokensPerSample).to.eq(markets[0].amount / numSamplesInMarket);
     });
 
     it("should calculate weighted tokens per sample if preEventPercent is included", async () => {
-        const expectedA = calculateTokensPerSample(
+        const res = calculateTokensPerSample(
             markets[1],
             numSamplesInMarket,
             blocksPerSample,
             markets[1].preEventPercent,
         );
-
-        expect(expectedA).to.eq(
-            (markets[1].amount / numSamplesInMarket) *
-                (1 + (markets[1].preEventPercent - 0.5)),
-        );
-
-        const expectedB = calculateTokensPerSample(
-            markets[1],
-            numSamplesInMarket,
-            blocksPerSample,
-            0.4,
-        );
-
-        expect(expectedB).to.eq(
-            (markets[1].amount / numSamplesInMarket) * (1 + (0.4 - 0.5)),
-        );
+		const expected = (markets[1].amount * markets[1].preEventPercent) / numSamplesInMarket;
+        expect(res).to.eq(expected);
     });
 });
 
@@ -92,7 +78,6 @@ describe("create array of samples", () => {
 
     it("should create one array of samples if the event start date does not exist", async () => {
         const expected = createArrayOfSamples(123456, 234567, null, 10000);
-		console.log('expected', expected)
         expect(expected[0].length).to.eq(12);
         expect(expected[1]).to.be.undefined;
     });

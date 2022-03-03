@@ -360,16 +360,11 @@ export const calculateTokensPerSample = (
     market: LpMarketInfo,
     numSamples: number,
     blocksPerSample: number,
-    preEventPercent: number | null,
+    percentOfTokens: number,
 ): number => {
-    const tokensPerSample =
-        market.howToCalculate === LpCalculation.PerMarket
-            ? market.amount / numSamples
-            : market.amount * blocksPerSample;
-
-    return preEventPercent
-        ? tokensPerSample * (1 + (preEventPercent - 0.5))
-        : tokensPerSample;
+    return market.howToCalculate === LpCalculation.PerMarket
+        ? (market.amount * percentOfTokens) / numSamples
+        : market.amount * percentOfTokens * blocksPerSample;
 };
 
 /**
