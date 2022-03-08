@@ -110,10 +110,10 @@ const createMerkleRootFileName = (
         environment === "local" ? LOCAL_RPC_URL : PRODUCTION_RPC_URL;
 
     const CHAIN_ID = environment === "local" ? 31337 : 137; // hardhat or matic
-    const DEPLOYMENTS_FOLDER = environment === "local" ? "localhost" : "matic";
+    // const DEPLOYMENTS_FOLDER = environment === "local" ? "localhost" : "matic";
     const SNAPSHOT_BASE_FILE_PATH = process.env.SNAPSHOT_BASE_FILE_PATH;
 
-    const riskyMessage = `Your are about to generate a liquidity mining and fees snapshot and populate data for a ${environment} strapi instance`;
+    const riskyMessage = `You're about to generate a liquidity mining and fees snapshot and populate data for a ${environment} strapi instance`;
     const confirm = await confirmRiskyWithMessage(riskyMessage);
     if (!confirm) {
         return;
@@ -210,234 +210,346 @@ const createMerkleRootFileName = (
         console.log("start Date", new Date(startTimestamp));
         console.log("end Date", new Date(endTimestamp));
         const isUSDC = tokenData.symbol.toLowerCase() === "usdc" ?? false;
-        const t1 = Date.now();
-        const liqMap = await generateLpSnapshot(
-            ReturnType.Map,
-            startTimestamp,
-            endTimestamp,
-            markets,
-            Number(DEFAULT_BLOCKS_PER_SAMPLE),
-        );
-        // console.log(`${tokenId} liqMap`, liqMap);
-        console.log(
-            `${tokenId} liqMap`,
-            Object.keys(liqMap).length + " liquidity providers",
-        );
-        const t2 = Date.now();
-        const feeMap = await generateFeesSnapshot(
-            ReturnType.Map,
-            startTimestamp,
-            endTimestamp,
-            feeTokenSupply,
-        );
-        // console.log(`${tokenId} feeMap`, feeMap);
-        console.log(
-            `${tokenId} feeMap`,
-            Object.keys(feeMap).length + " users who paid fees",
-        );
-        const t3 = Date.now();
-        let currentEpochUserMap = combineMaps([
-            liqMap as MapOfCount,
-            feeMap as MapOfCount,
-        ]);
-        
 
-        // // ------------------------------------------------
-        // // ------------------------------------------------
-        // // ONLY DO THIS IF YOU"RE TESTING AND DO NOT HAVE LIQUIDITY IN ANY PROD MARKETS
-        // // ------------------------------------------------
-        // // ------------------------------------------------
-        if (hijack) {
-            const addressToUse = hijackAddress;
-            currentEpochUserMap = hijackAddressForTesting(
-                currentEpochUserMap,
-                addressToUse,
-            );
-            console.log(
-                "balance of address to use: ",
-                currentEpochUserMap[addressToUse],
-            );
-        }
-        // // ------------------------------------------------
-        // // ------------------------------------------------
-
-        console.log(
-            "currentEpochUserMap",
-            Object.keys(currentEpochUserMap).length + " total users",
-        );
-
+        // ------------------------------------------------
+        // SDK
+        // ------------------------------------------------
+        let sdk: DistributorSdk;
         let merkleInfo: MerkleDistributorInfo;
-        let prevMerkleFile: string | false;
+
         try {
-            prevMerkleFile = fs
-                .readFileSync(
-                    createMerkleRootFileName(
-                        SNAPSHOT_BASE_FILE_PATH,
-                        chosenEpoch - 1,
-                        tokenData.symbol,
-                    ),
-                )
-                .toString();
-        } catch (error) {
-			console.log('no prevMerkleFile found!')
-            prevMerkleFile = false;
-        }
-        if (!prevMerkleFile) {
-            const normalizedEarnings = normalizeEarningsNewFormat(
-                currentEpochUserMap,
-                isUSDC,
-            );
-
-            console.log("normalizedEarnings length", normalizedEarnings.length);
-            merkleInfo = parseBalanceMap(normalizedEarnings);
-
-            console.log(
-                "epoch 0 merkleInfo",
-                BigNumber.from(merkleInfo.tokenTotal).toString(),
-            );
-        }
-
-        if (prevMerkleFile) {
             const mnemonic = process.env.MNEMONIC_FOR_ADMIN;
             if (!mnemonic) {
                 throw new Error("No mnemonic set!");
             }
 
-            const DISTRIBUTOR_ADDRESS = getDistributorAddress(
-                DEPLOYMENTS_FOLDER,
-                tokenData.symbol.toUpperCase(),
-            );
-            console.log("DISTRIBUTOR_ADDRESS", DISTRIBUTOR_ADDRESS);
-
             const provider = new providers.JsonRpcProvider(RPC_URL);
-            const account = ethers.utils.HDNode.fromMnemonic(mnemonic);
-            const walletWithProvider = new ethers.Wallet(account, provider);
-            walletWithProvider.connect(provider);
-            const signer = provider.getSigner();
-            const sdk = new DistributorSdk(
+            const hdNode = ethers.utils.HDNode.fromMnemonic(mnemonic);
+            const firstAccount = hdNode.derivePath(`m/44'/60'/0'/0/0`);
+            const signer = new ethers.Wallet(firstAccount.privateKey, provider);
+
+            sdk = new DistributorSdk(
                 // eslint-disable-next-line
                 // @ts-ignore
                 signer,
                 CHAIN_ID,
-                "0xtoken-address-not-needed-to-freeze",
-                DISTRIBUTOR_ADDRESS,
+                tokenData.symbol.toLowerCase(),
             );
-            console.log({ provider, account, signer, sdk });
-            try {
-                const prevMerkleInfo: MerkleDistributorInfo =
-                    JSON.parse(prevMerkleFile);
-                console.log(
-                    "prevMerkleInfo tokenTotal",
-                    BigNumber.from(prevMerkleInfo.tokenTotal).toString(),
-                );
-                const previousClaims = await sdk.getClaimedStatus(
-                    prevMerkleInfo,
-                );
-                console.log("previousClaims", previousClaims);
 
-                merkleInfo = combineMerkleInfo(
-                    previousClaims,
+            console.log({
+                provider,
+                // account,
+                signer,
+                sdk,
+            });
+        } catch (error) {
+            console.log(`Error instantiating SDK: ${error}`);
+        }
+
+        // ------------------------------------------------
+        // SNAPSHOT CALCULATION
+        // ------------------------------------------------
+
+        const { shouldGenerateSnapshot } = await inquirer.prompt([
+            {
+                type: "confirm",
+                message: `Do you want to generate snapshots`,
+                name: "shouldGenerateSnapshot",
+                default: false,
+            },
+        ]);
+
+        if (shouldGenerateSnapshot) {
+            const t1 = Date.now();
+            const liqMap = await generateLpSnapshot(
+                ReturnType.Map,
+                startTimestamp,
+                endTimestamp,
+                markets,
+                Number(DEFAULT_BLOCKS_PER_SAMPLE),
+            );
+            // console.log(`${tokenId} liqMap`, liqMap);
+            console.log(
+                `${tokenId} liqMap`,
+                Object.keys(liqMap).length + " liquidity providers",
+            );
+            const t2 = Date.now();
+            const feeMap = await generateFeesSnapshot(
+                ReturnType.Map,
+                startTimestamp,
+                endTimestamp,
+                feeTokenSupply,
+            );
+            // console.log(`${tokenId} feeMap`, feeMap);
+            console.log(
+                `${tokenId} feeMap`,
+                Object.keys(feeMap).length + " users who paid fees",
+            );
+            const t3 = Date.now();
+            let currentEpochUserMap = combineMaps([
+                liqMap as MapOfCount,
+                feeMap as MapOfCount,
+            ]);
+
+            // // ------------------------------------------------
+            // // ------------------------------------------------
+            // // ONLY DO THIS IF YOU"RE TESTING AND DO NOT HAVE LIQUIDITY IN ANY PROD MARKETS
+            // // ------------------------------------------------
+            // // ------------------------------------------------
+            if (hijack) {
+                const addressToUse = hijackAddress;
+                currentEpochUserMap = hijackAddressForTesting(
+                    currentEpochUserMap,
+                    addressToUse,
+                );
+                console.log(
+                    "balance of address to use: ",
+                    currentEpochUserMap[addressToUse],
+                );
+            }
+            // // ------------------------------------------------
+            // // ------------------------------------------------
+
+            console.log(
+                "currentEpochUserMap",
+                Object.keys(currentEpochUserMap).length + " total users",
+            );
+
+            let prevMerkleFile: string | false;
+
+            try {
+                prevMerkleFile = fs
+                    .readFileSync(
+                        createMerkleRootFileName(
+                            SNAPSHOT_BASE_FILE_PATH,
+                            chosenEpoch - 1,
+                            tokenData.symbol,
+                        ),
+                    )
+                    .toString();
+            } catch (error) {
+                console.log("no prevMerkleFile found!");
+                prevMerkleFile = false;
+            }
+
+            if (!prevMerkleFile) {
+                const normalizedEarnings = normalizeEarningsNewFormat(
                     currentEpochUserMap,
                     isUSDC,
                 );
-                console.log("merkleInfo", merkleInfo);
-                await sdk.freeze();
-                await sdk.updateMerkleRoot(merkleInfo.merkleRoot);
-                await sdk.unfreeze();
-            } catch (error) {
-                console.log("error", error);
+
+                console.log(
+                    "normalizedEarnings length",
+                    normalizedEarnings.length,
+                );
+                merkleInfo = parseBalanceMap(normalizedEarnings);
+
+                console.log(
+                    "epoch 0 merkleInfo",
+                    BigNumber.from(merkleInfo.tokenTotal).toString(),
+                );
             }
-        }
-        console.log(
-            "new merkleInfo tokenTotal",
-            BigNumber.from(merkleInfo.tokenTotal).toString(),
-        );
-        console.log(
-            "merkleInfo",
-            Object.keys(merkleInfo.claims).length + " total claims",
-        );
-        console.log("liq diff", t2 - t1);
-        console.log("fee diff", t3 - t2);
-        try {
-            fs.writeFileSync(
-                createMerkleRootFileName(
-                    SNAPSHOT_BASE_FILE_PATH,
-                    chosenEpoch,
-                    tokenData.symbol,
-                ),
-                JSON.stringify(merkleInfo),
-            );
-        } catch (error) {
-            console.log("write merkle snapshot", error);
-        }
 
-        const usersForStrapi = formatClaimsForStrapi(
-            merkleInfo,
-            chosenEpoch,
-            Number(tokenId),
-        );
-
-        console.log("usersForStrapi", usersForStrapi);
-        const userSampleSize = 1000;
-        console.log(
-            "splitting user chunks into ",
-            usersForStrapi.length / userSampleSize + " samples",
-        );
-
-        const WRITE_TO_STRAPI = process.env.WRITE_TO_STRAPI;
-        console.log({ WRITE_TO_STRAPI });
-        if (WRITE_TO_STRAPI) {
-            // Login to strapi
-            const url = `${STRAPI_URL}/admin/login`;
-            const strapiEmail = process.env.STRAPI_ADMIN_EMAIL;
-            const strapiPassword = process.env.STRAPI_ADMIN_PASSWORD;
-            let token;
-
-            try {
-                const loginResult = await fetch(url, {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        email: strapiEmail,
-                        password: strapiPassword,
-                    }),
-                    method: "POST",
-                });
-
-                console.log({ loginResult });
-
-                const loginJson = await loginResult.json();
-
-                console.log({ loginJson });
-
-                ({
-                    data: { token },
-                } = loginJson);
-            } catch (error) {
-                console.log("error", error);
-            }
-            console.log("token 2", token);
-
-            while (usersForStrapi.length > 0) {
-                const sample = usersForStrapi.splice(0, userSampleSize);
-                console.log("sample", sample);
+            if (prevMerkleFile) {
+                if (!sdk) {
+                    throw new Error(
+                        "SDK must be instantiated to getClaimedStatus!",
+                    );
+                }
                 try {
-                    // Create reward-users record as admin
-                    const response = await fetch(`${STRAPI_URL}/reward-users`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify(sample),
-                    });
-                    console.log({ response });
-                    console.log("responseJson", await response.json());
+                    const prevMerkleInfo: MerkleDistributorInfo =
+                        JSON.parse(prevMerkleFile);
+                    console.log(
+                        "prevMerkleInfo tokenTotal",
+                        BigNumber.from(prevMerkleInfo.tokenTotal).toString(),
+                    );
+                    const previousClaims = await sdk.getClaimedStatus(
+                        prevMerkleInfo,
+                    );
+                    console.log("previousClaims", previousClaims);
+                    console.log("merkleInfo", merkleInfo);
+
+                    merkleInfo = combineMerkleInfo(
+                        previousClaims,
+                        currentEpochUserMap,
+                        isUSDC,
+                    );
                 } catch (error) {
                     console.log("error", error);
                 }
             }
+
+            console.log(
+                "new merkleInfo tokenTotal",
+                BigNumber.from(merkleInfo.tokenTotal).toString(),
+            );
+            console.log(
+                "merkleInfo",
+                Object.keys(merkleInfo.claims).length + " total claims",
+            );
+            console.log("liq diff", t2 - t1);
+            console.log("fee diff", t3 - t2);
+            try {
+                fs.writeFileSync(
+                    createMerkleRootFileName(
+                        SNAPSHOT_BASE_FILE_PATH,
+                        chosenEpoch,
+                        tokenData.symbol,
+                    ),
+                    JSON.stringify(merkleInfo),
+                );
+            } catch (error) {
+                console.log("write merkle snapshot", error);
+            }
         }
+
+        // ------------------------------------------------
+        // PULL MERKLE INFO FROM DISK
+        // ------------------------------------------------
+
+        const { shouldPullMerkleInfoFromDisk } = await inquirer.prompt([
+            {
+                type: "confirm",
+                message: `Do you want to pull epoch #${chosenEpoch} from disk (assuming you already calculated it?)`,
+                name: "shouldPullMerkleInfoFromDisk",
+                default: false,
+            },
+        ]);
+
+        if (shouldPullMerkleInfoFromDisk) {
+            try {
+                const file = fs
+                    .readFileSync(
+                        createMerkleRootFileName(
+                            SNAPSHOT_BASE_FILE_PATH,
+                            chosenEpoch,
+                            tokenData.symbol,
+                        ),
+                    )
+                    .toString();
+
+                merkleInfo = JSON.parse(file);
+            } catch (error) {
+                console.log(
+                    "no merkle info for chosen epoch found, write one!",
+                );
+            }
+        }
+
+        // ------------------------------------------------
+        // STRAPI
+        // ------------------------------------------------
+
+        if (merkleInfo) {
+            const { shouldUpdateStrapi } = await inquirer.prompt([
+                {
+                    type: "confirm",
+                    message: `Do you want to write ${
+                        Object.keys(merkleInfo.claims).length
+                    } new reward-users to Strapi for ${chosenEpoch}?`,
+                    name: "shouldUpdateStrapi",
+                    default: false,
+                },
+            ]);
+
+            const strapiEmail = process.env.STRAPI_ADMIN_EMAIL;
+            const strapiPassword = process.env.STRAPI_ADMIN_PASSWORD;
+
+            if (shouldUpdateStrapi && strapiEmail && strapiPassword) {
+                const usersForStrapi = formatClaimsForStrapi(
+                    merkleInfo,
+                    chosenEpoch,
+                    Number(tokenId),
+                );
+                console.log("usersForStrapi", usersForStrapi);
+                const userSampleSize = 1000;
+                console.log(
+                    "splitting user chunks into ",
+                    usersForStrapi.length / userSampleSize + " samples",
+                );
+                // Login to strapi
+                const url = `${STRAPI_URL}/admin/login`;
+
+                let token;
+                try {
+                    const loginResult = await fetch(url, {
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            email: strapiEmail,
+                            password: strapiPassword,
+                        }),
+                        method: "POST",
+                    });
+                    console.log({ loginResult });
+                    const loginJson = await loginResult.json();
+                    console.log({ loginJson });
+                    ({
+                        data: { token },
+                    } = loginJson);
+                } catch (error) {
+                    console.log("error", error);
+                }
+                console.log("token 2", token);
+                while (usersForStrapi.length > 0) {
+                    const sample = usersForStrapi.splice(0, userSampleSize);
+                    console.log("sample", sample);
+                    try {
+                        // Create reward-users record as admin
+                        const response = await fetch(
+                            `${STRAPI_URL}/reward-users`,
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${token}`,
+                                },
+                                body: JSON.stringify(sample),
+                            },
+                        );
+                        console.log({ response });
+                        console.log("responseJson", await response.json());
+                    } catch (error) {
+                        console.log("error", error);
+                    }
+                }
+            }
+        }
+
+        // ------------------------------------------------
+        // MERKLE ROOT
+        // ------------------------------------------------
+
+        console.log({ sdk });
+        if (sdk && merkleInfo.merkleRoot) {
+            const { shouldUpdateMerkleRoot } = await inquirer.prompt([
+                {
+                    type: "confirm",
+                    message: `Do you want to update the merkle root to: ${merkleInfo.merkleRoot}`,
+                    name: "shouldUpdateMerkleRoot",
+                    default: false,
+                },
+            ]);
+            if (shouldUpdateMerkleRoot) {
+                sdk.freeze()
+                    .then((freezeTx) => {
+                        console.log("freezeTx", freezeTx);
+                        return sdk.updateMerkleRoot(merkleInfo.merkleRoot);
+                    })
+                    .then((updateMerkleRootTx) => {
+                        console.log("updateMerkleRootTx", updateMerkleRootTx);
+                        return sdk.unfreeze();
+                    })
+                    .then((unfreezeTx) => {
+                        console.log("unfreezeTx", unfreezeTx);
+                        return true;
+                    })
+                    .catch((err) => {
+                        console.log("error updating merkle root", err);
+                    });
+            }
+        }
+		
     }
 })(args);
