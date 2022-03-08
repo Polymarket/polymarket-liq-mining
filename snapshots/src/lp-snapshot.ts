@@ -73,7 +73,7 @@ export async function generateLpSnapshot(
             console.log("reward market start date exists, getting block!");
             while (!rewardMarketStartBlock) {
                 console.log(
-                    "reward market end block was not found. trying again!",
+                    "reward market start block was not found. trying again!",
                 );
                 rewardMarketStartBlock = await convertTimestampToBlockNumber(
                     market.rewardMarketStartDate,
