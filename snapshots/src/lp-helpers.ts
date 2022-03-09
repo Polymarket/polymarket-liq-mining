@@ -188,17 +188,36 @@ export const cleanAndSeparateEpochPerToken = (
                     markets: [],
                 };
             }
+
+            const rewardMarketStartDate = getDateMs(curr.reward_start_date);
+            const eventStartDate = getDateMs(curr.event_start_date);
+            const rewardMarketEndDate = getDateMs(curr.reward_end_date);
+            const marketMaker = curr.market.marketMakerAddress.toLowerCase();
+
+            if (
+                rewardMarketStartDate &&
+                rewardMarketEndDate &&
+                eventStartDate
+            ) {
+                validateEventStartBlock(
+                    rewardMarketStartDate,
+                    eventStartDate,
+                    rewardMarketEndDate,
+                    marketMaker,
+                );
+            }
+
             acc[token.reward_token.id].markets.push({
                 amount: BigNumber.from(token.lp_token_supply).toNumber(),
                 howToCalculate: token.token_calculation,
-                marketMaker: curr.market.marketMakerAddress.toLowerCase(),
-                rewardMarketEndDate: getDateMs(curr.reward_end_date),
-                rewardMarketStartDate: getDateMs(curr.reward_start_date),
-                eventStartDate: getDateMs(curr.event_start_date),
+                marketMaker,
+                rewardMarketStartDate,
+                eventStartDate,
                 preEventPercent:
                     typeof curr.pre_event_percent === "number"
                         ? curr.pre_event_percent / 100
                         : null,
+                rewardMarketEndDate,
             });
         });
         return acc;
@@ -393,7 +412,9 @@ export const validateEventStartBlock = (
     startBlock: number,
     eventBlock: number,
     endBlock: number,
+    marketMaker: string,
 ): void => {
+    console.log("in validateEventStartBlock, market maker:", marketMaker);
     if (!startBlock || !eventBlock || !endBlock) {
         throw new Error("all blocks are not set!");
     }
