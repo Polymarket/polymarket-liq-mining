@@ -492,28 +492,28 @@ const createMerkleRootFileName = (
                     console.log("error", error);
                 }
                 console.log("token 2", token);
-                while (usersForStrapi.length > 0) {
-                    const sample = usersForStrapi.splice(0, userSampleSize);
-                    console.log("sample", sample);
-                    try {
-                        // Create reward-users record as admin
-                        const response = await fetch(
-                            `${STRAPI_URL}/reward-users`,
-                            {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    Authorization: `Bearer ${token}`,
-                                },
-                                body: JSON.stringify(sample),
-                            },
-                        );
-                        console.log({ response });
-                        console.log("responseJson", await response.json());
-                    } catch (error) {
-                        console.log("error", error);
-                    }
-                }
+                // while (usersForStrapi.length > 0) {
+                //     const sample = usersForStrapi.splice(0, userSampleSize);
+                //     console.log("sample", sample);
+                //     try {
+                //         // Create reward-users record as admin
+                //         const response = await fetch(
+                //             `${STRAPI_URL}/reward-users`,
+                //             {
+                //                 method: "POST",
+                //                 headers: {
+                //                     "Content-Type": "application/json",
+                //                     Authorization: `Bearer ${token}`,
+                //                 },
+                //                 body: JSON.stringify(sample),
+                //             },
+                //         );
+                //         console.log({ response });
+                //         console.log("responseJson", await response.json());
+                //     } catch (error) {
+                //         console.log("error", error);
+                //     }
+                // }
             }
         }
 
@@ -522,34 +522,33 @@ const createMerkleRootFileName = (
         // ------------------------------------------------
 
         console.log({ sdk });
-        if (sdk && merkleInfo.merkleRoot) {
-            const { shouldUpdateMerkleRoot } = await inquirer.prompt([
-                {
-                    type: "confirm",
-                    message: `Do you want to update the merkle root to: ${merkleInfo.merkleRoot}`,
-                    name: "shouldUpdateMerkleRoot",
-                    default: false,
-                },
-            ]);
-            if (shouldUpdateMerkleRoot) {
-                sdk.freeze()
-                    .then((freezeTx) => {
-                        console.log("freezeTx", freezeTx);
-                        return sdk.updateMerkleRoot(merkleInfo.merkleRoot);
-                    })
-                    .then((updateMerkleRootTx) => {
-                        console.log("updateMerkleRootTx", updateMerkleRootTx);
-                        return sdk.unfreeze();
-                    })
-                    .then((unfreezeTx) => {
-                        console.log("unfreezeTx", unfreezeTx);
-                        return true;
-                    })
-                    .catch((err) => {
-                        console.log("error updating merkle root", err);
-                    });
-            }
-        }
-		
+        // if (sdk && merkleInfo.merkleRoot) {
+        //     const { shouldUpdateMerkleRoot } = await inquirer.prompt([
+        //         {
+        //             type: "confirm",
+        //             message: `Do you want to update the merkle root to: ${merkleInfo.merkleRoot}`,
+        //             name: "shouldUpdateMerkleRoot",
+        //             default: false,
+        //         },
+        //     ]);
+        //     if (shouldUpdateMerkleRoot) {
+        //         sdk.freeze()
+        //             .then((freezeTx) => {
+        //                 console.log("freezeTx", freezeTx);
+        //                 return sdk.updateMerkleRoot(merkleInfo.merkleRoot);
+        //             })
+        //             .then((updateMerkleRootTx) => {
+        //                 console.log("updateMerkleRootTx", updateMerkleRootTx);
+        //                 return sdk.unfreeze();
+        //             })
+        //             .then((unfreezeTx) => {
+        //                 console.log("unfreezeTx", unfreezeTx);
+        //                 return true;
+        //             })
+        //             .catch((err) => {
+        //                 console.log("error updating merkle root", err);
+        //             });
+        //     }
+        // }
     }
 })(args);

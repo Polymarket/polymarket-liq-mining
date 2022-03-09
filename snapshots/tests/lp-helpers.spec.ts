@@ -52,7 +52,7 @@ describe("calculate samples correctly", () => {
             markets[0],
             numSamplesInMarket,
             blocksPerSample,
-			1
+            1,
         );
         expect(tokensPerSample).to.eq(markets[0].amount / numSamplesInMarket);
     });
@@ -64,7 +64,9 @@ describe("calculate samples correctly", () => {
             blocksPerSample,
             markets[1].preEventPercent,
         );
-		const expected = (markets[1].amount * markets[1].preEventPercent) / numSamplesInMarket;
+        const expected =
+            (markets[1].amount * markets[1].preEventPercent) /
+            numSamplesInMarket;
         expect(res).to.eq(expected);
     });
 });
@@ -113,7 +115,12 @@ describe("validate event blocks", () => {
         const eventStartBlock = 2110000;
         const endBlock = 2120000;
         expect(() =>
-            validateEventStartBlock(startBlock, eventStartBlock, endBlock),
+            validateEventStartBlock(
+                startBlock,
+                eventStartBlock,
+                endBlock,
+                "0x",
+            ),
         ).to.not.throw();
     });
 
@@ -122,7 +129,12 @@ describe("validate event blocks", () => {
         const eventStartBlock = 2090000;
         const endBlock = 2120000;
         expect(() =>
-            validateEventStartBlock(startBlock, eventStartBlock, endBlock),
+            validateEventStartBlock(
+                startBlock,
+                eventStartBlock,
+                endBlock,
+                "0x",
+            ),
         ).to.throw();
     });
 
@@ -131,7 +143,12 @@ describe("validate event blocks", () => {
         const eventStartBlock = 2110000;
         const endBlock = 2105000;
         expect(() =>
-            validateEventStartBlock(startBlock, eventStartBlock, endBlock),
+            validateEventStartBlock(
+                startBlock,
+                eventStartBlock,
+                endBlock,
+                "0x",
+            ),
         ).to.throw();
     });
 });

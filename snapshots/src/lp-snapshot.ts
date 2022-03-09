@@ -139,7 +139,7 @@ export async function generateLpSnapshot(
                     rewardMarketStartBlock,
                     eventStartBlock,
                     rewardMarketEndBlock,
-					marketMaker
+                    marketMaker,
                 );
             }
         }
