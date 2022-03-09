@@ -54,12 +54,12 @@ async function getFirstAddedLiquidity(marketAddress: string): Promise<string> {
             return liquidityAddTxnHash;
         } catch (err) {
             console.log(
-                "\n\n\n\n\n\n",
+                "\n",
                 "marketAddress",
                 marketAddress,
                 "retryCount",
                 retryCount,
-                "\n\n\n\n\n\n",
+                "\n",
             );
 
             retryCount += 1;
@@ -105,12 +105,12 @@ async function getMarketResolutionTransaction(
             return resolutionHash;
         } catch (err) {
             console.log(
-                "\n\n\n\n\n\n",
+                "\n",
                 "marketAddress",
                 marketAddress,
                 "retryCount",
                 retryCount,
-                "\n\n\n\n\n\n",
+                "\n",
             );
 
             retryCount += 1;

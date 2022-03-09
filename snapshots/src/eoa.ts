@@ -71,12 +71,12 @@ async function getTransactionHashes(address: string): Promise<string[]> {
             return transactionHashes;
         } catch (err) {
             console.log(
-                "\n\n\n\n\n\n",
+                "\n",
                 "address",
                 address,
                 "retryCount",
                 retryCount,
-                "\n\n\n\n\n\n",
+                "\n",
             );
 
             retryCount += 1;

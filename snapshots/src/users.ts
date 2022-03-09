@@ -63,14 +63,14 @@ export const getAllUsers = async (
             return users;
         } catch (err) {
             console.log(
-                "\n\n\n\n\n\n",
+                "\n",
                 "timestamp",
                 timestamp,
                 "excludedAccounts",
                 excludedAccounts,
                 "retryCount",
                 retryCount,
-                "\n\n\n\n\n\n",
+                "\n",
             );
 
             retryCount += 1;

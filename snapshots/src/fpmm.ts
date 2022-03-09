@@ -86,13 +86,14 @@ export const getFpmm = async (
             return data.fixedProductMarketMaker;
         } catch (err) {
             console.log(
-                "\n\n\n\n\n\nmarketAddress",
+                "\n",
+				"marketAddress",
                 marketAddress,
                 "block",
                 block,
                 "retryCount",
                 retryCount,
-                "\n\n\n\n\n\n",
+                "\n",
             );
 
             retryCount += 1;

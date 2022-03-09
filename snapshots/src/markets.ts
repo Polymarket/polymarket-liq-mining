@@ -48,12 +48,12 @@ export const getAllMarkets = async (timestamp: number): Promise<string[]> => {
             return markets;
         } catch (err) {
             console.log(
-                "\n\n\n\n\n\n",
+                "\n",
                 "timestamp",
                 timestamp,
                 "retryCount",
                 retryCount,
-                "\n\n\n\n\n\n",
+                "\n",
             );
 
             retryCount += 1;

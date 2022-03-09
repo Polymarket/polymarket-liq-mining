@@ -52,14 +52,14 @@ const getTradeVolumePerUser = async (
             return tradeVolume / SCALE_FACTOR;
         } catch (err) {
             console.log(
-                "\n\n\n\n\n\n",
+                "\n",
                 "address",
                 address,
                 "timestamp",
                 timestamp,
                 "retryCount",
                 retryCount,
-                "\n\n\n\n\n\n",
+                "\n",
             );
 
             retryCount += 1;
@@ -123,7 +123,7 @@ const getFeesPerUser = async (
             return fees / SCALE_FACTOR;
         } catch (err) {
             console.log(
-                "\n\n\n\n\n\n",
+                "\n",
                 "address",
                 address,
                 "startTimestamp",
@@ -132,7 +132,7 @@ const getFeesPerUser = async (
                 endTimestamp,
                 "retryCount",
                 retryCount,
-                "\n\n\n\n\n\n",
+                "\n",
             );
 
             retryCount += 1;

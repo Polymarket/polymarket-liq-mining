@@ -63,14 +63,14 @@ export const getAllFeesInEpoch = async (
             return usersWithTransactions;
         } catch (err) {
             console.log(
-                "\n\n\n\n\n\n",
+                "\n",
                 "startTimestamp",
                 startTimestamp,
                 "endTimestamp",
                 endTimestamp,
                 "retryCount",
                 retryCount,
-                "\n\n\n\n\n\n",
+                "\n",
             );
 
             retryCount += 1;
