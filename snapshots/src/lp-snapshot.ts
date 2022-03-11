@@ -73,7 +73,7 @@ export async function generateLpSnapshot(
             console.log("reward market start date exists, getting block!");
             while (!rewardMarketStartBlock) {
                 console.log(
-                    "reward market end block was not found. trying again!",
+                    "reward market start block was not found. trying again!",
                 );
                 rewardMarketStartBlock = await convertTimestampToBlockNumber(
                     market.rewardMarketStartDate,
@@ -113,6 +113,8 @@ export async function generateLpSnapshot(
             marketEndBlock,
             epochEndBlock,
             currentBlock,
+        });
+        console.log({
             startBlockBeingUsed: startBlock,
             eventStartBlock,
             endBlockBeingUsed: endBlock,
@@ -132,12 +134,13 @@ export async function generateLpSnapshot(
             );
 
             if (eventStartBlock) {
+                console.log("market maker of market with event", marketMaker);
                 validateEventStartBlock(
                     rewardMarketStartBlock,
                     eventStartBlock,
                     rewardMarketEndBlock,
+                    marketMaker,
                 );
-                console.log("market maker of market with event", marketMaker);
             }
         }
 
