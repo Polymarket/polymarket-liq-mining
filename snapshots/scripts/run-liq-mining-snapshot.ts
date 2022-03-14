@@ -38,7 +38,6 @@ import {
     PRODUCTION_RPC_URL,
     PRODUCTION_STRAPI_URL,
 } from "../src/constants";
-import { getDistributorAddress } from "../src/deployments";
 
 // const DEFAULT_BLOCKS_PER_SAMPLE = 1800; // Approx every hour with a 2s block time
 // const DEFAULT_BLOCKS_PER_SAMPLE = 30; // Approx every min with a 2s block time
@@ -262,7 +261,6 @@ const createMerkleRootFileName = (
         if (shouldGenerateSnapshot) {
             const t1 = Date.now();
             const liqMap = await generateLpSnapshot(
-                ReturnType.Map,
                 startTimestamp,
                 endTimestamp,
                 markets,
@@ -275,7 +273,6 @@ const createMerkleRootFileName = (
             );
             const t2 = Date.now();
             const feeMap = await generateFeesSnapshot(
-                ReturnType.Map,
                 startTimestamp,
                 endTimestamp,
                 feeTokenSupply,

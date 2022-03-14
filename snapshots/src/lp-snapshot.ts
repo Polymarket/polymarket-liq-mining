@@ -15,8 +15,7 @@ import {
     validateEventStartBlock,
 } from "./lp-helpers";
 import { getStartAndEndBlock } from "./lp-helpers";
-import { MapOfCount, ReturnSnapshot, ReturnType } from "./interfaces";
-import { addEoaToUserPayoutMap } from "./helpers";
+import { MapOfCount } from "./interfaces";
 
 const NUMBER_OF_SAMPLES_PER_MARKET = 150;
 
@@ -27,12 +26,11 @@ const NUMBER_OF_SAMPLES_PER_MARKET = 150;
  * @returns
  */
 export async function generateLpSnapshot(
-    returnType: ReturnType,
     startTimestamp: number,
     endTimestamp: number,
     marketMakers: LpMarketInfo[],
     blocksPerSample: number,
-): Promise<ReturnSnapshot[] | MapOfCount> {
+): Promise<MapOfCount> {
     console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
     let userTokensPerEpoch: { [proxyWallet: string]: number } = {};
@@ -202,9 +200,5 @@ export async function generateLpSnapshot(
         });
     }
 
-    if (returnType === ReturnType.Map) {
-        return userTokensPerEpoch;
-    }
-
-    return addEoaToUserPayoutMap(userTokensPerEpoch);
+    return userTokensPerEpoch;
 }
