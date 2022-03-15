@@ -1,5 +1,4 @@
 import * as dotenv from "dotenv";
-import * as yargs from "yargs";
 import fetch from "cross-fetch";
 import inquirer from "inquirer";
 import { generateLpSnapshot } from "../src/lp-snapshot";
@@ -26,10 +25,7 @@ import {
 import { BigNumber, ethers, providers } from "ethers";
 import { DistributorSdk } from "../../sdk/src/distributorSdk";
 import { validateEnvVars } from "../src/validate-env-vars";
-import {
-    fetchRewardEpochs,
-    fetchRewardUsersForEpoch,
-} from "../src/strapi-helpers";
+import { fetchRewardEpochs } from "../src/strapi-helpers";
 import {
     DEFAULT_BLOCKS_PER_SAMPLE,
     HIJACK_ADDRESS_FOR_TESTING,
@@ -42,7 +38,6 @@ import {
 } from "../src/constants";
 
 dotenv.config();
-
 
 const confirmRiskyWithMessage = async (message: string) => {
     const { confirm } = await inquirer.prompt([
@@ -133,18 +128,6 @@ const createMerkleRootFileName = (
     ]);
     console.log("Chosen epoch:", chosenEpoch);
 
-    // check if user rewards already exist for that epoch
-    const userRewards = await fetchRewardUsersForEpoch(STRAPI_URL, chosenEpoch);
-    console.log("userRewards count", userRewards);
-    if (userRewards.length > 0) {
-        console.log(
-            "User Rewards records already exist for this epoch, did you choose the correct epoch?",
-        );
-        console.log(
-            "Use the reset local script if trying to repeat a dry run on local.",
-        );
-        return;
-    }
     // Allow hijacking when local
     let hijack = false;
     let hijackAddress = null;
@@ -262,7 +245,7 @@ const createMerkleRootFileName = (
                 endTimestamp,
                 markets,
                 Number(DEFAULT_BLOCKS_PER_SAMPLE),
-				true // throw error if block mismatch
+                true, // throw error if block mismatch
             );
             // console.log(`${tokenId} liqMap`, liqMap);
             console.log(
