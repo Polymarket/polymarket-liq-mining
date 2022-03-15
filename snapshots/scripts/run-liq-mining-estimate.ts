@@ -14,8 +14,8 @@ import {
     DEFAULT_BLOCKS_PER_SAMPLE,
     STRAPI_URL,
     USER_SAMPLE_SIZE,
-	STRAPI_ADMIN_EMAIL,
-	STRAPI_ADMIN_PASSWORD,
+    STRAPI_ADMIN_EMAIL,
+    STRAPI_ADMIN_PASSWORD,
 } from "../src/constants";
 
 dotenv.config();
@@ -93,7 +93,7 @@ dotenv.config();
             endTimestamp,
             markets,
             Number(DEFAULT_BLOCKS_PER_SAMPLE),
-			false // dont throw error if block mismatch
+            false, // dont throw error if block mismatch
         );
         // console.log(`${tokenId} liqMap`, liqMap);
         console.log(
@@ -139,9 +139,7 @@ dotenv.config();
             console.log({ loginResult });
             const loginJson = await loginResult.json();
             console.log({ loginJson });
-            ({
-                data: { token },
-            } = loginJson);
+            token = loginJson.data.token;
         } catch (error) {
             console.log("error", error);
         }
@@ -160,7 +158,7 @@ dotenv.config();
                     body: JSON.stringify(sample),
                 });
                 console.log({ response });
-                console.log("responseJson", await response.json());
+                // console.log("responseJson", await response.json());
             } catch (error) {
                 console.log("error", error);
             }

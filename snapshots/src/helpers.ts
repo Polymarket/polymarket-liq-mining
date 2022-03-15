@@ -169,7 +169,7 @@ export const formatClaimsForStrapi = (
 
 /**
  * Formats a liquidity map for estimated rewards for strapi
- * @param mapOfCount liquidity map 
+ * @param mapOfCount liquidity map
  * @param epoch which epoch
  * @param epoch reward_token id
  * @param isUSDC for scaling
@@ -180,12 +180,15 @@ export const formatEstimatedRewards = (
     reward_token: RewardToken["id"],
     isUSDC: boolean,
 ): UserEstimatedRewardForStrapi[] => {
-    return Object.keys(map).map((username) => {
+    return positiveAddressesOnly(map).map((username) => {
         return {
-            username,
+            username: validateAddress(username), // VALIDATE ADDRESS
             epoch,
             reward_token,
-            estimated_liq: getAmountInEther(map[username], isUSDC).toHexString() ?? "0x0",
+            estimated_liq: getAmountInEther(
+                map[username],
+                isUSDC,
+            ).toHexString(),
         };
     });
 };

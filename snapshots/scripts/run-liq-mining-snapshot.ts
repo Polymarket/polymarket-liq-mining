@@ -422,9 +422,9 @@ const createMerkleRootFileName = (
             const { shouldUpdateStrapi } = await inquirer.prompt([
                 {
                     type: "confirm",
-                    message: `Do you want to write ${
+                    message: `Do you want to update ${
                         Object.keys(merkleInfo.claims).length
-                    } new reward-users to Strapi for ${chosenEpoch}?`,
+                    } reward-users to Strapi for ${chosenEpoch}?`,
                     name: "shouldUpdateStrapi",
                     default: false,
                 },
@@ -469,13 +469,13 @@ const createMerkleRootFileName = (
                 console.log("token 2", token);
                 while (usersForStrapi.length > 0) {
                     const sample = usersForStrapi.splice(0, userSampleSize);
-                    console.log("sample", sample);
+                    // console.log("sample", sample);
                     try {
                         // Create reward-users record as admin
                         const response = await fetch(
                             `${STRAPI_URL}/reward-users`,
                             {
-                                method: "POST",
+                                method: "PUT",
                                 headers: {
                                     "Content-Type": "application/json",
                                     Authorization: `Bearer ${token}`,
@@ -484,7 +484,7 @@ const createMerkleRootFileName = (
                             },
                         );
                         console.log({ response });
-                        console.log("responseJson", await response.json());
+                        // console.log("responseJson", await response.json());
                     } catch (error) {
                         console.log("error", error);
                     }
