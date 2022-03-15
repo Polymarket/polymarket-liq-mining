@@ -1,8 +1,14 @@
-import { MapOfCount, UserAmount, UserRewardForStrapi } from "./interfaces";
+import {
+    MapOfCount,
+    UserActualRewardForStrapi,
+    UserAmount,
+    UserEstimatedRewardForStrapi,
+    UserRewardForStrapi,
+} from "./interfaces";
 import { getEoaLinkAddress } from "./eoa";
 import {
-  NewFormat,
-  parseBalanceMap,
+    NewFormat,
+    parseBalanceMap,
 } from "../../merkle-distributor/src/parse-balance-map";
 import { IsClaimed } from "../../sdk/src/types";
 import { BigNumber } from "@ethersproject/bignumber";
@@ -22,7 +28,7 @@ export const EIGHT_DAYS_AGO = now - 691200000;
 
 // TYPES
 type BigNumberMapOfCount = { [address: string]: BigNumber };
-type BanMap = { [address:string]: boolean}
+type BanMap = { [address: string]: boolean };
 
 /**
  * Sums liquidity of a given block
@@ -30,10 +36,10 @@ type BanMap = { [address:string]: boolean}
  * @returns the sum of all block values
  */
 export const sumValues = (block: MapOfCount): number => {
-  const allLiquidity: number[] = Object.values(block);
-  return allLiquidity.reduce((acc, current) => {
-    return acc + current;
-  }, 0);
+    const allLiquidity: number[] = Object.values(block);
+    return allLiquidity.reduce((acc, current) => {
+        return acc + current;
+    }, 0);
 };
 
 /**
@@ -41,24 +47,27 @@ export const sumValues = (block: MapOfCount): number => {
  * @param userAmounts
  * @returns userAmounts
  */
-export const cleanUserAmounts = (userAmounts: UserAmount[], banMap: BanMap): UserAmount[] => {
-  return userAmounts
-    .filter(({user}) => {
-		// console.log('user', user)
-		if (banMap[user.toLowerCase()]) {
-			return false
-		}
-		return true
-	})
-    .map(({ user, amount }) => {
-      return {
-        user,
-        amount:
-          typeof amount === "number"
-            ? amount / GRAPH_SCALE_FACTOR
-            : parseInt(amount) / GRAPH_SCALE_FACTOR,
-      };
-    });
+export const cleanUserAmounts = (
+    userAmounts: UserAmount[],
+    banMap: BanMap,
+): UserAmount[] => {
+    return userAmounts
+        .filter(({ user }) => {
+            // console.log('user', user)
+            if (banMap[user.toLowerCase()]) {
+                return false;
+            }
+            return true;
+        })
+        .map(({ user, amount }) => {
+            return {
+                user,
+                amount:
+                    typeof amount === "number"
+                        ? amount / GRAPH_SCALE_FACTOR
+                        : parseInt(amount) / GRAPH_SCALE_FACTOR,
+            };
+        });
 };
 
 /**
@@ -67,14 +76,14 @@ export const cleanUserAmounts = (userAmounts: UserAmount[], banMap: BanMap): Use
  * @returns mapOfCount
  */
 export const makePointsMap = (userAmounts: UserAmount[]): MapOfCount => {
-  return userAmounts.reduce<MapOfCount>((acc, curr) => {
-    const address = curr.user;
-    if (!acc[address]) {
-      acc[address] = 0;
-    }
-    acc[address] += curr.amount;
-    return acc;
-  }, {});
+    return userAmounts.reduce<MapOfCount>((acc, curr) => {
+        const address = curr.user;
+        if (!acc[address]) {
+            acc[address] = 0;
+        }
+        acc[address] += curr.amount;
+        return acc;
+    }, {});
 };
 
 /**
@@ -85,18 +94,18 @@ export const makePointsMap = (userAmounts: UserAmount[]): MapOfCount => {
  * @returns mapOfCount
  */
 export const makePayoutsMap = (
-  pointsMap: MapOfCount,
-  totalPoints: number,
-  supply: number
+    pointsMap: MapOfCount,
+    totalPoints: number,
+    supply: number,
 ): MapOfCount => {
-  return Object.keys(pointsMap).reduce((acc, user) => {
-    if (!acc[user]) {
-      acc[user] = 0;
-    }
-    const percentOfTotalFees = pointsMap[user] / totalPoints;
-    acc[user] = percentOfTotalFees * supply;
-    return acc;
-  }, {});
+    return Object.keys(pointsMap).reduce((acc, user) => {
+        if (!acc[user]) {
+            acc[user] = 0;
+        }
+        const percentOfTotalFees = pointsMap[user] / totalPoints;
+        acc[user] = percentOfTotalFees * supply;
+        return acc;
+    }, {});
 };
 
 /**
@@ -105,16 +114,16 @@ export const makePayoutsMap = (
  * @returns mapOfCount
  */
 export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
-  const newMap = {};
-  for (const oldMap of arrayOfMaps) {
-    for (const user of Object.keys(oldMap)) {
-      if (!newMap[user]) {
-        newMap[user] = 0;
-      }
-      newMap[user] = newMap[user] + oldMap[user];
+    const newMap = {};
+    for (const oldMap of arrayOfMaps) {
+        for (const user of Object.keys(oldMap)) {
+            if (!newMap[user]) {
+                newMap[user] = 0;
+            }
+            newMap[user] = newMap[user] + oldMap[user];
+        }
     }
-  }
-  return newMap;
+    return newMap;
 };
 
 /**
@@ -123,19 +132,19 @@ export const combineMaps = (arrayOfMaps: MapOfCount[]): MapOfCount => {
  * @returns proxyWallet, eoaWallet, amount
  */
 export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
-  [account: string]: T;
+    [account: string]: T;
 }): Promise<{ proxyWallet: string; eoaWallet: string; amount: T }[]> => {
-  // Return an array with address, EOA and amount
-  return Promise.all(
-    Object.keys(map).map(async (userAddress) => {
-      const eoaWallet = await getEoaLinkAddress(userAddress);
-      return {
-        proxyWallet: userAddress,
-        amount: map[userAddress] as T,
-        eoaWallet: eoaWallet,
-      };
-    })
-  );
+    // Return an array with address, EOA and amount
+    return Promise.all(
+        Object.keys(map).map(async (userAddress) => {
+            const eoaWallet = await getEoaLinkAddress(userAddress);
+            return {
+                proxyWallet: userAddress,
+                amount: map[userAddress] as T,
+                eoaWallet: eoaWallet,
+            };
+        }),
+    );
 };
 
 /**
@@ -144,18 +153,41 @@ export const addEoaToUserPayoutMap = async <T extends string | number>(map: {
  * @param epoch which epoch
  */
 export const formatClaimsForStrapi = (
-  merkleInfo: MerkleDistributorInfo,
-  epoch: number,
-  tokenId: RewardToken["id"]
-): UserRewardForStrapi[] => {
-  return Object.keys(merkleInfo.claims).map((username) => {
-    return {
-      username,
-      epoch,
-      reward_token: tokenId,
-      ...merkleInfo.claims[username],
-    };
-  });
+    merkleInfo: MerkleDistributorInfo,
+    epoch: number,
+    tokenId: RewardToken["id"],
+): UserActualRewardForStrapi[] => {
+    return Object.keys(merkleInfo.claims).map((username) => {
+        return {
+            username,
+            epoch,
+            reward_token: tokenId,
+            ...merkleInfo.claims[username],
+        };
+    });
+};
+
+/**
+ * Formats a liquidity map for estimated rewards for strapi
+ * @param mapOfCount liquidity map 
+ * @param epoch which epoch
+ * @param epoch reward_token id
+ * @param isUSDC for scaling
+ */
+export const formatEstimatedRewards = (
+    map: MapOfCount,
+    epoch: number,
+    reward_token: RewardToken["id"],
+    isUSDC: boolean,
+): UserEstimatedRewardForStrapi[] => {
+    return Object.keys(map).map((username) => {
+        return {
+            username,
+            epoch,
+            reward_token,
+            estimated_liq: getAmountInEther(map[username], isUSDC).toHexString() ?? "0x0",
+        };
+    });
 };
 
 /**
@@ -164,17 +196,17 @@ export const formatClaimsForStrapi = (
  * @returns addresses with positive values
  */
 const positiveAddressesOnly = (map) =>
-  Object.keys(map).filter((key) => map[key] > 0);
+    Object.keys(map).filter((key) => map[key] > 0);
 
 /**
  * Makes sure the address is valid and then formats it correctly
  * @param address string
  */
 export const validateAddress = (address: string): string => {
-  if (!isAddress(address)) {
-    throw new Error("Invalid address");
-  }
-  return getAddress(address);
+    if (!isAddress(address)) {
+        throw new Error("Invalid address");
+    }
+    return getAddress(address);
 };
 
 /**
@@ -183,7 +215,7 @@ export const validateAddress = (address: string): string => {
  * @returns
  */
 const trimAndLowerCaseAddress = (address: string): string => {
-  return address.trim().toLowerCase();
+    return address.trim().toLowerCase();
 };
 
 /**
@@ -191,14 +223,19 @@ const trimAndLowerCaseAddress = (address: string): string => {
  * @param number
  * @returns
  */
-export const getAmountInEther = (number: number, isUSDC: boolean): BigNumber => {
-  let n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
+export const getAmountInEther = (
+    number: number,
+    isUSDC: boolean,
+): BigNumber => {
+    let n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
 
-  if (n.includes("e")) {
-    const eIndex = n.indexOf("e");
-    n = n.slice(0, eIndex);
-  }
-  return isUSDC ? ethers.utils.parseEther(n).div(BigNumber.from(10).pow(12)) : ethers.utils.parseEther(n);
+    if (n.includes("e")) {
+        const eIndex = n.indexOf("e");
+        n = n.slice(0, eIndex);
+    }
+    return isUSDC
+        ? ethers.utils.parseEther(n).div(BigNumber.from(10).pow(12))
+        : ethers.utils.parseEther(n);
 };
 
 /**
@@ -208,18 +245,18 @@ export const getAmountInEther = (number: number, isUSDC: boolean): BigNumber => 
  * @returns todo - getAmountInEther
  */
 export const normalizeEarningsNewFormat = (
-  map: MapOfCount | BigNumberMapOfCount,
-  isUSDC: boolean
+    map: MapOfCount | BigNumberMapOfCount,
+    isUSDC: boolean,
 ): NewFormat[] => {
-  return positiveAddressesOnly(map).map((addr) => {
-    return {
-      address: validateAddress(addr), // NOTICE THE VALIDATE ADDRESS FROM ETHERS
-      earnings: BigNumber.isBigNumber(map[addr])
-        ? map[addr].toString()
-        : getAmountInEther(map[addr] as number, isUSDC).toString(),
-      reasons: "",
-    };
-  });
+    return positiveAddressesOnly(map).map((addr) => {
+        return {
+            address: validateAddress(addr), // NOTICE THE VALIDATE ADDRESS FROM ETHERS
+            earnings: BigNumber.isBigNumber(map[addr])
+                ? map[addr].toString()
+                : getAmountInEther(map[addr] as number, isUSDC).toString(),
+            reasons: "",
+        };
+    });
 };
 
 /**
@@ -228,19 +265,19 @@ export const normalizeEarningsNewFormat = (
  * @returns mapOfCount
  */
 export const combineBigNumberMaps = (
-  arrayOfMaps: BigNumberMapOfCount[]
+    arrayOfMaps: BigNumberMapOfCount[],
 ): BigNumberMapOfCount => {
-  const newMap = {};
+    const newMap = {};
 
-  for (const oldMap of arrayOfMaps) {
-    for (const user of Object.keys(oldMap)) {
-      if (!newMap[user]) {
-        newMap[user] = BigNumber.from("0");
-      }
-      newMap[user] = newMap[user].add(oldMap[user]);
+    for (const oldMap of arrayOfMaps) {
+        for (const user of Object.keys(oldMap)) {
+            if (!newMap[user]) {
+                newMap[user] = BigNumber.from("0");
+            }
+            newMap[user] = newMap[user].add(oldMap[user]);
+        }
     }
-  }
-  return newMap;
+    return newMap;
 };
 
 /**
@@ -250,16 +287,16 @@ export const combineBigNumberMaps = (
  * @returns todo - update getAmountInEther
  */
 export const normalizeMapForMultipleEpochs = (
-  map: MapOfCount,
-  isUSDC: boolean,
+    map: MapOfCount,
+    isUSDC: boolean,
 ): BigNumberMapOfCount => {
-  return positiveAddressesOnly(map).reduce((acc, curr) => {
-    const lowerCase = trimAndLowerCaseAddress(curr);
-    if (!acc[lowerCase]) {
-      acc[lowerCase] = getAmountInEther(map[curr], isUSDC);
-    }
-    return acc;
-  }, {});
+    return positiveAddressesOnly(map).reduce((acc, curr) => {
+        const lowerCase = trimAndLowerCaseAddress(curr);
+        if (!acc[lowerCase]) {
+            acc[lowerCase] = getAmountInEther(map[curr], isUSDC);
+        }
+        return acc;
+    }, {});
 };
 
 /**
@@ -271,39 +308,39 @@ export const normalizeMapForMultipleEpochs = (
  * @returns merkleDistributorInfo
  */
 export const combineMerkleInfo = (
-  prevClaims: IsClaimed[],
-  newClaimMap: MapOfCount,
-  isUSDC: boolean,
+    prevClaims: IsClaimed[],
+    newClaimMap: MapOfCount,
+    isUSDC: boolean,
 ): MerkleDistributorInfo => {
-  const mapOfUnpaidClaims: BigNumberMapOfCount = prevClaims
-    .filter((c) => !c.isClaimed)
-    .reduce((acc, curr) => {
-      const address = trimAndLowerCaseAddress(curr.address);
-      if (!acc[address]) {
-        acc[address] = BigNumber.from(curr.amount);
-      }
-      return acc;
-    }, {});
+    const mapOfUnpaidClaims: BigNumberMapOfCount = prevClaims
+        .filter((c) => !c.isClaimed)
+        .reduce((acc, curr) => {
+            const address = trimAndLowerCaseAddress(curr.address);
+            if (!acc[address]) {
+                acc[address] = BigNumber.from(curr.amount);
+            }
+            return acc;
+        }, {});
 
-  const newMap = normalizeMapForMultipleEpochs(newClaimMap, isUSDC);
-  const combined = combineBigNumberMaps([newMap, mapOfUnpaidClaims]);
-  const normalized = normalizeEarningsNewFormat(combined, isUSDC);
-  return parseBalanceMap(normalized);
+    const newMap = normalizeMapForMultipleEpochs(newClaimMap, isUSDC);
+    const combined = combineBigNumberMaps([newMap, mapOfUnpaidClaims]);
+    const normalized = normalizeEarningsNewFormat(combined, isUSDC);
+    return parseBalanceMap(normalized);
 };
 
 export const hijackAddressForTesting = (
-  map: MapOfCount,
-  pirateAddress: string
+    map: MapOfCount,
+    pirateAddress: string,
 ): MapOfCount => {
-  const addressToHijack = Object.keys(map)
-    .sort((a, b) => map[b] - map[a])
-    .find((address) => map[address]);
+    const addressToHijack = Object.keys(map)
+        .sort((a, b) => map[b] - map[a])
+        .find((address) => map[address]);
 
-  const largestAmount = map[addressToHijack];
-  delete map[addressToHijack];
+    const largestAmount = map[addressToHijack];
+    delete map[addressToHijack];
 
-  return {
-    ...map,
-    [pirateAddress]: largestAmount,
-  };
+    return {
+        ...map,
+        [pirateAddress]: largestAmount,
+    };
 };

@@ -16,7 +16,7 @@ import {
     MerkleDistributorInfo,
 } from "../../merkle-distributor/src/parse-balance-map";
 import { generateFeesSnapshot } from "../src/fees-snapshot";
-import { ReturnType, MapOfCount } from "../src/interfaces";
+import { MapOfCount } from "../src/interfaces";
 import {
     RewardEpochFromStrapi,
     ensureGoodDataFromStrapi,
@@ -37,15 +37,12 @@ import {
     LOCAL_STRAPI_URL,
     PRODUCTION_RPC_URL,
     PRODUCTION_STRAPI_URL,
+    STRAPI_ADMIN_EMAIL,
+    STRAPI_ADMIN_PASSWORD,
 } from "../src/constants";
-
-// const DEFAULT_BLOCKS_PER_SAMPLE = 1800; // Approx every hour with a 2s block time
-// const DEFAULT_BLOCKS_PER_SAMPLE = 30; // Approx every min with a 2s block time
-// const DEFAULT_TOKENS_PER_SAMPLE = 60; // tokens_per_block * block_per_sample
 
 dotenv.config();
 
-const args = yargs.options({}).argv;
 
 const confirmRiskyWithMessage = async (message: string) => {
     const { confirm } = await inquirer.prompt([
@@ -67,7 +64,7 @@ const createMerkleRootFileName = (
     return `${baseFilePath}epoch${epoch}-token${tokenSymbol.toUpperCase()}-merkle-info.json`;
 };
 
-(async (args: any) => {
+(async () => {
     // check standard env vars and error if not set
     const CHECK_ENV_VARS = [
         "SUBGRAPH_URL",
@@ -449,10 +446,7 @@ const createMerkleRootFileName = (
                 },
             ]);
 
-            const strapiEmail = process.env.STRAPI_ADMIN_EMAIL;
-            const strapiPassword = process.env.STRAPI_ADMIN_PASSWORD;
-
-            if (shouldUpdateStrapi && strapiEmail && strapiPassword) {
+            if (shouldUpdateStrapi) {
                 const usersForStrapi = formatClaimsForStrapi(
                     merkleInfo,
                     chosenEpoch,
@@ -474,8 +468,8 @@ const createMerkleRootFileName = (
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            email: strapiEmail,
-                            password: strapiPassword,
+                            email: STRAPI_ADMIN_EMAIL,
+                            password: STRAPI_ADMIN_PASSWORD,
                         }),
                         method: "POST",
                     });
@@ -548,4 +542,4 @@ const createMerkleRootFileName = (
             }
         }
     }
-})(args);
+})();
