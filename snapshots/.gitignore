@@ -20,3 +20,5 @@ coverage.json
 
 # snapshot tests
 snapshots/tests/
+
+dist

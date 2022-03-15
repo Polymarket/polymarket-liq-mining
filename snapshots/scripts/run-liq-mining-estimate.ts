@@ -2,7 +2,6 @@ import * as dotenv from "dotenv";
 import fetch from "cross-fetch";
 import { generateLpSnapshot } from "../src/lp-snapshot";
 import { formatEstimatedRewards } from "../src/helpers";
-import { generateFeesSnapshot } from "../src/fees-snapshot";
 import {
     RewardEpochFromStrapi,
     ensureGoodDataFromStrapi,

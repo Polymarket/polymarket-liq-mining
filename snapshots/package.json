@@ -1,63 +1,67 @@
 {
-  "name": "snapshots",
-  "description": "Scripts and tools for creating snapshots for token distros",
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
-  "scripts": {
-    "test": "mocha -r ts-node/register tests/*.spec.ts",
-    "eoa-snapshot": "ts-node scripts/create-eoa-addresses-cache.ts",
-    "volume-snapshot": "ts-node scripts/run-volume-snapshot.ts",
-    "lp-snapshot": "ts-node scripts/run-lp-snapshot.ts",
-    "fees-snapshot": "ts-node scripts/run-fees-snapshot.ts",
-    "liq-mining-snapshot": "ts-node scripts/run-liq-mining-snapshot.ts",
-    "liq-mining-estimate": "ts-node scripts/run-liq-mining-estimate.ts",
-    "reset-local": "ts-node scripts/run-reset-local.ts"
-  },
-  "lint-staged": {
-    "*.ts": [
-      "eslint --cache --fix",
-      "prettier --write"
-    ],
-    "*.sol": [
-      "solhint -c .solhint.json",
-      "prettier --write",
-      "yarn test"
-    ],
-    "*.md": "prettier --write"
-  },
-  "devDependencies": {
-    "@typechain/ethers-v5": "^5.0.0",
-    "@types/chai": "^4.2.00",
-    "@types/mocha": "^8.2.0",
-    "@types/node": "^14.14.0",
-    "@typescript-eslint/eslint-plugin": "^4.15.0",
-    "@typescript-eslint/parser": "^4.15.0",
-    "chai": "^4.3.4",
-    "cross-env": "^7.0.0",
-    "dotenv": "^8.2.0",
-    "eslint": "^7.20.0",
-    "ethers": "^5.0.0",
-    "husky": "^5.0.9",
-    "lint-staged": "^10.5.4",
-    "prettier": "^2.2.1",
-    "ts-generator": "^0.1.0",
-    "ts-mocha": "^8.0.0",
-    "ts-node": "^9.1.0",
-    "typechain": "^4.0.0",
-    "typescript": "^4.1.0"
-  },
-  "dependencies": {
-    "@apollo/client": "^3.3.19",
-    "@types/yargs": "^17.0.0",
-    "cross-fetch": "^3.1.4",
-    "fs": "^0.0.1-security",
-    "graphql": "^15.5.0",
-    "hardhat": "^2.8.3",
-    "inquirer": "^8.2.0",
-    "path": "^0.12.7",
-    "promises-tho": "^1.1.0",
-    "react": "^17.0.2",
-    "yargs": "^17.0.1"
-  }
+    "name": "snapshots",
+    "description": "Scripts and tools for creating snapshots for token distros",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "scripts": {
+        "test": "mocha -r ts-node/register tests/*.spec.ts",
+        "eoa-snapshot": "ts-node scripts/create-eoa-addresses-cache.ts",
+        "volume-snapshot": "ts-node scripts/run-volume-snapshot.ts",
+        "lp-snapshot": "ts-node scripts/run-lp-snapshot.ts",
+        "fees-snapshot": "ts-node scripts/run-fees-snapshot.ts",
+        "liq-mining-snapshot": "ts-node scripts/run-liq-mining-snapshot.ts",
+        "liq-mining-estimate": "ts-node scripts/run-liq-mining-estimate.ts",
+        "reset-local": "ts-node scripts/run-reset-local.ts",
+        "build": "tsc"
+    },
+    "engines": {
+        "node": "14.18.1"
+    },
+    "lint-staged": {
+        "*.ts": [
+            "eslint --cache --fix",
+            "prettier --write"
+        ],
+        "*.sol": [
+            "solhint -c .solhint.json",
+            "prettier --write",
+            "yarn test"
+        ],
+        "*.md": "prettier --write"
+    },
+    "devDependencies": {
+        "@typechain/ethers-v5": "^5.0.0",
+        "@types/chai": "^4.2.00",
+        "@types/mocha": "^8.2.0",
+        "@types/node": "^14.14.0",
+        "@typescript-eslint/eslint-plugin": "^4.15.0",
+        "@typescript-eslint/parser": "^4.15.0",
+        "chai": "^4.3.4",
+        "cross-env": "^7.0.0",
+        "dotenv": "^8.2.0",
+        "eslint": "^7.20.0",
+        "ethers": "^5.0.0",
+        "husky": "^5.0.9",
+        "lint-staged": "^10.5.4",
+        "prettier": "^2.2.1",
+        "ts-generator": "^0.1.0",
+        "ts-mocha": "^8.0.0",
+        "ts-node": "^9.1.0",
+        "typechain": "^4.0.0",
+        "typescript": "^4.1.0"
+    },
+    "dependencies": {
+        "@apollo/client": "^3.3.19",
+        "@types/yargs": "^17.0.0",
+        "cross-fetch": "^3.1.4",
+        "fs": "^0.0.1-security",
+        "graphql": "^15.5.0",
+        "hardhat": "^2.8.3",
+        "inquirer": "^8.2.0",
+        "path": "^0.12.7",
+        "promises-tho": "^1.1.0",
+        "react": "^17.0.2",
+        "yargs": "^17.0.1"
+    }
 }
