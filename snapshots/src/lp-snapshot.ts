@@ -30,6 +30,7 @@ export async function generateLpSnapshot(
     endTimestamp: number,
     marketMakers: LpMarketInfo[],
     blocksPerSample: number,
+	shouldThrowBlockOrderError: boolean
 ): Promise<MapOfCount> {
     console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
@@ -133,12 +134,19 @@ export async function generateLpSnapshot(
 
             if (eventStartBlock) {
                 console.log("market maker of market with event", marketMaker);
-                validateEventStartBlock(
+                const blockOrderError =  validateEventStartBlock(
                     rewardMarketStartBlock,
                     eventStartBlock,
                     rewardMarketEndBlock,
                     marketMaker,
                 );
+				if (blockOrderError && shouldThrowBlockOrderError) {
+					throw new Error(blockOrderError)
+				}
+				if (blockOrderError && !shouldThrowBlockOrderError) {
+					console.log('block order error during estimation, not using this market')
+					return 
+				}
             }
         }
 

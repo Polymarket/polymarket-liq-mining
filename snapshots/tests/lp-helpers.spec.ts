@@ -7,7 +7,7 @@ import {
 } from "../src/lp-helpers";
 
 import { expect } from "chai";
-import { createArrayOfSamples } from "../src/lp-helpers";
+import { createArrayOfSamples, BlockOrderError } from '../src/lp-helpers';
 import {
     getStartAndEndBlock,
     LpMarketInfo,
@@ -114,42 +114,41 @@ describe("validate event blocks", () => {
         const startBlock = 2100000;
         const eventStartBlock = 2110000;
         const endBlock = 2120000;
-        expect(() =>
-            validateEventStartBlock(
-                startBlock,
-                eventStartBlock,
-                endBlock,
-                "0x",
-            ),
-        ).to.not.throw();
+        const expected = validateEventStartBlock(
+            startBlock,
+            eventStartBlock,
+            endBlock,
+            "0x",
+        );
+        expect(expected).to.eq(null);
     });
 
     it("should throw an error if event block is before start block", async () => {
         const startBlock = 2100000;
         const eventStartBlock = 2090000;
         const endBlock = 2120000;
-        expect(() =>
+        expect(
             validateEventStartBlock(
                 startBlock,
                 eventStartBlock,
                 endBlock,
                 "0x",
             ),
-        ).to.throw();
+        ).to.eq(BlockOrderError.StartBeforeEventEnd);
     });
 
     it("should throw an error if event block is after end block", async () => {
         const startBlock = 2100000;
         const eventStartBlock = 2110000;
         const endBlock = 2105000;
-        expect(() =>
+        expect(
             validateEventStartBlock(
                 startBlock,
                 eventStartBlock,
                 endBlock,
                 "0x",
             ),
-        ).to.throw();
+        ).to.eq(BlockOrderError.EndBeforeEventStart);
     });
 });
 

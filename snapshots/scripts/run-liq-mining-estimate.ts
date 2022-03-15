@@ -21,10 +21,6 @@ import {
 dotenv.config();
 
 (async () => {
-    // ------------------------------------------------
-    // ENV CHECK
-    // ------------------------------------------------
-
     const CHECK_ENV_VARS = [
         "SUBGRAPH_URL",
         "STRAPI_ADMIN_EMAIL",
@@ -97,6 +93,7 @@ dotenv.config();
             endTimestamp,
             markets,
             Number(DEFAULT_BLOCKS_PER_SAMPLE),
+			false // dont throw error if block mismatch
         );
         // console.log(`${tokenId} liqMap`, liqMap);
         console.log(

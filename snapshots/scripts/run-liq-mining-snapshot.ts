@@ -262,6 +262,7 @@ const createMerkleRootFileName = (
                 endTimestamp,
                 markets,
                 Number(DEFAULT_BLOCKS_PER_SAMPLE),
+				true // throw error if block mismatch
             );
             // console.log(`${tokenId} liqMap`, liqMap);
             console.log(
