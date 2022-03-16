@@ -39,6 +39,7 @@ dotenv.config();
         "DEFAULT_BLOCKS_PER_SAMPLE",
         "USER_SAMPLE_SIZE",
         "STRAPI_URL",
+        "MATIC_RPC_URL"
     ];
     const validEnvVars = await validate_env_vars_1.validateEnvVars(CHECK_ENV_VARS);
     if (!validEnvVars) {
