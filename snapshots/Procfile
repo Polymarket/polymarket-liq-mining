@@ -1,1 +1,1 @@
-web: tsc --project snapshots/
+worker: tsc --project snapshots/
