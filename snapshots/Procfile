@@ -1,1 +1,1 @@
-web: node snapshots/hello-world.js
+web: tsc --project snapshots/
