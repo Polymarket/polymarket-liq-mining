@@ -88,39 +88,45 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, bl
             if (eventStartBlock) {
                 console.log("market maker of market with event", marketMaker);
                 const blockOrderError = lp_helpers_1.validateEventStartBlock(rewardMarketStartBlock, eventStartBlock, rewardMarketEndBlock, marketMaker);
+                console.log("blockOrderError", blockOrderError);
                 if (blockOrderError && shouldThrowBlockOrderError) {
+                    console.log("wasssssup");
                     throw new Error(blockOrderError);
                 }
                 if (blockOrderError && !shouldThrowBlockOrderError) {
-                    console.log('block order error during estimation, not using this market');
+                    console.log("block order error during estimation, not using this market");
                     return;
                 }
             }
         }
         const arrayOfSamples = lp_helpers_1.createArrayOfSamples(startBlock, endBlock, eventStartBlock, blocksPerSample);
-        // console.log(`arrayOfSamples length: ${arrayOfSamples.length}`);
+        console.log(`arrayOfSamples length: ${arrayOfSamples.length}`);
         if (arrayOfSamples.length === 2 &&
             typeof market.preEventPercent !== "number") {
             throw new Error("If you specify an event, you must also add percents for pre event and event!");
         }
-        arrayOfSamples.forEach(async (samples, idx) => {
+        for (let idx = 0; idx < arrayOfSamples.length; idx++) {
+            const samples = arrayOfSamples[idx];
+            console.log("in liq across blocks");
             const liquidityAcrossBlocks = await fpmm_1.calculateValOfLpPositionsAcrossBlocks(marketMaker, samples);
-            console.log(`number of samples: ${samples.length}`);
-            // if there are two arrays of blocks, the [1] blocks must be during the event
-            let weight = 1;
-            if (typeof market.preEventPercent === "number") {
-                weight =
-                    idx === 0
-                        ? market.preEventPercent
-                        : 1 - market.preEventPercent;
+            if (liquidityAcrossBlocks) {
+                console.log(`number of samples: ${samples.length}`);
+                // if there are two arrays of blocks, the [1] blocks must be during the event
+                let weight = 1;
+                if (typeof market.preEventPercent === "number") {
+                    weight =
+                        idx === 0
+                            ? market.preEventPercent
+                            : 1 - market.preEventPercent;
+                }
+                const tokensPerSample = lp_helpers_1.calculateTokensPerSample(market, samples.length, blocksPerSample, weight);
+                console.log(`Using ${market.howToCalculate} calculation`);
+                console.log(`Using ${weight} for weight`);
+                userTokensPerEpoch = await lp_helpers_1.updateTokensPerBlockReward(userTokensPerEpoch, liquidityAcrossBlocks, tokensPerSample);
+                console.log(`Using ${tokensPerSample} tokens per sample`);
+                console.log(`Using ${tokensPerSample / blocksPerSample} tokens per block`);
             }
-            const tokensPerSample = lp_helpers_1.calculateTokensPerSample(market, samples.length, blocksPerSample, weight);
-            console.log(`Using ${market.howToCalculate} calculation`);
-            console.log(`Using ${weight} for weight`);
-            userTokensPerEpoch = lp_helpers_1.updateTokensPerBlockReward(userTokensPerEpoch, liquidityAcrossBlocks, tokensPerSample);
-            console.log(`Using ${tokensPerSample} tokens per sample`);
-            console.log(`Using ${tokensPerSample / blocksPerSample} tokens per block`);
-        });
+        }
     }
     return userTokensPerEpoch;
 }

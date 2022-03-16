@@ -30,7 +30,7 @@ export async function generateLpSnapshot(
     endTimestamp: number,
     marketMakers: LpMarketInfo[],
     blocksPerSample: number,
-	shouldThrowBlockOrderError: boolean
+    shouldThrowBlockOrderError: boolean,
 ): Promise<MapOfCount> {
     console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
@@ -134,19 +134,23 @@ export async function generateLpSnapshot(
 
             if (eventStartBlock) {
                 console.log("market maker of market with event", marketMaker);
-                const blockOrderError =  validateEventStartBlock(
+                const blockOrderError = validateEventStartBlock(
                     rewardMarketStartBlock,
                     eventStartBlock,
                     rewardMarketEndBlock,
                     marketMaker,
                 );
-				if (blockOrderError && shouldThrowBlockOrderError) {
-					throw new Error(blockOrderError)
-				}
-				if (blockOrderError && !shouldThrowBlockOrderError) {
-					console.log('block order error during estimation, not using this market')
-					return 
-				}
+                console.log("blockOrderError", blockOrderError);
+                if (blockOrderError && shouldThrowBlockOrderError) {
+                    console.log("wasssssup");
+                    throw new Error(blockOrderError);
+                }
+                if (blockOrderError && !shouldThrowBlockOrderError) {
+                    console.log(
+                        "block order error during estimation, not using this market",
+                    );
+                    return;
+                }
             }
         }
 
@@ -157,7 +161,7 @@ export async function generateLpSnapshot(
             blocksPerSample,
         );
 
-        // console.log(`arrayOfSamples length: ${arrayOfSamples.length}`);
+        console.log(`arrayOfSamples length: ${arrayOfSamples.length}`);
 
         if (
             arrayOfSamples.length === 2 &&
@@ -168,44 +172,50 @@ export async function generateLpSnapshot(
             );
         }
 
-        arrayOfSamples.forEach(async (samples, idx) => {
+        for (let idx = 0; idx < arrayOfSamples.length; idx++) {
+            const samples = arrayOfSamples[idx];
+            console.log("in liq across blocks");
             const liquidityAcrossBlocks =
                 await calculateValOfLpPositionsAcrossBlocks(
                     marketMaker,
                     samples,
                 );
 
-            console.log(`number of samples: ${samples.length}`);
-            // if there are two arrays of blocks, the [1] blocks must be during the event
-            let weight = 1;
-            if (typeof market.preEventPercent === "number") {
-                weight =
-                    idx === 0
-                        ? market.preEventPercent
-                        : 1 - market.preEventPercent;
+            if (liquidityAcrossBlocks) {
+                console.log(`number of samples: ${samples.length}`);
+                // if there are two arrays of blocks, the [1] blocks must be during the event
+                let weight = 1;
+                if (typeof market.preEventPercent === "number") {
+                    weight =
+                        idx === 0
+                            ? market.preEventPercent
+                            : 1 - market.preEventPercent;
+                }
+
+                const tokensPerSample = calculateTokensPerSample(
+                    market,
+                    samples.length,
+                    blocksPerSample,
+                    weight,
+                );
+
+                console.log(`Using ${market.howToCalculate} calculation`);
+                console.log(`Using ${weight} for weight`);
+
+                userTokensPerEpoch = await updateTokensPerBlockReward(
+                    userTokensPerEpoch,
+                    liquidityAcrossBlocks,
+                    tokensPerSample,
+                );
+
+                console.log(`Using ${tokensPerSample} tokens per sample`);
+                console.log(
+                    `Using ${
+                        tokensPerSample / blocksPerSample
+                    } tokens per block`,
+                );
             }
-
-            const tokensPerSample = calculateTokensPerSample(
-                market,
-                samples.length,
-                blocksPerSample,
-                weight,
-            );
-
-            console.log(`Using ${market.howToCalculate} calculation`);
-            console.log(`Using ${weight} for weight`);
-
-            userTokensPerEpoch = updateTokensPerBlockReward(
-                userTokensPerEpoch,
-                liquidityAcrossBlocks,
-                tokensPerSample,
-            );
-
-            console.log(`Using ${tokensPerSample} tokens per sample`);
-            console.log(
-                `Using ${tokensPerSample / blocksPerSample} tokens per block`,
-            );
-        });
+        }
     }
 
     return userTokensPerEpoch;
