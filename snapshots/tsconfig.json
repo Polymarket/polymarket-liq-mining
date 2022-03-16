@@ -1,15 +1,16 @@
 {
-  "compilerOptions": {
-    "lib": ["es6"],
-    "target": "es2017",
-    "module": "commonjs",
-    "strict": false,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "types": [ "node", "mocha", "chai" ]
-  },
-  "include": ["./src/*"],
-  "exclude": ["./tests/"]
+    "compilerOptions": {
+        "lib": ["es6"],
+        "target": "es2017",
+        "module": "commonjs",
+        "strict": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "types": ["node", "mocha", "chai"],
+        "outDir": "./dist"
+    },
+    "include": ["./src/*", "./scripts/run-liq-mining-estimate.ts"],
+    "exclude": ["./tests/"]
 }

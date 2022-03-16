@@ -1,5 +1,4 @@
 import * as dotenv from "dotenv";
-import * as yargs from "yargs";
 import fetch from "cross-fetch";
 import inquirer from "inquirer";
 import { generateLpSnapshot } from "../src/lp-snapshot";
@@ -16,7 +15,7 @@ import {
     MerkleDistributorInfo,
 } from "../../merkle-distributor/src/parse-balance-map";
 import { generateFeesSnapshot } from "../src/fees-snapshot";
-import { ReturnType, MapOfCount } from "../src/interfaces";
+import { MapOfCount } from "../src/interfaces";
 import {
     RewardEpochFromStrapi,
     ensureGoodDataFromStrapi,
@@ -26,10 +25,7 @@ import {
 import { BigNumber, ethers, providers } from "ethers";
 import { DistributorSdk } from "../../sdk/src/distributorSdk";
 import { validateEnvVars } from "../src/validate-env-vars";
-import {
-    fetchRewardEpochs,
-    fetchRewardUsersForEpoch,
-} from "../src/strapi-helpers";
+import { fetchRewardEpochs } from "../src/strapi-helpers";
 import {
     DEFAULT_BLOCKS_PER_SAMPLE,
     HIJACK_ADDRESS_FOR_TESTING,
@@ -37,16 +33,11 @@ import {
     LOCAL_STRAPI_URL,
     PRODUCTION_RPC_URL,
     PRODUCTION_STRAPI_URL,
+    STRAPI_ADMIN_EMAIL,
+    STRAPI_ADMIN_PASSWORD,
 } from "../src/constants";
-import { getDistributorAddress } from "../src/deployments";
-
-// const DEFAULT_BLOCKS_PER_SAMPLE = 1800; // Approx every hour with a 2s block time
-// const DEFAULT_BLOCKS_PER_SAMPLE = 30; // Approx every min with a 2s block time
-// const DEFAULT_TOKENS_PER_SAMPLE = 60; // tokens_per_block * block_per_sample
 
 dotenv.config();
-
-const args = yargs.options({}).argv;
 
 const confirmRiskyWithMessage = async (message: string) => {
     const { confirm } = await inquirer.prompt([
@@ -68,7 +59,7 @@ const createMerkleRootFileName = (
     return `${baseFilePath}epoch${epoch}-token${tokenSymbol.toUpperCase()}-merkle-info.json`;
 };
 
-(async (args: any) => {
+(async () => {
     // check standard env vars and error if not set
     const CHECK_ENV_VARS = [
         "SUBGRAPH_URL",
@@ -137,18 +128,6 @@ const createMerkleRootFileName = (
     ]);
     console.log("Chosen epoch:", chosenEpoch);
 
-    // check if user rewards already exist for that epoch
-    const userRewards = await fetchRewardUsersForEpoch(STRAPI_URL, chosenEpoch);
-    console.log("userRewards count", userRewards);
-    if (userRewards.length > 0) {
-        console.log(
-            "User Rewards records already exist for this epoch, did you choose the correct epoch?",
-        );
-        console.log(
-            "Use the reset local script if trying to repeat a dry run on local.",
-        );
-        return;
-    }
     // Allow hijacking when local
     let hijack = false;
     let hijackAddress = null;
@@ -262,11 +241,11 @@ const createMerkleRootFileName = (
         if (shouldGenerateSnapshot) {
             const t1 = Date.now();
             const liqMap = await generateLpSnapshot(
-                ReturnType.Map,
                 startTimestamp,
                 endTimestamp,
                 markets,
                 Number(DEFAULT_BLOCKS_PER_SAMPLE),
+                true, // throw error if block mismatch
             );
             // console.log(`${tokenId} liqMap`, liqMap);
             console.log(
@@ -275,7 +254,6 @@ const createMerkleRootFileName = (
             );
             const t2 = Date.now();
             const feeMap = await generateFeesSnapshot(
-                ReturnType.Map,
                 startTimestamp,
                 endTimestamp,
                 feeTokenSupply,
@@ -444,18 +422,15 @@ const createMerkleRootFileName = (
             const { shouldUpdateStrapi } = await inquirer.prompt([
                 {
                     type: "confirm",
-                    message: `Do you want to write ${
+                    message: `Do you want to update ${
                         Object.keys(merkleInfo.claims).length
-                    } new reward-users to Strapi for ${chosenEpoch}?`,
+                    } reward-users to Strapi for ${chosenEpoch}?`,
                     name: "shouldUpdateStrapi",
                     default: false,
                 },
             ]);
 
-            const strapiEmail = process.env.STRAPI_ADMIN_EMAIL;
-            const strapiPassword = process.env.STRAPI_ADMIN_PASSWORD;
-
-            if (shouldUpdateStrapi && strapiEmail && strapiPassword) {
+            if (shouldUpdateStrapi) {
                 const usersForStrapi = formatClaimsForStrapi(
                     merkleInfo,
                     chosenEpoch,
@@ -477,8 +452,8 @@ const createMerkleRootFileName = (
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            email: strapiEmail,
-                            password: strapiPassword,
+                            email: STRAPI_ADMIN_EMAIL,
+                            password: STRAPI_ADMIN_PASSWORD,
                         }),
                         method: "POST",
                     });
@@ -494,13 +469,13 @@ const createMerkleRootFileName = (
                 console.log("token 2", token);
                 while (usersForStrapi.length > 0) {
                     const sample = usersForStrapi.splice(0, userSampleSize);
-                    console.log("sample", sample);
+                    // console.log("sample", sample);
                     try {
                         // Create reward-users record as admin
                         const response = await fetch(
                             `${STRAPI_URL}/reward-users`,
                             {
-                                method: "POST",
+                                method: "PUT",
                                 headers: {
                                     "Content-Type": "application/json",
                                     Authorization: `Bearer ${token}`,
@@ -509,7 +484,7 @@ const createMerkleRootFileName = (
                             },
                         );
                         console.log({ response });
-                        console.log("responseJson", await response.json());
+                        // console.log("responseJson", await response.json());
                     } catch (error) {
                         console.log("error", error);
                     }
@@ -551,4 +526,4 @@ const createMerkleRootFileName = (
             }
         }
     }
-})(args);
+})();

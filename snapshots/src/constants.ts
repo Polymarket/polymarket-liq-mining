@@ -10,3 +10,8 @@ export const LOCAL_RPC_URL = process.env.LOCAL_RPC_URL;
 export const PRODUCTION_RPC_URL = process.env.MATIC_RPC_URL;
 export const DISTRIBUTOR_ADDRESS = process.env.DISTRIBUTOR_ADDRESS;
 export const DEFAULT_BLOCKS_PER_SAMPLE = process.env.DEFAULT_BLOCKS_PER_SAMPLE;
+
+export const STRAPI_ADMIN_PASSWORD = process.env.STRAPI_ADMIN_PASSWORD;
+export const STRAPI_ADMIN_EMAIL = process.env.STRAPI_ADMIN_EMAIL;
+export const STRAPI_URL = process.env.STRAPI_URL;
+export const USER_SAMPLE_SIZE = process.env.USER_SAMPLE_SIZE;

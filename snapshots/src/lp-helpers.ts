@@ -112,6 +112,13 @@ interface CleanEpochInfo {
     epoch: number;
     tokenMap: TokenMap;
 }
+
+export enum BlockOrderError {
+    NotSet = "all blocks are not set!",
+    StartBeforeEventEnd = "reward market start block is after event block!",
+    EndBeforeEventStart = "reward market end block is before event block!",
+}
+
 /**
  * Throws errors if properties we need from Strapi are not present
  * @param epochInfo
@@ -413,17 +420,18 @@ export const validateEventStartBlock = (
     eventBlock: number,
     endBlock: number,
     marketMaker: string,
-): void => {
+): string | null => {
     console.log("in validateEventStartBlock, market maker:", marketMaker);
     if (!startBlock || !eventBlock || !endBlock) {
-        throw new Error("all blocks are not set!");
+		return BlockOrderError.NotSet
     }
     if (startBlock > eventBlock) {
-        throw new Error("reward market start block is after event block!");
+        return BlockOrderError.StartBeforeEventEnd
     }
     if (endBlock < eventBlock) {
-        throw new Error("reward market end block is before event block!");
+        return BlockOrderError.EndBeforeEventStart
     }
+    return null;
 };
 
 export const createArrayOfSamples = (
