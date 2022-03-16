@@ -12,8 +12,7 @@
         "fees-snapshot": "ts-node scripts/run-fees-snapshot.ts",
         "liq-mining-snapshot": "ts-node scripts/run-liq-mining-snapshot.ts",
         "liq-mining-estimate": "ts-node scripts/run-liq-mining-estimate.ts",
-        "reset-local": "ts-node scripts/run-reset-local.ts",
-        "heroku-postbuild": "tsc"
+        "reset-local": "ts-node scripts/run-reset-local.ts"
     },
     "lint-staged": {
         "*.ts": [
