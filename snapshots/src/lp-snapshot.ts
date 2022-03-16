@@ -129,7 +129,7 @@ export async function generateLpSnapshot(
                 NUMBER_OF_SAMPLES_PER_MARKET,
             );
             console.log(
-                `Reward market start and end block exist. Custom sample size: ${blocksPerSample}`,
+                `Reward market start and end block exist. There are ${blocksPerSample} blocks per sample`,
             );
 
             if (eventStartBlock) {
@@ -161,7 +161,7 @@ export async function generateLpSnapshot(
             blocksPerSample,
         );
 
-        console.log(`arrayOfSamples length: ${arrayOfSamples.length}`);
+        console.log(`There are ${arrayOfSamples.length} sets of samples of blocks`);
 
         if (
             arrayOfSamples.length === 2 &&
@@ -174,7 +174,6 @@ export async function generateLpSnapshot(
 
         for (let idx = 0; idx < arrayOfSamples.length; idx++) {
             const samples = arrayOfSamples[idx];
-            console.log("in liq across blocks");
             const liquidityAcrossBlocks =
                 await calculateValOfLpPositionsAcrossBlocks(
                     marketMaker,
@@ -182,7 +181,7 @@ export async function generateLpSnapshot(
                 );
 
             if (liquidityAcrossBlocks) {
-                console.log(`number of samples: ${samples.length}`);
+                console.log(`There are ${samples.length} blocks in this sample`);
                 // if there are two arrays of blocks, the [1] blocks must be during the event
                 let weight = 1;
                 if (typeof market.preEventPercent === "number") {
