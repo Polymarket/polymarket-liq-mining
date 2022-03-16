@@ -15,9 +15,6 @@
         "reset-local": "ts-node scripts/run-reset-local.ts",
 		"build": "tsc"
     },
-    "engines": {
-        "node": "14.18.1"
-    },
     "lint-staged": {
         "*.ts": [
             "eslint --cache --fix",
