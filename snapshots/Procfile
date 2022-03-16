@@ -1,1 +1,1 @@
-worker: tsc --project snapshots/
+worker: node snapshots/hello-world.js
