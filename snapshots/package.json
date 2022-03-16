@@ -13,7 +13,7 @@
         "liq-mining-snapshot": "ts-node scripts/run-liq-mining-snapshot.ts",
         "liq-mining-estimate": "ts-node scripts/run-liq-mining-estimate.ts",
         "reset-local": "ts-node scripts/run-reset-local.ts",
-        "build": "tsc"
+        "heroku-postbuild": "tsc"
     },
     "lint-staged": {
         "*.ts": [
