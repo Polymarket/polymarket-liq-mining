@@ -239,13 +239,22 @@ const createMerkleRootFileName = (
         ]);
 
         if (shouldGenerateSnapshot) {
+            const { shouldFailOnBlockMismatch } = await inquirer.prompt([
+                {
+                    type: "confirm",
+                    message: `Should the script throw an error and stop running if event blocks are in the wrong order?`,
+                    name: "shouldFailOnBlockMismatch",
+                    default: true,
+                },
+            ]);
+
             const t1 = Date.now();
             const liqMap = await generateLpSnapshot(
                 startTimestamp,
                 endTimestamp,
                 markets,
                 Number(DEFAULT_BLOCKS_PER_SAMPLE),
-                true, // throw error if block mismatch
+                shouldFailOnBlockMismatch,
             );
             // console.log(`${tokenId} liqMap`, liqMap);
             console.log(

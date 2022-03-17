@@ -206,12 +206,15 @@ export const cleanAndSeparateEpochPerToken = (
                 rewardMarketEndDate &&
                 eventStartDate
             ) {
-                validateEventStartBlock(
+                const hasError = validateEventStartBlock(
                     rewardMarketStartDate,
                     eventStartDate,
                     rewardMarketEndDate,
                     marketMaker,
                 );
+				if (hasError) {
+					throw new Error(hasError)
+				}
             }
 
             acc[token.reward_token.id].markets.push({

@@ -140,16 +140,18 @@ export async function generateLpSnapshot(
                     rewardMarketEndBlock,
                     marketMaker,
                 );
-                console.log("blockOrderError", blockOrderError);
                 if (blockOrderError && shouldThrowBlockOrderError) {
-                    console.log("wasssssup");
+                    console.log("blockOrderError", blockOrderError);
                     throw new Error(blockOrderError);
                 }
                 if (blockOrderError && !shouldThrowBlockOrderError) {
                     console.log(
-                        "block order error during estimation, not using this market",
+                        "\n\n\n\n\n\n",
+                        "block order error during estimation, not using market: " +
+                            marketMaker,
+                        "\n\n\n\n\n\n",
                     );
-                    return;
+                    continue;
                 }
             }
         }
@@ -161,7 +163,9 @@ export async function generateLpSnapshot(
             blocksPerSample,
         );
 
-        console.log(`There are ${arrayOfSamples.length} sets of samples of blocks`);
+        console.log(
+            `There are ${arrayOfSamples.length} sets of samples of blocks`,
+        );
 
         if (
             arrayOfSamples.length === 2 &&
@@ -181,7 +185,9 @@ export async function generateLpSnapshot(
                 );
 
             if (liquidityAcrossBlocks) {
-                console.log(`There are ${samples.length} blocks in this sample`);
+                console.log(
+                    `There are ${samples.length} blocks in this sample`,
+                );
                 // if there are two arrays of blocks, the [1] blocks must be during the event
                 let weight = 1;
                 if (typeof market.preEventPercent === "number") {
