@@ -113,7 +113,7 @@ async function convertTimestampToBlockNumber(timestamp) {
     }
     let requestsMade = 0;
     let blockNumber = currentBlockNumber;
-    if (!block) {
+    if (!block || !block.timestamp) {
         block = await provider.getBlock(blockNumber);
         requestsMade += 1;
         console.log("no block found. trying again. number of requests made so far:", requestsMade);

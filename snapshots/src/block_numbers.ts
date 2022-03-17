@@ -159,7 +159,7 @@ export async function convertTimestampToBlockNumber(
 
     let blockNumber = currentBlockNumber;
 
-    if (!block) {
+    if (!block || !block.timestamp) {
         block = await provider.getBlock(blockNumber);
         requestsMade += 1;
         console.log(

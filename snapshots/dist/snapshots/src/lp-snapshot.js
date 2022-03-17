@@ -84,7 +84,7 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, bl
         // then we should take reward_market_start & reward_market_end diff and divide by 150
         if (rewardMarketStartBlock && rewardMarketEndBlock) {
             blocksPerSample = lp_helpers_1.calculateSamplesPerEvent(rewardMarketStartBlock, rewardMarketEndBlock, NUMBER_OF_SAMPLES_PER_MARKET);
-            console.log(`Reward market start and end block exist. Custom sample size: ${blocksPerSample}`);
+            console.log(`Reward market start and end block exist. There are ${blocksPerSample} blocks per sample`);
             if (eventStartBlock) {
                 console.log("market maker of market with event", marketMaker);
                 const blockOrderError = lp_helpers_1.validateEventStartBlock(rewardMarketStartBlock, eventStartBlock, rewardMarketEndBlock, marketMaker);
@@ -100,17 +100,16 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, bl
             }
         }
         const arrayOfSamples = lp_helpers_1.createArrayOfSamples(startBlock, endBlock, eventStartBlock, blocksPerSample);
-        console.log(`arrayOfSamples length: ${arrayOfSamples.length}`);
+        console.log(`There are ${arrayOfSamples.length} sets of samples of blocks`);
         if (arrayOfSamples.length === 2 &&
             typeof market.preEventPercent !== "number") {
             throw new Error("If you specify an event, you must also add percents for pre event and event!");
         }
         for (let idx = 0; idx < arrayOfSamples.length; idx++) {
             const samples = arrayOfSamples[idx];
-            console.log("in liq across blocks");
             const liquidityAcrossBlocks = await fpmm_1.calculateValOfLpPositionsAcrossBlocks(marketMaker, samples);
             if (liquidityAcrossBlocks) {
-                console.log(`number of samples: ${samples.length}`);
+                console.log(`There are ${samples.length} blocks in this sample`);
                 // if there are two arrays of blocks, the [1] blocks must be during the event
                 let weight = 1;
                 if (typeof market.preEventPercent === "number") {
