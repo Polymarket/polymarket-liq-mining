@@ -200,6 +200,11 @@ export async function convertTimestampToBlockNumber(
                     blockNumber,
                 );
                 blockNumber += step; //step size
+                blockNumber =
+                    blockNumber > currentBlockNumber
+                        ? Math.floor((currentBlockNumber - blockNumber) / 2)
+                        : blockNumber;
+
                 block = await provider.getBlock(blockNumber);
                 requestsMade += 1;
             }
