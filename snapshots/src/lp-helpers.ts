@@ -212,9 +212,9 @@ export const cleanAndSeparateEpochPerToken = (
                     rewardMarketEndDate,
                     marketMaker,
                 );
-				if (hasError) {
-					throw new Error(hasError)
-				}
+                if (hasError) {
+                    throw new Error(hasError);
+                }
             }
 
             acc[token.reward_token.id].markets.push({
@@ -408,11 +408,6 @@ export const calculateSamplesPerEvent = (
     endBlock: number,
     samplesPerMarket: number,
 ): number => {
-    if (startBlock > endBlock) {
-        throw new Error(
-            "reward market end block is after reward market start block!",
-        );
-    }
     const diff = endBlock - startBlock;
     const samples = Math.floor(diff / samplesPerMarket);
     return samples;
@@ -426,13 +421,13 @@ export const validateEventStartBlock = (
 ): string | null => {
     console.log("in validateEventStartBlock, market maker:", marketMaker);
     if (!startBlock || !eventBlock || !endBlock) {
-		return BlockOrderError.NotSet
+        return BlockOrderError.NotSet;
     }
     if (startBlock > eventBlock) {
-        return BlockOrderError.StartBeforeEventEnd
+        return BlockOrderError.StartBeforeEventEnd;
     }
     if (endBlock < eventBlock) {
-        return BlockOrderError.EndBeforeEventStart
+        return BlockOrderError.EndBeforeEventStart;
     }
     return null;
 };
@@ -458,3 +453,4 @@ export const createArrayOfSamples = (
 
     return arrayOfSamples;
 };
+

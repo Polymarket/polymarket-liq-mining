@@ -16,6 +16,8 @@ import {
 } from "./lp-helpers";
 import { getStartAndEndBlock } from "./lp-helpers";
 import { MapOfCount } from "./interfaces";
+import { getMemoFile, MemoizedFile, setMemoFile } from "./memo";
+import { DEFAULT_BLOCKS_PER_SAMPLE } from './constants';
 
 const NUMBER_OF_SAMPLES_PER_MARKET = 150;
 
@@ -29,13 +31,32 @@ export async function generateLpSnapshot(
     startTimestamp: number,
     endTimestamp: number,
     marketMakers: LpMarketInfo[],
-    blocksPerSample: number,
+    defaultBlocksPerSample: number,
     shouldThrowBlockOrderError: boolean,
+    memoizeMarketInfo?: { epoch: number; tokenSymbol: string },
 ): Promise<MapOfCount> {
     console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
 
     let userTokensPerEpoch: { [proxyWallet: string]: number } = {};
-    const markets = lowerCaseMarketMakers(marketMakers);
+    let markets = lowerCaseMarketMakers(marketMakers);
+
+    if (memoizeMarketInfo) {
+        const { epoch, tokenSymbol } = memoizeMarketInfo;
+        const file: MemoizedFile = getMemoFile(epoch, tokenSymbol);
+        console.log("memoizedFileToStart", file);
+        if (file) {
+            userTokensPerEpoch = { ...file.memoizedUserTokensPerEpoch };
+            markets = markets.filter(
+                (m) => file.marketMakersInMap[m.marketMaker] === undefined,
+            );
+            console.log("markets");
+        } else {
+            setMemoFile(tokenSymbol, epoch, {
+                marketMakersInMap: {},
+                memoizedUserTokensPerEpoch: {},
+            });
+        }
+    }
 
     let epochEndBlock = await convertTimestampToBlockNumber(endTimestamp);
     while (!epochEndBlock) {
@@ -50,6 +71,8 @@ export async function generateLpSnapshot(
     }
 
     for (const market of markets) {
+		let blocksPerSample = defaultBlocksPerSample
+		console.log('***********************************')
         const { marketMaker } = market;
         const marketStartBlock = await getStartBlock(marketMaker);
         const marketEndBlock = await getEndBlock(marketMaker);
@@ -120,7 +143,7 @@ export async function generateLpSnapshot(
             diffBetweenNowAndEndBlock: currentBlock - endBlock,
         });
 
-        // roughly, if our systems can handle ~150 samples per epoch
+        // roughly, if our systems can handle ~150 samples per epoc
         // then we should take reward_market_start & reward_market_end diff and divide by 150
         if (rewardMarketStartBlock && rewardMarketEndBlock) {
             blocksPerSample = calculateSamplesPerEvent(
@@ -128,6 +151,7 @@ export async function generateLpSnapshot(
                 rewardMarketEndBlock,
                 NUMBER_OF_SAMPLES_PER_MARKET,
             );
+
             console.log(
                 `Reward market start and end block exist. There are ${blocksPerSample} blocks per sample`,
             );
@@ -163,6 +187,7 @@ export async function generateLpSnapshot(
             blocksPerSample,
         );
 
+		console.log('blocksPerSample', blocksPerSample)
         console.log(
             `There are ${arrayOfSamples.length} sets of samples of blocks`,
         );
@@ -183,11 +208,9 @@ export async function generateLpSnapshot(
                     marketMaker,
                     samples,
                 );
+			console.log('THE NUMBER OF SAMPLES LOGGED ABOVE SHOULD NEVER BE ABOVE' + DEFAULT_BLOCKS_PER_SAMPLE)
 
             if (liquidityAcrossBlocks) {
-                console.log(
-                    `There are ${samples.length} blocks in this sample`,
-                );
                 // if there are two arrays of blocks, the [1] blocks must be during the event
                 let weight = 1;
                 if (typeof market.preEventPercent === "number") {
@@ -212,6 +235,22 @@ export async function generateLpSnapshot(
                     liquidityAcrossBlocks,
                     tokensPerSample,
                 );
+
+                if (memoizeMarketInfo) {
+                    const { epoch, tokenSymbol } = memoizeMarketInfo;
+                    const { marketMakersInMap } = getMemoFile(
+                        epoch,
+                        tokenSymbol,
+                    );
+
+                    setMemoFile(tokenSymbol, epoch, {
+                        marketMakersInMap: {
+                            ...marketMakersInMap,
+                            [market.marketMaker]: true,
+                        },
+                        memoizedUserTokensPerEpoch: { ...userTokensPerEpoch },
+                    });
+                }
 
                 console.log(`Using ${tokensPerSample} tokens per sample`);
                 console.log(
