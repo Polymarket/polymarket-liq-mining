@@ -103,6 +103,7 @@ const createMerkleRootFileName = (
     const CHAIN_ID = environment === "local" ? 31337 : 137; // hardhat or matic
     // const DEPLOYMENTS_FOLDER = environment === "local" ? "localhost" : "matic";
     const SNAPSHOT_BASE_FILE_PATH = process.env.SNAPSHOT_BASE_FILE_PATH;
+	console.log('DEFAULT_BLOCKS_PER_SAMPLE', DEFAULT_BLOCKS_PER_SAMPLE)
 
     const riskyMessage = `You're about to generate a liquidity mining and fees snapshot and populate data for a ${environment} strapi instance`;
     const confirm = await confirmRiskyWithMessage(riskyMessage);
@@ -239,14 +240,39 @@ const createMerkleRootFileName = (
         ]);
 
         if (shouldGenerateSnapshot) {
+            const { shouldFailOnBlockMismatch } = await inquirer.prompt([
+                {
+                    type: "confirm",
+                    message: `Should the script throw an error and stop running if event blocks are in the wrong order?`,
+                    name: "shouldFailOnBlockMismatch",
+                    default: true,
+                },
+            ]);
+
+            const { shouldMemoizeMarketInfo } = await inquirer.prompt([
+                {
+                    type: "confirm",
+                    message: `Should we read and write markets lp info from local file system as the script runs`,
+                    name: "shouldMemoizeMarketInfo",
+                    default: true,
+                },
+            ]);
+
             const t1 = Date.now();
             const liqMap = await generateLpSnapshot(
                 startTimestamp,
                 endTimestamp,
                 markets,
                 Number(DEFAULT_BLOCKS_PER_SAMPLE),
-                true, // throw error if block mismatch
+                shouldFailOnBlockMismatch,
+                shouldMemoizeMarketInfo
+                    ? {
+                          epoch: chosenEpoch,
+                          tokenSymbol: tokenData.symbol.toUpperCase(),
+                      }
+                    : undefined,
             );
+
             // console.log(`${tokenId} liqMap`, liqMap);
             console.log(
                 `${tokenId} liqMap`,
@@ -378,6 +404,10 @@ const createMerkleRootFileName = (
                 );
             } catch (error) {
                 console.log("write merkle snapshot", error);
+            }
+
+            if (shouldMemoizeMarketInfo) {
+                // todo - see how many files are in directory. delete if necessary
             }
         }
 
