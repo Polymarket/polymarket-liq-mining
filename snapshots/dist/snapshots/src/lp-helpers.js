@@ -81,7 +81,10 @@ const cleanAndSeparateEpochPerToken = (epochInfo) => {
             if (rewardMarketStartDate &&
                 rewardMarketEndDate &&
                 eventStartDate) {
-                exports.validateEventStartBlock(rewardMarketStartDate, eventStartDate, rewardMarketEndDate, marketMaker);
+                const hasError = exports.validateEventStartBlock(rewardMarketStartDate, eventStartDate, rewardMarketEndDate, marketMaker);
+                if (hasError) {
+                    throw new Error(hasError);
+                }
             }
             acc[token.reward_token.id].markets.push({
                 amount: bignumber_1.BigNumber.from(token.lp_token_supply).toNumber(),
@@ -221,9 +224,6 @@ exports.calculateTokensPerSample = calculateTokensPerSample;
  * @returns numberOfSamples number
  */
 const calculateSamplesPerEvent = (startBlock, endBlock, samplesPerMarket) => {
-    if (startBlock > endBlock) {
-        throw new Error("reward market end block is after reward market start block!");
-    }
     const diff = endBlock - startBlock;
     const samples = Math.floor(diff / samplesPerMarket);
     return samples;

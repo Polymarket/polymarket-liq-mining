@@ -5,6 +5,8 @@ const fpmm_1 = require("./fpmm");
 const block_numbers_1 = require("./block_numbers");
 const lp_helpers_1 = require("./lp-helpers");
 const lp_helpers_2 = require("./lp-helpers");
+const memo_1 = require("./memo");
+const constants_1 = require("./constants");
 const NUMBER_OF_SAMPLES_PER_MARKET = 150;
 /**
  * Generate a lp weighted token snapshot
@@ -12,10 +14,26 @@ const NUMBER_OF_SAMPLES_PER_MARKET = 150;
  * @param supply
  * @returns
  */
-async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, blocksPerSample, shouldThrowBlockOrderError) {
+async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, defaultBlocksPerSample, shouldThrowBlockOrderError, memoizeMarketInfo) {
     console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
     let userTokensPerEpoch = {};
-    const markets = lp_helpers_1.lowerCaseMarketMakers(marketMakers);
+    let markets = lp_helpers_1.lowerCaseMarketMakers(marketMakers);
+    if (memoizeMarketInfo) {
+        const { epoch, tokenSymbol } = memoizeMarketInfo;
+        const file = memo_1.getMemoFile(epoch, tokenSymbol);
+        console.log("memoizedFileToStart", file);
+        if (file) {
+            userTokensPerEpoch = Object.assign({}, file.memoizedUserTokensPerEpoch);
+            markets = markets.filter((m) => file.marketMakersInMap[m.marketMaker] === undefined);
+            console.log("markets");
+        }
+        else {
+            memo_1.setMemoFile(tokenSymbol, epoch, {
+                marketMakersInMap: {},
+                memoizedUserTokensPerEpoch: {},
+            });
+        }
+    }
     let epochEndBlock = await block_numbers_1.convertTimestampToBlockNumber(endTimestamp);
     while (!epochEndBlock) {
         console.log("epochEndBlock was not found. trying again!");
@@ -27,6 +45,8 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, bl
         epochStartBlock = await block_numbers_1.convertTimestampToBlockNumber(startTimestamp);
     }
     for (const market of markets) {
+        let blocksPerSample = defaultBlocksPerSample;
+        console.log('***********************************');
         const { marketMaker } = market;
         const marketStartBlock = await block_numbers_1.getStartBlock(marketMaker);
         const marketEndBlock = await block_numbers_1.getEndBlock(marketMaker);
@@ -80,7 +100,7 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, bl
             endBlockBeingUsed: endBlock,
             diffBetweenNowAndEndBlock: currentBlock - endBlock,
         });
-        // roughly, if our systems can handle ~150 samples per epoch
+        // roughly, if our systems can handle ~150 samples per epoc
         // then we should take reward_market_start & reward_market_end diff and divide by 150
         if (rewardMarketStartBlock && rewardMarketEndBlock) {
             blocksPerSample = lp_helpers_1.calculateSamplesPerEvent(rewardMarketStartBlock, rewardMarketEndBlock, NUMBER_OF_SAMPLES_PER_MARKET);
@@ -88,18 +108,19 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, bl
             if (eventStartBlock) {
                 console.log("market maker of market with event", marketMaker);
                 const blockOrderError = lp_helpers_1.validateEventStartBlock(rewardMarketStartBlock, eventStartBlock, rewardMarketEndBlock, marketMaker);
-                console.log("blockOrderError", blockOrderError);
                 if (blockOrderError && shouldThrowBlockOrderError) {
-                    console.log("wasssssup");
+                    console.log("blockOrderError", blockOrderError);
                     throw new Error(blockOrderError);
                 }
                 if (blockOrderError && !shouldThrowBlockOrderError) {
-                    console.log("block order error during estimation, not using this market");
-                    return;
+                    console.log("\n\n\n\n\n\n", "block order error during estimation, not using market: " +
+                        marketMaker, "\n\n\n\n\n\n");
+                    continue;
                 }
             }
         }
         const arrayOfSamples = lp_helpers_1.createArrayOfSamples(startBlock, endBlock, eventStartBlock, blocksPerSample);
+        console.log('blocksPerSample', blocksPerSample);
         console.log(`There are ${arrayOfSamples.length} sets of samples of blocks`);
         if (arrayOfSamples.length === 2 &&
             typeof market.preEventPercent !== "number") {
@@ -108,8 +129,8 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, bl
         for (let idx = 0; idx < arrayOfSamples.length; idx++) {
             const samples = arrayOfSamples[idx];
             const liquidityAcrossBlocks = await fpmm_1.calculateValOfLpPositionsAcrossBlocks(marketMaker, samples);
+            console.log('THE NUMBER OF SAMPLES LOGGED ABOVE SHOULD NEVER BE ABOVE' + constants_1.DEFAULT_BLOCKS_PER_SAMPLE);
             if (liquidityAcrossBlocks) {
-                console.log(`There are ${samples.length} blocks in this sample`);
                 // if there are two arrays of blocks, the [1] blocks must be during the event
                 let weight = 1;
                 if (typeof market.preEventPercent === "number") {
@@ -122,6 +143,14 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, bl
                 console.log(`Using ${market.howToCalculate} calculation`);
                 console.log(`Using ${weight} for weight`);
                 userTokensPerEpoch = await lp_helpers_1.updateTokensPerBlockReward(userTokensPerEpoch, liquidityAcrossBlocks, tokensPerSample);
+                if (memoizeMarketInfo) {
+                    const { epoch, tokenSymbol } = memoizeMarketInfo;
+                    const { marketMakersInMap } = memo_1.getMemoFile(epoch, tokenSymbol);
+                    memo_1.setMemoFile(tokenSymbol, epoch, {
+                        marketMakersInMap: Object.assign(Object.assign({}, marketMakersInMap), { [market.marketMaker]: true }),
+                        memoizedUserTokensPerEpoch: Object.assign({}, userTokensPerEpoch),
+                    });
+                }
                 console.log(`Using ${tokensPerSample} tokens per sample`);
                 console.log(`Using ${tokensPerSample / blocksPerSample} tokens per block`);
             }
