@@ -505,7 +505,7 @@ const createMerkleRootFileName = (
                         const response = await fetch(
                             `${STRAPI_URL}/reward-users`,
                             {
-								method: "POST",
+								method: "PUT",
                                 headers: {
                                     "Content-Type": "application/json",
                                     Authorization: `Bearer ${token}`,
