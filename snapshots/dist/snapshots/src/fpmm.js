@@ -37,7 +37,13 @@ exports.calcLpPositions = calcLpPositions;
  */
 const calculateValOfLpPositions = async (marketAddress, block) => {
     const fpmm = await exports.getFpmm(marketAddress, block);
-    return await calcLpPositions(fpmm);
+    if (!fpmm) {
+        console.log("\n\n\n\n\n\n", "NO FPMM!", "\n", "market maker: ", marketAddress, "\n", "at block: ", block, "\n\n\n\n\n\n");
+        console.log("NO FPMM!", marketAddress, "block: ", block);
+    }
+    if (fpmm) {
+        return await calcLpPositions(fpmm);
+    }
 };
 exports.calculateValOfLpPositions = calculateValOfLpPositions;
 /**

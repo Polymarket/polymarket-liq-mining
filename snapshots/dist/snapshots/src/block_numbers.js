@@ -139,6 +139,10 @@ async function convertTimestampToBlockNumber(timestamp) {
             while (block.timestamp < lowerLimitStamp) {
                 console.log("current block is in the past, walking up the chain:", blockNumber);
                 blockNumber += step; //step size
+                blockNumber =
+                    blockNumber > currentBlockNumber
+                        ? Math.floor((currentBlockNumber - blockNumber) / 2)
+                        : blockNumber;
                 block = await provider.getBlock(blockNumber);
                 requestsMade += 1;
             }
