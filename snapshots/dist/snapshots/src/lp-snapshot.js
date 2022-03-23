@@ -6,7 +6,6 @@ const block_numbers_1 = require("./block_numbers");
 const lp_helpers_1 = require("./lp-helpers");
 const lp_helpers_2 = require("./lp-helpers");
 const memo_1 = require("./memo");
-const constants_1 = require("./constants");
 const NUMBER_OF_SAMPLES_PER_MARKET = 150;
 /**
  * Generate a lp weighted token snapshot
@@ -46,7 +45,7 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, de
     }
     for (const market of markets) {
         let blocksPerSample = defaultBlocksPerSample;
-        console.log('***********************************');
+        console.log("***********************************");
         const { marketMaker } = market;
         const marketStartBlock = await block_numbers_1.getStartBlock(marketMaker);
         const marketEndBlock = await block_numbers_1.getEndBlock(marketMaker);
@@ -120,7 +119,7 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, de
             }
         }
         const arrayOfSamples = lp_helpers_1.createArrayOfSamples(startBlock, endBlock, eventStartBlock, blocksPerSample);
-        console.log('blocksPerSample', blocksPerSample);
+        console.log("blocksPerSample", blocksPerSample);
         console.log(`There are ${arrayOfSamples.length} sets of samples of blocks`);
         if (arrayOfSamples.length === 2 &&
             typeof market.preEventPercent !== "number") {
@@ -128,9 +127,12 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, de
         }
         for (let idx = 0; idx < arrayOfSamples.length; idx++) {
             const samples = arrayOfSamples[idx];
-            const liquidityAcrossBlocks = await fpmm_1.calculateValOfLpPositionsAcrossBlocks(marketMaker, samples);
-            console.log('THE NUMBER OF SAMPLES LOGGED ABOVE SHOULD NEVER BE ABOVE' + constants_1.DEFAULT_BLOCKS_PER_SAMPLE);
-            if (liquidityAcrossBlocks) {
+            const allBlocks = await fpmm_1.calculateValOfLpPositionsAcrossBlocks(marketMaker, samples);
+            console.log("THE NUMBER OF SAMPLES LOGGED ABOVE SHOULD NEVER BE ABOVE " +
+                NUMBER_OF_SAMPLES_PER_MARKET);
+            // filter out undefined/null blocks
+            const liquidityAcrossBlocks = allBlocks.filter((block) => block);
+            if (allBlocks && liquidityAcrossBlocks) {
                 // if there are two arrays of blocks, the [1] blocks must be during the event
                 let weight = 1;
                 if (typeof market.preEventPercent === "number") {
@@ -153,6 +155,10 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, de
                 }
                 console.log(`Using ${tokensPerSample} tokens per sample`);
                 console.log(`Using ${tokensPerSample / blocksPerSample} tokens per block`);
+            }
+            else {
+                console.log(`NO BLOCKS WITH LPs WERE FOUND!`);
+                continue;
             }
         }
     }

@@ -52,7 +52,24 @@ export const calculateValOfLpPositions = async (
     block: number,
 ): Promise<any> => {
     const fpmm: FixedProductMarketMaker = await getFpmm(marketAddress, block);
-    return await calcLpPositions(fpmm);
+    if (!fpmm) {
+        console.log(
+            "\n\n\n\n\n\n",
+            "NO FPMM!",
+            "\n",
+            "market maker: ",
+            marketAddress,
+            "\n",
+            "at block: ",
+            block,
+            "\n\n\n\n\n\n",
+        );
+
+        console.log("NO FPMM!", marketAddress, "block: ", block);
+    }
+    if (fpmm) {
+        return await calcLpPositions(fpmm);
+    }
 };
 
 /**
@@ -87,7 +104,7 @@ export const getFpmm = async (
         } catch (err) {
             console.log(
                 "\n",
-				"marketAddress",
+                "marketAddress",
                 marketAddress,
                 "block",
                 block,
