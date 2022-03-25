@@ -270,16 +270,12 @@ const createMerkleRootFileName = (
             await client.connect()
             .then(() => console.log('connected'))
             .catch(err => console.error('connection error', err.stack))
-            // await client
-            //     .query('SELECT NOW() as now')
-            //     .then(res => console.log(res.rows[0]))
-            //     .catch(e => console.error(e.stack))
             let mapAccountsFees = new Map<string, number>();
             const sampleSize = 25;
             for (let i = 0; i < 450/sampleSize; i++) {
                 console.log(i);
                 const query = `with avg_price_tbl AS (SELECT CAST("tradeAmount" AS FLOAT)/CAST("outcomeTokensAmount" AS FLOAT) AS "avg_price", * FROM "Transactions"
-                WHERE "timestamp" >= '2022-03-11 4:00:00' AND "timestamp" <= '2022-03-18 4:00:00' AND "outcomeTokensAmount" > 0
+                WHERE "timestamp" >= '2022-03-18 4:00:00' AND "timestamp" <= '2022-03-25 4:00:00' AND "outcomeTokensAmount" > 0
                 ), sub_tbl AS (
                 SELECT ROW_NUMBER() OVER(ORDER BY "account" ASC) AS "row", "account", SUM("feeAmount")/10^6 AS "totalFeeAmount" FROM "avg_price_tbl"
                 WHERE "avg_price" <=0.98
@@ -573,7 +569,7 @@ const createMerkleRootFileName = (
         // ------------------------------------------------
 
         console.log({ sdk });
-        if (sdk && merkleInfo.merkleRoot) {
+        if (sdk && merkleInfo && merkleInfo.merkleRoot) {
             const { shouldUpdateMerkleRoot } = await inquirer.prompt([
                 {
                     type: "confirm",
