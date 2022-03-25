@@ -34,8 +34,16 @@ import {
     PRODUCTION_RPC_URL,
     PRODUCTION_STRAPI_URL,
     STRAPI_ADMIN_EMAIL,
-    STRAPI_ADMIN_PASSWORD,
+    STRAPI_ADMIN_PASSWORD, 
+    PGHOST, 
+    PGPORT, 
+    PGDATABASE, 
+    PGUSER, 
+    PGPASSWORD 
 } from "../src/constants";
+import * as pg from 'node-postgres'
+import { doQuery, generateSQLFeesSnapshot, getClient, getSQLFees } from "../src/sql_fees"
+import { TransactionDescription } from "ethers/lib/utils";
 
 dotenv.config();
 
@@ -258,6 +266,44 @@ const createMerkleRootFileName = (
                 },
             ]);
 
+            const client = getClient(PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD);
+            await client.connect()
+            .then(() => console.log('connected'))
+            .catch(err => console.error('connection error', err.stack))
+            // await client
+            //     .query('SELECT NOW() as now')
+            //     .then(res => console.log(res.rows[0]))
+            //     .catch(e => console.error(e.stack))
+            let mapAccountsFees = new Map<string, number>();
+            const sampleSize = 25;
+            for (let i = 0; i < 450/sampleSize; i++) {
+                console.log(i);
+                const query = `with avg_price_tbl AS (SELECT CAST("tradeAmount" AS FLOAT)/CAST("outcomeTokensAmount" AS FLOAT) AS "avg_price", * FROM "Transactions"
+                WHERE "timestamp" >= '2022-03-11 4:00:00' AND "timestamp" <= '2022-03-18 4:00:00' AND "outcomeTokensAmount" > 0
+                ), sub_tbl AS (
+                SELECT ROW_NUMBER() OVER(ORDER BY "account" ASC) AS "row", "account", SUM("feeAmount")/10^6 AS "totalFeeAmount" FROM "avg_price_tbl"
+                WHERE "avg_price" <=0.98
+                GROUP BY "account"
+                ORDER BY "totalFeeAmount" DESC)
+                SELECT * FROM "sub_tbl" 
+                WHERE "row" >= ${i * sampleSize} AND "row" < ${(i+1) * sampleSize}`
+                const mapAccountsFeesTemp = await doQuery(query, client);
+                mapAccountsFees = new Map([...mapAccountsFees, ...mapAccountsFeesTemp])
+                await new Promise(r => setTimeout(r, 2000));
+            }
+            client.end();
+            console.log(mapAccountsFees.get('0x091033fccbca0a9e8b9c2d548de7f4aabf52ab44'));
+            console.log(mapAccountsFees.size);
+            console.log("fee token supply number", feeTokenSupply);
+            const fees = await getSQLFees(mapAccountsFees);
+            const feeMap = await generateSQLFeesSnapshot(fees, feeTokenSupply);
+
+            console.log(`${tokenId} feeMap`, feeMap)
+            console.log(
+                `${tokenId} feeMap`,
+                Object.keys(feeMap).length + " users who paid fees",
+            )
+
             const t1 = Date.now();
             const liqMap = await generateLpSnapshot(
                 startTimestamp,
@@ -279,16 +325,16 @@ const createMerkleRootFileName = (
                 Object.keys(liqMap).length + " liquidity providers",
             );
             const t2 = Date.now();
-            const feeMap = await generateFeesSnapshot(
-                startTimestamp,
-                endTimestamp,
-                feeTokenSupply,
-            );
+            // const feeMap = await generateFeesSnapshot(
+            //     startTimestamp,
+            //     endTimestamp,
+            //     feeTokenSupply,
+            // );
             // console.log(`${tokenId} feeMap`, feeMap);
-            console.log(
-                `${tokenId} feeMap`,
-                Object.keys(feeMap).length + " users who paid fees",
-            );
+            // console.log(
+            //     `${tokenId} feeMap`,
+            //     Object.keys(feeMap).length + " users who paid fees",
+            // );
             const t3 = Date.now();
             let currentEpochUserMap = combineMaps([
                 liqMap as MapOfCount,
