@@ -41,7 +41,7 @@ export const doQuery = async (query: string, client: pg.Client): Promise<Map<str
       console.log("done")
       data.forEach(row => {
         mapAccountsFees.set(row.account, row.totalFeeAmount);
-        console.log(`Account: ${row.account} Fee Amount: ${row.totalFeeAmount}`);
+        //console.log(`Account: ${row.account} Fee Amount: ${row.totalFeeAmount}`);
       })
     })
   .catch(e => console.error(e.stack))
@@ -67,3 +67,4 @@ export async function generateSQLFeesSnapshot(dataFromSQL: UserAmount[], tokensP
     const payoutMap = makePayoutsMap(pointsMap, feeSum, tokensPerEpoch);
     return payoutMap;
 }
+

@@ -79,6 +79,12 @@ const createMerkleRootFileName = (
     const validEnvVars = await validateEnvVars(CHECK_ENV_VARS);
     if (!validEnvVars) return;
     // local or production
+    //put code here to test asap
+
+
+
+
+    //
     const { environment } = await inquirer.prompt([
         {
             name: "environment",
@@ -136,7 +142,7 @@ const createMerkleRootFileName = (
         },
     ]);
     console.log("Chosen epoch:", chosenEpoch);
-
+    
     // Allow hijacking when local
     let hijack = false;
     let hijackAddress = null;
@@ -185,7 +191,6 @@ const createMerkleRootFileName = (
     const { startTimestamp, endTimestamp, tokenMap } =
         cleanAndSeparateEpochPerToken(epochInfo);
     console.log("epochInfo", epochInfo);
-
     for (const tokenId of Object.keys(tokenMap)) {
         const { markets, feeTokenSupply } = tokenMap[tokenId];
         const tokenDataResponse = await fetch(
@@ -271,11 +276,11 @@ const createMerkleRootFileName = (
             .then(() => console.log('connected'))
             .catch(err => console.error('connection error', err.stack))
             let mapAccountsFees = new Map<string, number>();
-            const sampleSize = 25;
+            const sampleSize = 50;
             for (let i = 0; i < 450/sampleSize; i++) {
                 console.log(i);
                 const query = `with avg_price_tbl AS (SELECT CAST("tradeAmount" AS FLOAT)/CAST("outcomeTokensAmount" AS FLOAT) AS "avg_price", * FROM "Transactions"
-                WHERE "timestamp" >= '2022-03-18 4:00:00' AND "timestamp" <= '2022-03-25 4:00:00' AND "outcomeTokensAmount" > 0
+                WHERE "timestamp" >= '${epochs[chosenEpoch].start}' AND "timestamp" <= '${epochs[chosenEpoch].end}' AND "outcomeTokensAmount" > 0
                 ), sub_tbl AS (
                 SELECT ROW_NUMBER() OVER(ORDER BY "account" ASC) AS "row", "account", SUM("feeAmount")/10^6 AS "totalFeeAmount" FROM "avg_price_tbl"
                 WHERE "avg_price" <=0.98
@@ -288,8 +293,6 @@ const createMerkleRootFileName = (
                 await new Promise(r => setTimeout(r, 2000));
             }
             client.end();
-            console.log(mapAccountsFees.get('0x091033fccbca0a9e8b9c2d548de7f4aabf52ab44'));
-            console.log(mapAccountsFees.size);
             console.log("fee token supply number", feeTokenSupply);
             const fees = await getSQLFees(mapAccountsFees);
             const feeMap = await generateSQLFeesSnapshot(fees, feeTokenSupply);
