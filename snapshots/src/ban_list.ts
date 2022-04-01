@@ -14,6 +14,21 @@ export const EXCLUDED_ACCOUNTS = [
     "0x778f6b920f7b96b0a76b1711b495e429b932e2c3",
     "0x9db30adf4332ae357d585fdc3e642b657e5aeed4",
     "0xacebab2569ce6e5b660793b76e54d79eb7360c6a",
+    "0xcef8576f9c83757ada94080eb0bdf16d69a70df6",
+    "0x44ec5e86b5717b66ceb8515f81fbc6874d784f5a",
+    "0x655e30f3400f64f3f6184b5d94901a0dffefd0dc",
+    "0xa93ec6a1868f748f011dff8b1b9549271451ba5e",
+    "0x70549c99930d6f5afeab4ede88ff0dedf6fde71b",
+    "0x0d851e9b1636d2b0be03bf0e8e037edd079beeb5",
+    "0x62d84ed708dd2048ae1616cbd48e50438137df3c",
+    "0x0d851e9b1636d2b0be03bf0e8e037edd079beeb5",
+    "0x380888bf73ac09025556ce33f3c3c871f97f68f9",
+    "0xdcb005ee865d17496be32d4da04127b555bb28dd",
+    "0x4844abd66acbd3af04168ec2eca95d34265640c0",
+    "0x41b78e67d9d9bb52ef4981686593dbab3c85dda7",
+    "0x7c240ff259178a9228b12c942780c7633687b9dc",
+    "0x1466daa7c1020ecef08c945015fee5cc60c74057"
+
 ];
 
 export const EXCLUDED_ACCOUNT_MAP = EXCLUDED_ACCOUNTS.reduce((acc, curr) => {

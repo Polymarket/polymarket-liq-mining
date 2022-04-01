@@ -34,7 +34,7 @@ import {
     PRODUCTION_STRAPI_URL,
     STRAPI_ADMIN_EMAIL,
     STRAPI_ADMIN_PASSWORD} from "../src/constants";
-import { addToFeeMap, getDifference, getFeesSnapshot, } from "../src/sql_fees"
+import { addToFeeMap, getFeesSnapshot, } from "../src/sql_fees"
 
 dotenv.config();
 
