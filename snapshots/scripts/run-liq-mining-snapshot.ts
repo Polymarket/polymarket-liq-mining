@@ -14,7 +14,6 @@ import {
     parseBalanceMap,
     MerkleDistributorInfo,
 } from "../../merkle-distributor/src/parse-balance-map";
-import { generateFeesSnapshot } from "../src/fees-snapshot";
 import { MapOfCount } from "../src/interfaces";
 import {
     RewardEpochFromStrapi,
@@ -34,18 +33,8 @@ import {
     PRODUCTION_RPC_URL,
     PRODUCTION_STRAPI_URL,
     STRAPI_ADMIN_EMAIL,
-    STRAPI_ADMIN_PASSWORD, 
-    PGHOST, 
-    PGPORT, 
-    PGDATABASE, 
-    PGUSER, 
-    PGPASSWORD,
-    METABASEPASSWORD,
-    METABASEUSER
-} from "../src/constants";
-import * as pg from 'node-postgres'
-import { doQuery, generateSQLFeesSnapshot, getClient, getData, getFeesSnapshot, getFeesSnapshot2, getSQLFees, getToken, } from "../src/sql_fees"
-import { TransactionDescription } from "ethers/lib/utils";
+    STRAPI_ADMIN_PASSWORD} from "../src/constants";
+import { getFeesSnapshot, } from "../src/sql_fees"
 
 dotenv.config();
 
@@ -287,8 +276,6 @@ const createMerkleRootFileName = (
             ]);
 
             const feeMap = await getFeesSnapshot(epochInfo, feeTokenSupply);
-            console.log(feeMap);
-            //const feeMap = await getFeesSnapshot(epochInfo, feeTokenSupply);
 
             console.log(`${tokenId} feeMap`, feeMap)
             console.log(
