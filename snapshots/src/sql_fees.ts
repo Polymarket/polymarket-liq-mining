@@ -1,6 +1,7 @@
 import { MapOfCount } from "./interfaces";
-import { PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD } from "./constants";
+import { PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD, METABASEUSER, METABASEPASSWORD } from "./constants";
 import * as pg from 'node-postgres'
+import fetch from "cross-fetch";
 import { queryGqlClient } from "./gql_client";
 import { UserAmount } from "./interfaces";
 import {
@@ -13,6 +14,7 @@ import { EXCLUDED_ACCOUNT_MAP } from "./ban_list";
 import request from 'request';
 import { responsePathAsArray } from "graphql";
 import { RewardEpochFromStrapi } from "./lp-helpers";
+import { strict } from "yargs";
 
 //Store the .env variables
 //import the .env variables to connect to DB
@@ -36,28 +38,87 @@ export const getClient = (PGHOST: string, PGPORT: string, PGDATABASE: string, PG
       })
     return client;
 }
-
-// export const getToken = async (USERNAME: string, PASSWORD: string): Promise<string> => {
-//   const options = {
-//     'method': 'POST',
-//     'url': 'https://data.polymarket.io/api/session',
-//     'headers': {
-//       'Content-Type': 'application/json',
-//       'Cookie': 'metabase.DEVICE=f7736e9c-c1b5-4a06-860d-a989cf1f7f1e; metabase.SESSION=fd0b9744-9b50-41ec-8182-fcc8780d9bc4'
-//     },
-//     body: JSON.stringify({
-//       "username": USERNAME,
-//       "password": PASSWORD
-//     })
-//   }
-//   let respString = '';
-//   request(options, function (error, response) {
-//     if (error) throw new Error(error);
-//     console.log(response.body);
-//     respString = response.body;
-//   });
-//   return respString;
+// export const testfunc = async (mystring: string): Promise<string> => {
+//   return mystring;
 // }
+
+export const getToken = async (USERNAME: string, PASSWORD: string): Promise<string> => {
+  let returnVar = '';
+  await fetch('https://data.polymarket.io/api/session', {
+    method: 'POST',
+    body: JSON.stringify({
+      "username": USERNAME,
+      "password": PASSWORD
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': 'metabase.DEVICE=f7736e9c-c1b5-4a06-860d-a989cf1f7f1e; metabase.SESSION=fd0b9744-9b50-41ec-8182-fcc8780d9bc4'
+    }
+  }).then((response) => response.json())
+  //Then with the data from the response in JSON...
+  .then((data) => {
+    returnVar = String(data.id);
+  })
+  //Then with the error genereted...
+  .catch((error) => {
+    console.error('Error:', error);
+    return "error";
+  });
+  return returnVar;
+}
+
+export const getData = async (query: any): Promise<Map<string, number>> => {
+  const token = await getToken(METABASEUSER, METABASEPASSWORD);
+  const mapAccountsFees = new Map<string, number>();
+  await fetch('https://data.polymarket.io/api/dataset', {
+    method: 'POST',
+    body: JSON.stringify(query),
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Metabase-Session': String(token),
+    }
+  }).then((response) => response.json())
+  //Then with the data from the response in JSON...
+  .then((data) => {
+    const arrayFees = data.data.rows;
+    arrayFees.forEach(arr => {
+      mapAccountsFees.set(arr[1], arr[2]);
+    })
+    //console.log(data.data.rows);
+  })
+  //Then with the error genereted...
+  .catch((error) => {
+    console.error('Error:', error);
+  })
+  console.log(mapAccountsFees.entries())
+  return mapAccountsFees;
+}
+
+export const getFeesSnapshot2 = async (epoch: RewardEpochFromStrapi, feeTokenSupply: number): Promise<MapOfCount> => {
+  const max_avg_price = 0.98;
+  const fullQuery = `with avg_price_tbl AS (SELECT CAST("tradeAmount" AS FLOAT)/CAST("outcomeTokensAmount" AS FLOAT) AS "avg_price", * FROM "Transactions"
+  WHERE "timestamp" >= '${epoch.start}' AND "timestamp" <= '${epoch.end}' AND "outcomeTokensAmount" > 0
+  ), sub_tbl AS (
+  SELECT ROW_NUMBER() OVER(ORDER BY "account" ASC) AS "row", "account", SUM("feeAmount")/10^6 AS "totalFeeAmount" FROM "avg_price_tbl"
+  WHERE "avg_price" <=${max_avg_price}
+  GROUP BY "account"
+  ORDER BY "totalFeeAmount" DESC)
+  SELECT * FROM "sub_tbl"`
+  const queryDict = {
+    "database": 3,
+    "type": "native",
+    "native": {
+      "query" : fullQuery
+    }
+  }
+  const mapAccountsFees = await getData(queryDict);
+  const fees = await getSQLFees(mapAccountsFees);
+  const feeMap = await generateSQLFeesSnapshot(fees, feeTokenSupply);
+  return feeMap;
+
+}
+
+
 
 export const doQuery = async (query: string, client: pg.Client): Promise<Map<string, number>> => {
   const mapAccountsFees = new Map<string, number>();

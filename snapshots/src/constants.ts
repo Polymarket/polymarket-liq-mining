@@ -21,3 +21,6 @@ export const PGPORT = process.env.PGPORT;
 export const PGDATABASE = process.env.PGDATABASE;
 export const PGUSER = process.env.PGUSER;
 export const PGPASSWORD = process.env.PGPASSWORD;
+
+export const METABASEUSER = process.env.METABASEUSER;
+export const METABASEPASSWORD = process.env.METABASEPASSWORD;

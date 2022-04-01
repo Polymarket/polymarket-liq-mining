@@ -44,7 +44,7 @@ import {
     METABASEUSER
 } from "../src/constants";
 import * as pg from 'node-postgres'
-import { doQuery, generateSQLFeesSnapshot, getClient, getFeesSnapshot, getSQLFees } from "../src/sql_fees"
+import { doQuery, generateSQLFeesSnapshot, getClient, getData, getFeesSnapshot, getFeesSnapshot2, getSQLFees, getToken, } from "../src/sql_fees"
 import { TransactionDescription } from "ethers/lib/utils";
 
 dotenv.config();
@@ -82,8 +82,23 @@ const createMerkleRootFileName = (
     if (!validEnvVars) return;
     // local or production
     //put code here to test asap
-    // const mbToken = await getToken(METABASEUSER, METABASEPASSWORD);
-
+    // const testquery = {
+    //     "database": 3,
+    //     "type": "native",
+    //     "native": {
+    //       "query": `with avg_price_tbl AS (SELECT CAST("tradeAmount" AS FLOAT)/CAST("outcomeTokensAmount" AS FLOAT) AS "avg_price", * FROM "Transactions"
+    //       WHERE "timestamp" >= '2022-03-11' AND "timestamp" <= '2022-03-18' AND "outcomeTokensAmount" > 0
+    //       ), sub_tbl AS (
+    //       SELECT ROW_NUMBER() OVER(ORDER BY "account" ASC) AS "row", "account", SUM("feeAmount")/10^6 AS "totalFeeAmount" FROM "avg_price_tbl"
+    //       WHERE "avg_price" <=0.98
+    //       GROUP BY "account"
+    //       ORDER BY "totalFeeAmount" DESC)
+    //       SELECT * FROM "sub_tbl"`
+    //     }
+    //   }
+    // const test = await getData(testquery);
+    // console.log(test);
+    //console.log(getData(testquery));
     //
     const { environment } = await inquirer.prompt([
         {
@@ -272,6 +287,8 @@ const createMerkleRootFileName = (
             ]);
 
             const feeMap = await getFeesSnapshot(epochInfo, feeTokenSupply);
+            console.log(feeMap);
+            //const feeMap = await getFeesSnapshot(epochInfo, feeTokenSupply);
 
             console.log(`${tokenId} feeMap`, feeMap)
             console.log(
