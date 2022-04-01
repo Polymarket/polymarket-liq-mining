@@ -177,7 +177,6 @@ export async function convertTimestampToBlockNumber(
         while (block.timestamp > timestampInSeconds) {
             const decreaseBlocks =
                 (block.timestamp - timestampInSeconds) / averageBlockTime;
-
             console.log(
                 "current block is in the future, walking down the chain:",
                 blockNumber,

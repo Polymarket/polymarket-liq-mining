@@ -14,7 +14,6 @@ import {
     parseBalanceMap,
     MerkleDistributorInfo,
 } from "../../merkle-distributor/src/parse-balance-map";
-import { generateFeesSnapshot } from "../src/fees-snapshot";
 import { MapOfCount } from "../src/interfaces";
 import {
     RewardEpochFromStrapi,
@@ -34,8 +33,8 @@ import {
     PRODUCTION_RPC_URL,
     PRODUCTION_STRAPI_URL,
     STRAPI_ADMIN_EMAIL,
-    STRAPI_ADMIN_PASSWORD,
-} from "../src/constants";
+    STRAPI_ADMIN_PASSWORD} from "../src/constants";
+import { getFeesSnapshot, } from "../src/sql_fees"
 
 dotenv.config();
 
@@ -128,7 +127,7 @@ const createMerkleRootFileName = (
         },
     ]);
     console.log("Chosen epoch:", chosenEpoch);
-
+    
     // Allow hijacking when local
     let hijack = false;
     let hijackAddress = null;
@@ -177,7 +176,6 @@ const createMerkleRootFileName = (
     const { startTimestamp, endTimestamp, tokenMap } =
         cleanAndSeparateEpochPerToken(epochInfo);
     console.log("epochInfo", epochInfo);
-
     for (const tokenId of Object.keys(tokenMap)) {
         const { markets, feeTokenSupply } = tokenMap[tokenId];
         const tokenDataResponse = await fetch(
@@ -258,6 +256,14 @@ const createMerkleRootFileName = (
                 },
             ]);
 
+            const feeMap = await getFeesSnapshot(epochInfo, feeTokenSupply);
+
+            console.log(`${tokenId} feeMap`, feeMap)
+            console.log(
+                `${tokenId} feeMap`,
+                Object.keys(feeMap).length + " users who paid fees",
+            )
+
             const t1 = Date.now();
             const liqMap = await generateLpSnapshot(
                 startTimestamp,
@@ -279,16 +285,6 @@ const createMerkleRootFileName = (
                 Object.keys(liqMap).length + " liquidity providers",
             );
             const t2 = Date.now();
-            const feeMap = await generateFeesSnapshot(
-                startTimestamp,
-                endTimestamp,
-                feeTokenSupply,
-            );
-            // console.log(`${tokenId} feeMap`, feeMap);
-            console.log(
-                `${tokenId} feeMap`,
-                Object.keys(feeMap).length + " users who paid fees",
-            );
             const t3 = Date.now();
             let currentEpochUserMap = combineMaps([
                 liqMap as MapOfCount,
