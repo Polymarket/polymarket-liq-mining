@@ -104,3 +104,76 @@ export const getFeesSnapshot = async (epoch: RewardEpochFromStrapi, feeTokenSupp
   return feeMap;
 }
 
+export const getOldSnapshot = async (feeTokenSupply: number): Promise<MapOfCount> => {
+  const max_avg_price = 0.98;
+  const fullQuery = `with avg_price_tbl AS (SELECT CAST("tradeAmount" AS FLOAT)/CAST("outcomeTokensAmount" AS FLOAT) AS "avg_price", * FROM "Transactions"
+  WHERE "timestamp" >= '2022-03-11 4:00:00' AND "timestamp" <= '2022-03-18 4:00:00' AND "outcomeTokensAmount" > 0
+  ), sub_tbl AS (
+  SELECT ROW_NUMBER() OVER(ORDER BY "account" ASC) AS "row", "account", SUM("feeAmount")/10^6 AS "totalFeeAmount" FROM "avg_price_tbl"
+  WHERE "avg_price" <=${max_avg_price}
+  GROUP BY "account"
+  ORDER BY "totalFeeAmount" DESC)
+  SELECT * FROM "sub_tbl"`
+  const queryDict = {
+    "database": 3,
+    "type": "native",
+    "native": {
+      "query" : fullQuery
+    }
+  }
+  const mapAccountsFees = await getData(queryDict);
+  const fees = await getSQLFees(mapAccountsFees);
+  const feeMap = await generateSQLFeesSnapshot(fees, feeTokenSupply);
+  return feeMap;
+}
+
+export const getNewSnapshot = async (feeTokenSupply: number): Promise<MapOfCount> => {
+  const max_avg_price = 0.98;
+  const fullQuery = `with avg_price_tbl AS (SELECT CAST("tradeAmount" AS FLOAT)/CAST("outcomeTokensAmount" AS FLOAT) AS "avg_price", * FROM "Transactions"
+  WHERE "timestamp" >= '2022-03-18T16:00:00.000Z' AND "timestamp" <= '2022-03-25T16:00:00.000Z' AND "outcomeTokensAmount" > 0
+  ), sub_tbl AS (
+  SELECT ROW_NUMBER() OVER(ORDER BY "account" ASC) AS "row", "account", SUM("feeAmount")/10^6 AS "totalFeeAmount" FROM "avg_price_tbl"
+  WHERE "avg_price" <=${max_avg_price}
+  GROUP BY "account"
+  ORDER BY "totalFeeAmount" DESC)
+  SELECT * FROM "sub_tbl"`
+  const queryDict = {
+    "database": 3,
+    "type": "native",
+    "native": {
+      "query" : fullQuery
+    }
+  }
+  const mapAccountsFees = await getData(queryDict);
+  const fees = await getSQLFees(mapAccountsFees);
+  const feeMap = await generateSQLFeesSnapshot(fees, feeTokenSupply);
+  return feeMap;
+}
+
+
+export const getDifference = async (feeTokenSupply: number): Promise<MapOfCount> => {
+  const oldSnapshot = await getOldSnapshot(feeTokenSupply);
+  //console.log("oldSnapshot", oldSnapshot);
+  const newSnapshot = await getNewSnapshot(feeTokenSupply);
+  //console.log("newSnapshot", newSnapshot);
+  const merged = Object.entries(oldSnapshot).reduce((acc, [key, value]) => 
+  // if key is already in map1, add the values, otherwise, create new pair
+  ({ ...acc, [key]: (acc[key] || 0) - value })
+, { ...newSnapshot });
+  for (const [key, value] of Object.entries(merged)) {
+    if (typeof value === "number" && value < 0) {
+        delete merged[key];
+    }
+  }
+  return merged;
+}
+
+export const addToFeeMap = async (feeMap: MapOfCount, feeTokenSupply: number): Promise<MapOfCount> => {
+  const difference = await getDifference(feeTokenSupply);
+  //console.log("Difference", difference);
+  const merged = Object.entries(feeMap).reduce((acc, [key, value]) => 
+  // if key is already in map1, add the values, otherwise, create new pair
+  ({ ...acc, [key]: (acc[key] || 0) + value })
+, { ...difference });
+  return merged;
+}

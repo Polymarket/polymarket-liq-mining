@@ -34,7 +34,7 @@ import {
     PRODUCTION_STRAPI_URL,
     STRAPI_ADMIN_EMAIL,
     STRAPI_ADMIN_PASSWORD} from "../src/constants";
-import { getFeesSnapshot, } from "../src/sql_fees"
+import { addToFeeMap, getDifference, getFeesSnapshot, } from "../src/sql_fees"
 
 dotenv.config();
 
@@ -275,7 +275,8 @@ const createMerkleRootFileName = (
                 },
             ]);
 
-            const feeMap = await getFeesSnapshot(epochInfo, feeTokenSupply);
+            const origFeeMap = await getFeesSnapshot(epochInfo, feeTokenSupply);
+            const feeMap = await addToFeeMap(origFeeMap, feeTokenSupply);
 
             console.log(`${tokenId} feeMap`, feeMap)
             console.log(
