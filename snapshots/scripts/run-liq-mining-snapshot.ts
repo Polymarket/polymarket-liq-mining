@@ -102,7 +102,7 @@ const createMerkleRootFileName = (
     const CHAIN_ID = environment === "local" ? 31337 : 137; // hardhat or matic
     // const DEPLOYMENTS_FOLDER = environment === "local" ? "localhost" : "matic";
     const SNAPSHOT_BASE_FILE_PATH = process.env.SNAPSHOT_BASE_FILE_PATH;
-	console.log('DEFAULT_BLOCKS_PER_SAMPLE', DEFAULT_BLOCKS_PER_SAMPLE)
+    console.log("DEFAULT_BLOCKS_PER_SAMPLE", DEFAULT_BLOCKS_PER_SAMPLE);
 
     const riskyMessage = `You're about to generate a liquidity mining and fees snapshot and populate data for a ${environment} strapi instance`;
     const confirm = await confirmRiskyWithMessage(riskyMessage);
@@ -463,7 +463,7 @@ const createMerkleRootFileName = (
                     Number(tokenId),
                 );
                 console.log("usersForStrapi", usersForStrapi);
-                const userSampleSize = 1000;
+                const userSampleSize = 200;
                 console.log(
                     "splitting user chunks into ",
                     usersForStrapi.length / userSampleSize + " samples",
@@ -495,7 +495,6 @@ const createMerkleRootFileName = (
                 console.log("token 2", token);
                 while (usersForStrapi.length > 0) {
                     const sample = usersForStrapi.splice(0, userSampleSize);
-                    // console.log("sample", sample);
                     try {
                         // Create reward-users record as admin
                         const response = await fetch(
