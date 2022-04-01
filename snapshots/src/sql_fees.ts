@@ -11,6 +11,14 @@ import {
 import { EXCLUDED_ACCOUNT_MAP } from "./ban_list";
 import { RewardEpochFromStrapi } from "./lp-helpers";
 
+interface SQLQueryStruct {
+  "database": number;
+  "type": string;
+  "native": {
+    "query" : string;
+  }
+}
+
 export const getToken = async (USERNAME: string, PASSWORD: string): Promise<string> => {
   let returnVar = '';
   await fetch('https://data.polymarket.io/api/session', {
@@ -34,7 +42,7 @@ export const getToken = async (USERNAME: string, PASSWORD: string): Promise<stri
   return returnVar;
 }
 
-export const getData = async (query: any): Promise<Map<string, number>> => {
+export const getData = async (query: SQLQueryStruct): Promise<Map<string, number>> => {
   const token = await getToken(METABASEUSER, METABASEPASSWORD);
   const mapAccountsFees = new Map<string, number>();
   await fetch('https://data.polymarket.io/api/dataset', {
