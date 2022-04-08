@@ -93,7 +93,8 @@ export const getFeesSnapshot = async (epoch: RewardEpochFromStrapi, feeTokenSupp
   WHERE "avg_price" <=${max_avg_price}
   GROUP BY "account"
   ORDER BY "totalFeeAmount" DESC)
-  SELECT * FROM "sub_tbl"`
+  SELECT * FROM "sub_tbl"
+  WHERE "totalFeeAmount" > 0.03`
   const queryDict = {
     "database": 3,
     "type": "native",
