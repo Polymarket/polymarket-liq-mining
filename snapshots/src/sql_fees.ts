@@ -56,7 +56,7 @@ export const getData = async (query: SQLQueryStruct): Promise<Map<string, number
   .then((data) => {
     const arrayFees = data.data.rows;
     arrayFees.forEach(arr => {
-      mapAccountsFees.set(arr[1], arr[2]);
+      mapAccountsFees.set(arr[0], arr[1]);
     })
   })
   .catch((error) => {
@@ -89,12 +89,27 @@ export const getFeesSnapshot = async (epoch: RewardEpochFromStrapi, feeTokenSupp
   const fullQuery = `with avg_price_tbl AS (SELECT CAST("tradeAmount" AS FLOAT)/CAST("outcomeTokensAmount" AS FLOAT) AS "avg_price", * FROM "Transactions"
   WHERE "timestamp" >= '${epoch.start}' AND "timestamp" <= '${epoch.end}' AND "outcomeTokensAmount" > 0
   ), sub_tbl AS (
-  SELECT ROW_NUMBER() OVER(ORDER BY "account" ASC) AS "row", "account", SUM("feeAmount")/10^6 AS "totalFeeAmount" FROM "avg_price_tbl"
-  WHERE "avg_price" <=${max_avg_price}
+  SELECT "account", SUM("feeAmount")/10^6 AS "totalFeeAmount" FROM "avg_price_tbl"
+  WHERE "avg_price" <= 0.98
   GROUP BY "account"
-  ORDER BY "totalFeeAmount" DESC)
-  SELECT * FROM "sub_tbl"
-  WHERE "totalFeeAmount" > 0.03`
+  ORDER BY "totalFeeAmount" DESC),
+  interval_tbl AS (
+  SELECT *, extract(hour FROM (INTERVAL '1 second' * floor((extract('epoch' from "timestamp") - extract(epoch from timestamp '${epoch.start}')) / 86400) * 86400))/24 AS "day" FROM "avg_price_tbl"
+  ORDER BY "timestamp" DESC
+  ),
+  group_interval_tbl AS (
+  SELECT "account", "day", SUM("feeAmount")/10^6 AS "totalFeeAmount" FROM "interval_tbl"
+  WHERE "avg_price" <= ${max_avg_price}
+  GROUP BY "account", "day"
+  ORDER BY "account", "totalFeeAmount" DESC
+  ),
+  proportion_tbl AS (SELECT *, "totalFeeAmount"/(SUM("totalFeeAmount") OVER (PARTITION BY day)) AS "proportion"  FROM "group_interval_tbl" ),
+  total_account_prop_tbl AS (
+  SELECT "account", SUM("proportion") AS "proportion_fees" FROM "proportion_tbl" 
+  GROUP BY "account"
+  )
+  SELECT "account", SUM("proportion")*10000 AS "totalFeeAmount" FROM "proportion_tbl"
+  GROUP BY "account"`
   const queryDict = {
     "database": 3,
     "type": "native",
