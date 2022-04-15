@@ -463,7 +463,7 @@ const createMerkleRootFileName = (
                     Number(tokenId),
                 );
                 console.log("usersForStrapi", usersForStrapi);
-                const userSampleSize = 200;
+                const userSampleSize = 150;
                 console.log(
                     "splitting user chunks into ",
                     usersForStrapi.length / userSampleSize + " samples",
