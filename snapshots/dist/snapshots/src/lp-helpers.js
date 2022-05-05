@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createArrayOfSamples = exports.validateEventStartBlock = exports.calculateSamplesPerEvent = exports.calculateTokensPerSample = exports.lowerCaseMarketMakers = exports.getStartAndEndBlock = exports.updateTokensPerBlockReward = exports.cleanAndSeparateEpochPerToken = exports.ensureGoodDataFromStrapi = exports.BlockOrderError = exports.LpCalculation = void 0;
+exports.calculatePercentOfSampleToUse = exports.calculateTokensPerSample = exports.createArrayOfSamples = exports.validateEventStartBlock = exports.calculateSamplesPerEvent = exports.lowerCaseMarketMakers = exports.getStartAndEndBlock = exports.updateTokensPerBlockReward = exports.cleanAndSeparateEpochPerToken = exports.ensureGoodDataFromStrapi = exports.BlockOrderError = exports.LpCalculation = void 0;
 const helpers_1 = require("./helpers");
 const bignumber_1 = require("@ethersproject/bignumber");
 var LpCalculation;
@@ -203,20 +203,6 @@ const lowerCaseMarketMakers = (markets) => {
 };
 exports.lowerCaseMarketMakers = lowerCaseMarketMakers;
 /**
- * Calculates how many tokens per sample of blocks
- * so we can always have consistent tokens per block calculation
- * @param market LpMarketInfo
- * @param numSamples number
- * @param blocksPerSample number
- * @returns tokensPerSample number
- */
-const calculateTokensPerSample = (market, numSamples, blocksPerSample, percentOfTokens) => {
-    return market.howToCalculate === LpCalculation.PerMarket
-        ? (market.amount * percentOfTokens) / numSamples
-        : market.amount * percentOfTokens * blocksPerSample;
-};
-exports.calculateTokensPerSample = calculateTokensPerSample;
-/**
  * Calculates the number of samples per market given a start block and end block
  * @param startBlock number
  * @param endBlock number
@@ -259,3 +245,49 @@ const createArrayOfSamples = (startBlock, endBlock, eventStartBlock, blocksPerSa
     return arrayOfSamples;
 };
 exports.createArrayOfSamples = createArrayOfSamples;
+/**
+ * Calculates how many tokens per sample of blocks
+ * so we can always have consistent tokens per block calculation
+ * @param market LpMarketInfo
+ * @param numSamples number
+ * @param blocksPerSample number
+ * @returns tokensPerSample number
+ */
+const calculateTokensPerSample = (amount, numSamples, percentOfTokens) => {
+    return (amount * percentOfTokens) / numSamples;
+};
+exports.calculateTokensPerSample = calculateTokensPerSample;
+/**
+ * Calculates what percent of supply to use during an estimation run
+ * @param isSampleDuringEvent number
+ * @param blocks - startBlock, nowBlock, eventStartBlock, endBlock
+ * @returns tokensPerSample number
+ */
+const calculatePercentOfSampleToUse = (isSampleDuringEvent, blocks) => {
+    const { now, startTime, endTime, eventStartTime } = blocks;
+    // if there is an event event, and the sample of blocks is during event, then eventStartBlock is start block
+    const sb = eventStartTime !== null && isSampleDuringEvent
+        ? eventStartTime
+        : startTime;
+    if (sb === eventStartTime) {
+        console.log("using eventStartTime as start:", sb);
+    }
+    if (now < sb) {
+        console.log(`now: ${now} is before startTime: ${sb} - using NONE of the supply`);
+        return 0;
+    }
+    // if there is an event, and sample is before event, then end block is event start block
+    const eb = eventStartTime !== null && !isSampleDuringEvent
+        ? eventStartTime
+        : endTime;
+    if (eb === eventStartTime) {
+        console.log("using eventStartTime as end block:", eb);
+    }
+    if (now >= eb) {
+        console.log(`now: ${now} is after endTime: ${eb} - using ALL of the supply`);
+        return 1;
+    }
+    const percentOfSampleBeingUsed = (now - sb) / (eb - sb);
+    return percentOfSampleBeingUsed;
+};
+exports.calculatePercentOfSampleToUse = calculatePercentOfSampleToUse;

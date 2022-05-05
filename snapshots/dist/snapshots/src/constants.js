@@ -19,7 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.USER_SAMPLE_SIZE = exports.STRAPI_URL = exports.STRAPI_ADMIN_EMAIL = exports.STRAPI_ADMIN_PASSWORD = exports.DEFAULT_BLOCKS_PER_SAMPLE = exports.DISTRIBUTOR_ADDRESS = exports.PRODUCTION_RPC_URL = exports.LOCAL_RPC_URL = exports.HIJACK_ADDRESS_FOR_TESTING = exports.PRODUCTION_STRAPI_URL = exports.LOCAL_STRAPI_URL = void 0;
+exports.METABASEPASSWORD = exports.METABASEUSER = exports.USER_SAMPLE_SIZE = exports.STRAPI_URL = exports.STRAPI_ADMIN_EMAIL = exports.STRAPI_ADMIN_PASSWORD = exports.DEFAULT_BLOCKS_PER_SAMPLE = exports.DISTRIBUTOR_ADDRESS = exports.PRODUCTION_RPC_URL = exports.LOCAL_RPC_URL = exports.HIJACK_ADDRESS_FOR_TESTING = exports.PRODUCTION_STRAPI_URL = exports.LOCAL_STRAPI_URL = void 0;
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
 exports.LOCAL_STRAPI_URL = "http://localhost:1337";
@@ -33,3 +33,5 @@ exports.STRAPI_ADMIN_PASSWORD = process.env.STRAPI_ADMIN_PASSWORD;
 exports.STRAPI_ADMIN_EMAIL = process.env.STRAPI_ADMIN_EMAIL;
 exports.STRAPI_URL = process.env.STRAPI_URL;
 exports.USER_SAMPLE_SIZE = process.env.USER_SAMPLE_SIZE;
+exports.METABASEUSER = process.env.METABASEUSER;
+exports.METABASEPASSWORD = process.env.METABASEPASSWORD;

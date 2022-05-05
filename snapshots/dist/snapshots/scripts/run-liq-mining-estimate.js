@@ -39,7 +39,7 @@ dotenv.config();
         "DEFAULT_BLOCKS_PER_SAMPLE",
         "USER_SAMPLE_SIZE",
         "STRAPI_URL",
-        "MATIC_RPC_URL"
+        "MATIC_RPC_URL",
     ];
     const validEnvVars = await validate_env_vars_1.validateEnvVars(CHECK_ENV_VARS);
     if (!validEnvVars) {
@@ -81,7 +81,8 @@ dotenv.config();
         // SNAPSHOT CALCULATION
         // ------------------------------------------------
         // const t1 = Date.now();
-        const liqMap = await lp_snapshot_1.generateLpSnapshot(startTimestamp, endTimestamp, markets, Number(constants_1.DEFAULT_BLOCKS_PER_SAMPLE), false);
+        const liqMap = await lp_snapshot_1.generateLpSnapshot(startTimestamp, endTimestamp, markets, Number(constants_1.DEFAULT_BLOCKS_PER_SAMPLE), false, // dont throw error if block mismatch
+        true);
         // console.log(`${tokenId} liqMap`, liqMap);
         console.log(`${tokenId} liqMap`, Object.keys(liqMap).length + " liquidity providers");
         const estimatedRewards = helpers_1.formatEstimatedRewards(liqMap, chosenEpoch, Number(tokenId), isUSDC);
