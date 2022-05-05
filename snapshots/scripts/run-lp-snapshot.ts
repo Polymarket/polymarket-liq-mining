@@ -92,6 +92,7 @@ const args = yargs.options({
         lowerCaseMarketMakers(args.incentivizedMarkets),
         args.blocksPerSample,
         true,
+		false, // !isEstimating
     );
     console.log("snapshot outside", snapshot);
 

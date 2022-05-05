@@ -27,7 +27,7 @@ dotenv.config();
         "DEFAULT_BLOCKS_PER_SAMPLE",
         "USER_SAMPLE_SIZE",
         "STRAPI_URL",
-		"MATIC_RPC_URL"
+        "MATIC_RPC_URL",
     ];
 
     const validEnvVars = await validateEnvVars(CHECK_ENV_VARS);
@@ -94,6 +94,7 @@ dotenv.config();
             markets,
             Number(DEFAULT_BLOCKS_PER_SAMPLE),
             false, // dont throw error if block mismatch
+            true, // isEstimating
         );
         // console.log(`${tokenId} liqMap`, liqMap);
         console.log(

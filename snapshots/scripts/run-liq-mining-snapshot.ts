@@ -271,6 +271,7 @@ const createMerkleRootFileName = (
                 markets,
                 Number(DEFAULT_BLOCKS_PER_SAMPLE),
                 shouldFailOnBlockMismatch,
+				false, // !isEstimating
                 shouldMemoizeMarketInfo
                     ? {
                           epoch: chosenEpoch,

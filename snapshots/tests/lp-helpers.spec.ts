@@ -1,4 +1,5 @@
 import {
+    calculatePercentOfSampleToUse,
     calculateSamplesPerEvent,
     calculateTokensPerSample,
     IStartAndEndBlock,
@@ -7,7 +8,7 @@ import {
 } from "../src/lp-helpers";
 
 import { expect } from "chai";
-import { createArrayOfSamples, BlockOrderError } from '../src/lp-helpers';
+import { createArrayOfSamples, BlockOrderError } from "../src/lp-helpers";
 import {
     getStartAndEndBlock,
     LpMarketInfo,
@@ -16,12 +17,10 @@ import {
 
 describe("calculate samples correctly", () => {
     let markets: LpMarketInfo[];
-    let blocksPerSample: number;
     let numSamplesInMarket: number;
     let alan, brian;
 
     beforeEach(() => {
-        blocksPerSample = 30;
         numSamplesInMarket = 420;
         alan = "0x00D3BB55A6259416BB8DeF0EB46818aD178326eB";
         brian = "0x0322c202691B2f1Eb4c4aB01Ee0813796392a3f2";
@@ -49,9 +48,8 @@ describe("calculate samples correctly", () => {
 
     it("should calculate tokens per sample based off tokens per market", async () => {
         const tokensPerSample = calculateTokensPerSample(
-            markets[0],
+            markets[0].amount,
             numSamplesInMarket,
-            blocksPerSample,
             1,
         );
         expect(tokensPerSample).to.eq(markets[0].amount / numSamplesInMarket);
@@ -59,15 +57,139 @@ describe("calculate samples correctly", () => {
 
     it("should calculate weighted tokens per sample if preEventPercent is included", async () => {
         const res = calculateTokensPerSample(
-            markets[1],
+            markets[1].amount,
             numSamplesInMarket,
-            blocksPerSample,
             markets[1].preEventPercent,
         );
         const expected =
             (markets[1].amount * markets[1].preEventPercent) /
             numSamplesInMarket;
         expect(res).to.eq(expected);
+    });
+});
+
+describe("calculates samples during estimation correctly", () => {
+    let isSampleDuringEvent: boolean;
+    let startTime: number;
+    let now: number;
+    let eventStartTime: number | null;
+    let endTime: number;
+
+    beforeEach(() => {
+        startTime = 27000000;
+        now = 27500000;
+        eventStartTime = null;
+        endTime = 28000000;
+        isSampleDuringEvent = false;
+    });
+
+    it("now is before start", async () => {
+        now = 25000000;
+
+        const tokenAmount = calculatePercentOfSampleToUse(isSampleDuringEvent, {
+            startTime,
+            now,
+            eventStartTime,
+            endTime,
+        });
+
+        expect(tokenAmount).to.eq(0);
+    });
+
+    it("now is after end", async () => {
+        now = 29000000;
+
+        const tokenAmount = calculatePercentOfSampleToUse(isSampleDuringEvent, {
+            startTime,
+            now,
+            eventStartTime,
+            endTime,
+        });
+        // const expected = weightedTotalSupply / numberOfSamples;
+        expect(tokenAmount).to.eq(1);
+    });
+
+    it("no event. now is after epoch begin and before epoch end", async () => {
+        const tokenAmount = calculatePercentOfSampleToUse(isSampleDuringEvent, {
+            startTime,
+            now,
+            eventStartTime,
+            endTime,
+        });
+
+        const expected = (now - startTime) / (endTime - startTime);
+
+        expect(tokenAmount).to.eq(expected);
+    });
+
+    it("event exists, now is before event starts, sample is before event", async () => {
+        eventStartTime = 27600000;
+        const tokenAmount = calculatePercentOfSampleToUse(isSampleDuringEvent, {
+            startTime,
+            now,
+            eventStartTime,
+            endTime,
+        });
+
+        const expected = (now - startTime) / (eventStartTime - startTime);
+        expect(tokenAmount).to.eq(expected);
+    });
+
+    it("event exists, now is before event starts, sample is before event", async () => {
+        now = 27500000;
+        eventStartTime = 27600000;
+        isSampleDuringEvent = true;
+
+        const tokenAmount = calculatePercentOfSampleToUse(isSampleDuringEvent, {
+            startTime,
+            now,
+            eventStartTime,
+            endTime,
+        });
+        expect(tokenAmount).to.eq(0);
+    });
+
+    it("event exists, now is after event starts, sample of blocks is from before the event starts", async () => {
+        eventStartTime = 27600000;
+        now = 27700000;
+
+        const tokenAmount = calculatePercentOfSampleToUse(isSampleDuringEvent, {
+            startTime,
+            now,
+            eventStartTime,
+            endTime,
+        });
+        expect(tokenAmount).to.eq(1);
+    });
+
+    it("event exists, now is after event starts, sample of blocks is from after the event has started", async () => {
+        eventStartTime = 27600000;
+        now = 27700000;
+        isSampleDuringEvent = true;
+
+        const tokenAmount = calculatePercentOfSampleToUse(isSampleDuringEvent, {
+            startTime,
+            now,
+            eventStartTime,
+            endTime,
+        });
+        const expected = (now - eventStartTime) / (endTime - eventStartTime);
+        expect(tokenAmount).to.eq(expected);
+    });
+
+    it("event exists, now is after event ended, blocks are after event started", async () => {
+        eventStartTime = 27600000;
+        now = 29500000;
+        isSampleDuringEvent = true;
+
+        const tokenAmount = calculatePercentOfSampleToUse(isSampleDuringEvent, {
+            startTime,
+            now,
+            eventStartTime,
+            endTime,
+        });
+
+        expect(tokenAmount).to.eq(1);
     });
 });
 
@@ -97,15 +219,6 @@ describe("calculate samples per event", () => {
         );
         const expected = Math.floor((endBlock - startBlock) / samplesPerMarket);
         expect(res).to.eq(expected);
-    });
-
-    it("should throw an error if endBlock is before startBlock", async () => {
-        const startBlock = 2120000;
-        const samplesPerMarket = 150;
-        const endBlock = 2100000;
-        expect(() =>
-            calculateSamplesPerEvent(startBlock, endBlock, samplesPerMarket),
-        ).to.throw();
     });
 });
 

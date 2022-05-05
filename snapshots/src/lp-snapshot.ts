@@ -6,6 +6,7 @@ import {
     getCurrentBlockNumber,
 } from "./block_numbers";
 import {
+    calculatePercentOfSampleToUse,
     calculateSamplesPerEvent,
     calculateTokensPerSample,
     createArrayOfSamples,
@@ -32,6 +33,7 @@ export async function generateLpSnapshot(
     marketMakers: LpMarketInfo[],
     defaultBlocksPerSample: number,
     shouldThrowBlockOrderError: boolean,
+    isEstimating: boolean,
     memoizeMarketInfo?: { epoch: number; tokenSymbol: string },
 ): Promise<MapOfCount> {
     console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
@@ -68,6 +70,8 @@ export async function generateLpSnapshot(
         console.log("epochStartBlock was not found. trying again!");
         epochStartBlock = await convertTimestampToBlockNumber(startTimestamp);
     }
+
+    const now = Date.now();
 
     for (const market of markets) {
         let blocksPerSample = defaultBlocksPerSample;
@@ -225,15 +229,52 @@ export async function generateLpSnapshot(
                             : 1 - market.preEventPercent;
                 }
 
-                const tokensPerSample = calculateTokensPerSample(
-                    market,
-                    samples.length,
-                    blocksPerSample,
-                    weight,
-                );
+                let tokensPerSample;
+                if (isEstimating) {
+                    const startTime = market.rewardMarketStartDate
+                        ? new Date(market.rewardMarketStartDate).getTime()
+                        : startTimestamp;
 
-                console.log(`Using ${market.howToCalculate} calculation`);
+                    const endTime = market.rewardMarketEndDate
+                        ? new Date(market.rewardMarketEndDate).getTime()
+                        : endTimestamp;
+
+                    const eventStartTime = market.eventStartDate
+                        ? new Date(market.eventStartDate).getTime()
+                        : null;
+
+                    const percentOfSampleBeingUsed =
+                        calculatePercentOfSampleToUse(
+                            idx === 1, // isSampleDuringEvent
+                            {
+                                startTime,
+                                now,
+                                eventStartTime,
+                                endTime,
+                            },
+                        );
+                    console.log(`Using ${percentOfSampleBeingUsed * 100}% of sample`);
+                    tokensPerSample =
+                        percentOfSampleBeingUsed *
+                        calculateTokensPerSample(
+                            market.amount,
+                            samples.length,
+                            weight,
+                        );
+                } else {
+                    tokensPerSample = calculateTokensPerSample(
+                        market.amount,
+                        samples.length,
+                        weight,
+                    );
+                }
+                console.log(`Using ${tokensPerSample} tokens per sample`);
                 console.log(`Using ${weight} for weight`);
+                console.log(
+                    `Using ${
+                        tokensPerSample / blocksPerSample
+                    } tokens per block`,
+                );
 
                 userTokensPerEpoch = await updateTokensPerBlockReward(
                     userTokensPerEpoch,
@@ -256,13 +297,6 @@ export async function generateLpSnapshot(
                         memoizedUserTokensPerEpoch: { ...userTokensPerEpoch },
                     });
                 }
-
-                console.log(`Using ${tokensPerSample} tokens per sample`);
-                console.log(
-                    `Using ${
-                        tokensPerSample / blocksPerSample
-                    } tokens per block`,
-                );
             } else {
                 console.log(`NO BLOCKS WITH LPs WERE FOUND!`);
                 continue;
