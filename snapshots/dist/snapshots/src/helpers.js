@@ -179,10 +179,12 @@ const trimAndLowerCaseAddress = (address) => {
  * @returns
  */
 const getAmountInEther = (number, isUSDC) => {
-    let n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
+    let n = number.toString();
     if (n.includes("e")) {
-        const eIndex = n.indexOf("e");
-        n = n.slice(0, eIndex);
+        n = new Number(number).toFixed(17); // toFixed loses precision, only use when number is in scientific notation
+    }
+    else {
+        n = n.slice(0, 17);
     }
     return isUSDC
         ? ethers_1.ethers.utils.parseEther(n).div(bignumber_1.BigNumber.from(10).pow(12))
@@ -196,7 +198,8 @@ exports.getAmountInEther = getAmountInEther;
  * @returns todo - getAmountInEther
  */
 const normalizeEarningsNewFormat = (map, isUSDC) => {
-    return positiveAddressesOnly(map).map((addr) => {
+    return positiveAddressesOnly(map)
+        .map((addr) => {
         return {
             address: exports.validateAddress(addr),
             earnings: bignumber_1.BigNumber.isBigNumber(map[addr])
@@ -204,6 +207,9 @@ const normalizeEarningsNewFormat = (map, isUSDC) => {
                 : exports.getAmountInEther(map[addr], isUSDC).toString(),
             reasons: "",
         };
+    })
+        .filter((pos) => {
+        return bignumber_1.BigNumber.from(pos.earnings).gt(0);
     });
 };
 exports.normalizeEarningsNewFormat = normalizeEarningsNewFormat;
