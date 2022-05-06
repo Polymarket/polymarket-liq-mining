@@ -252,15 +252,19 @@ export const normalizeEarningsNewFormat = (
     map: MapOfCount | BigNumberMapOfCount,
     isUSDC: boolean,
 ): NewFormat[] => {
-    return positiveAddressesOnly(map).map((addr) => {
-        return {
-            address: validateAddress(addr), // NOTICE THE VALIDATE ADDRESS FROM ETHERS
-            earnings: BigNumber.isBigNumber(map[addr])
-                ? map[addr].toString()
-                : getAmountInEther(map[addr] as number, isUSDC).toString(),
-            reasons: "",
-        };
-    });
+    return positiveAddressesOnly(map)
+        .map((addr) => {
+            return {
+                address: validateAddress(addr), // NOTICE THE VALIDATE ADDRESS FROM ETHERS
+                earnings: BigNumber.isBigNumber(map[addr])
+                    ? map[addr].toString()
+                    : getAmountInEther(map[addr] as number, isUSDC).toString(),
+                reasons: "",
+            };
+        })
+        .filter((pos) => {
+            return BigNumber.from(pos.earnings).gt(0);
+        });
 };
 
 /**
