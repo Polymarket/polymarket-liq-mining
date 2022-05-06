@@ -332,8 +332,6 @@ const createMerkleRootFileName = (
                 prevMerkleFile = false;
             }
 
-            prevMerkleFile = false;
-
             if (!prevMerkleFile) {
                 const normalizedEarnings = normalizeEarningsNewFormat(
                     currentEpochUserMap,
