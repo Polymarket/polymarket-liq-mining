@@ -452,22 +452,22 @@ export const calculateTokensPerSample = (
 };
 
 /**
- * Calculates what percent of supply to use during an estimation run 
+ * Calculates what percent of supply to use during an estimation run
  * @param isSampleDuringEvent number
- * @param blocks - startBlock, nowBlock, eventStartBlock, endBlock
+ * @param timestamps - startTime, now, eventStartTime, endTime
  * @returns tokensPerSample number
  */
 export const calculatePercentOfSampleToUse = (
     isSampleDuringEvent: boolean,
-    blocks: {
+    timestamps: {
         startTime: number;
         now: number;
         eventStartTime: number | null;
         endTime: number;
     },
 ): number => {
-    const { now, startTime, endTime, eventStartTime } = blocks;
-    // if there is an event event, and the sample of blocks is during event, then eventStartBlock is start block
+    const { now, startTime, endTime, eventStartTime } = timestamps;
+    // if there is an event event, and the sample of timestamps is during event, then eventStartBlock is start block
     const sb =
         eventStartTime !== null && isSampleDuringEvent
             ? eventStartTime

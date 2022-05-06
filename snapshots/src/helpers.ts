@@ -230,12 +230,13 @@ export const getAmountInEther = (
     number: number,
     isUSDC: boolean,
 ): BigNumber => {
-    let n = number.toString().slice(0, 17); // parseEther throws an error if decimals are longer than 18
-
+    let n = number.toString();
     if (n.includes("e")) {
-        const eIndex = n.indexOf("e");
-        n = n.slice(0, eIndex);
+        n = new Number(number).toFixed(17); // toFixed loses precision, only use when number is in scientific notation
+    } else {
+        n = n.slice(0, 17);
     }
+
     return isUSDC
         ? ethers.utils.parseEther(n).div(BigNumber.from(10).pow(12))
         : ethers.utils.parseEther(n);
