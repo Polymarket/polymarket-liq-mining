@@ -13,7 +13,7 @@ const NUMBER_OF_SAMPLES_PER_MARKET = 150;
  * @param supply
  * @returns
  */
-async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, defaultBlocksPerSample, shouldThrowBlockOrderError, memoizeMarketInfo) {
+async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, defaultBlocksPerSample, shouldThrowBlockOrderError, isEstimating, memoizeMarketInfo) {
     console.log(`Generating lp snapshot with timestamp: ${endTimestamp}`);
     let userTokensPerEpoch = {};
     let markets = lp_helpers_1.lowerCaseMarketMakers(marketMakers);
@@ -43,6 +43,7 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, de
         console.log("epochStartBlock was not found. trying again!");
         epochStartBlock = await block_numbers_1.convertTimestampToBlockNumber(startTimestamp);
     }
+    const now = Date.now();
     for (const market of markets) {
         let blocksPerSample = defaultBlocksPerSample;
         console.log("***********************************");
@@ -141,9 +142,35 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, de
                             ? market.preEventPercent
                             : 1 - market.preEventPercent;
                 }
-                const tokensPerSample = lp_helpers_1.calculateTokensPerSample(market, samples.length, blocksPerSample, weight);
-                console.log(`Using ${market.howToCalculate} calculation`);
+                let tokensPerSample;
+                if (isEstimating) {
+                    const startTime = market.rewardMarketStartDate
+                        ? new Date(market.rewardMarketStartDate).getTime()
+                        : startTimestamp;
+                    const endTime = market.rewardMarketEndDate
+                        ? new Date(market.rewardMarketEndDate).getTime()
+                        : endTimestamp;
+                    const eventStartTime = market.eventStartDate
+                        ? new Date(market.eventStartDate).getTime()
+                        : null;
+                    const percentOfSampleBeingUsed = lp_helpers_1.calculatePercentOfSampleToUse(idx === 1, // isSampleDuringEvent
+                    {
+                        startTime,
+                        now,
+                        eventStartTime,
+                        endTime,
+                    });
+                    console.log(`Using ${percentOfSampleBeingUsed * 100}% of sample`);
+                    tokensPerSample =
+                        percentOfSampleBeingUsed *
+                            lp_helpers_1.calculateTokensPerSample(market.amount, samples.length, weight);
+                }
+                else {
+                    tokensPerSample = lp_helpers_1.calculateTokensPerSample(market.amount, samples.length, weight);
+                }
+                console.log(`Using ${tokensPerSample} tokens per sample`);
                 console.log(`Using ${weight} for weight`);
+                console.log(`Using ${tokensPerSample / blocksPerSample} tokens per block`);
                 userTokensPerEpoch = await lp_helpers_1.updateTokensPerBlockReward(userTokensPerEpoch, liquidityAcrossBlocks, tokensPerSample);
                 if (memoizeMarketInfo) {
                     const { epoch, tokenSymbol } = memoizeMarketInfo;
@@ -153,8 +180,6 @@ async function generateLpSnapshot(startTimestamp, endTimestamp, marketMakers, de
                         memoizedUserTokensPerEpoch: Object.assign({}, userTokensPerEpoch),
                     });
                 }
-                console.log(`Using ${tokensPerSample} tokens per sample`);
-                console.log(`Using ${tokensPerSample / blocksPerSample} tokens per block`);
             }
             else {
                 console.log(`NO BLOCKS WITH LPs WERE FOUND!`);

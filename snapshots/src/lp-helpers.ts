@@ -378,25 +378,6 @@ export const lowerCaseMarketMakers = (
 };
 
 /**
- * Calculates how many tokens per sample of blocks
- * so we can always have consistent tokens per block calculation
- * @param market LpMarketInfo
- * @param numSamples number
- * @param blocksPerSample number
- * @returns tokensPerSample number
- */
-export const calculateTokensPerSample = (
-    market: LpMarketInfo,
-    numSamples: number,
-    blocksPerSample: number,
-    percentOfTokens: number,
-): number => {
-    return market.howToCalculate === LpCalculation.PerMarket
-        ? (market.amount * percentOfTokens) / numSamples
-        : market.amount * percentOfTokens * blocksPerSample;
-};
-
-/**
  * Calculates the number of samples per market given a start block and end block
  * @param startBlock number
  * @param endBlock number
@@ -454,3 +435,72 @@ export const createArrayOfSamples = (
     return arrayOfSamples;
 };
 
+/**
+ * Calculates how many tokens per sample of blocks
+ * so we can always have consistent tokens per block calculation
+ * @param market LpMarketInfo
+ * @param numSamples number
+ * @param blocksPerSample number
+ * @returns tokensPerSample number
+ */
+export const calculateTokensPerSample = (
+    amount: number,
+    numSamples: number,
+    percentOfTokens: number,
+): number => {
+    return (amount * percentOfTokens) / numSamples;
+};
+
+/**
+ * Calculates what percent of supply to use during an estimation run
+ * @param isSampleDuringEvent number
+ * @param timestamps - startTime, now, eventStartTime, endTime
+ * @returns tokensPerSample number
+ */
+export const calculatePercentOfSampleToUse = (
+    isSampleDuringEvent: boolean,
+    timestamps: {
+        startTime: number;
+        now: number;
+        eventStartTime: number | null;
+        endTime: number;
+    },
+): number => {
+    const { now, startTime, endTime, eventStartTime } = timestamps;
+    // if there is an event event, and the sample of timestamps is during event, then eventStartBlock is start block
+    const sb =
+        eventStartTime !== null && isSampleDuringEvent
+            ? eventStartTime
+            : startTime;
+
+    if (sb === eventStartTime) {
+        console.log("using eventStartTime as start:", sb);
+    }
+
+    if (now < sb) {
+        console.log(
+            `now: ${now} is before startTime: ${sb} - using NONE of the supply`,
+        );
+        return 0;
+    }
+
+    // if there is an event, and sample is before event, then end block is event start block
+    const eb =
+        eventStartTime !== null && !isSampleDuringEvent
+            ? eventStartTime
+            : endTime;
+
+    if (eb === eventStartTime) {
+        console.log("using eventStartTime as end block:", eb);
+    }
+
+    if (now >= eb) {
+        console.log(
+            `now: ${now} is after endTime: ${eb} - using ALL of the supply`,
+        );
+        return 1;
+    }
+
+    const percentOfSampleBeingUsed = (now - sb) / (eb - sb);
+    return percentOfSampleBeingUsed;
+};
