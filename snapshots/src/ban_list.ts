@@ -85,7 +85,11 @@ export const EXCLUDED_ACCOUNTS = [
     "0xefa2387f1a1ad596cf2c2ac291d18f5ccfcd9259",
     "0x5a8d5ddbe95d628491dc57b2c10d060b27907e4e",
     "0x12e915a88624acd6320935a1ff029ebcfcf77129",
-    "0x1bbfcf2ec59400907c969d668afc3bf7638f9a0b"
+    "0x1bbfcf2ec59400907c969d668afc3bf7638f9a0b",
+    "0x316e3957a81bd531828ccd53893efa70bb238a11",
+    "0xb5364f9ae058270947245f7283924eaa627df8ea",
+    "0x6b7968e4669db4ee69d74cb0405d56bfef068af8",
+    "0x000000001d4b0cf0eefd45007af4370800a6b6a7",
 ];
 
 export const EXCLUDED_ACCOUNT_MAP = EXCLUDED_ACCOUNTS.reduce((acc, curr) => {
