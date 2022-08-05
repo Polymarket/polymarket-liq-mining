@@ -33,8 +33,9 @@ import {
     PRODUCTION_RPC_URL,
     PRODUCTION_STRAPI_URL,
     STRAPI_ADMIN_EMAIL,
-    STRAPI_ADMIN_PASSWORD} from "../src/constants";
-import { getFeesSnapshot, } from "../src/sql_fees"
+    STRAPI_ADMIN_PASSWORD,
+} from "../src/constants";
+import { getFeesSnapshot } from "../src/sql_fees";
 
 dotenv.config();
 
@@ -66,6 +67,8 @@ const createMerkleRootFileName = (
         "STRAPI_ADMIN_PASSWORD",
         "DEFAULT_BLOCKS_PER_SAMPLE",
         "SNAPSHOT_BASE_FILE_PATH",
+        "METABASEUSER",
+        "METABASEPASSWORD",
     ];
     const validEnvVars = await validateEnvVars(CHECK_ENV_VARS);
     if (!validEnvVars) return;
@@ -127,7 +130,7 @@ const createMerkleRootFileName = (
         },
     ]);
     console.log("Chosen epoch:", chosenEpoch);
-    
+
     // Allow hijacking when local
     let hijack = false;
     let hijackAddress = null;
@@ -258,11 +261,11 @@ const createMerkleRootFileName = (
 
             const feeMap = await getFeesSnapshot(epochInfo, feeTokenSupply);
 
-            console.log(`${tokenId} feeMap`, feeMap)
+            console.log(`${tokenId} feeMap`, feeMap);
             console.log(
                 `${tokenId} feeMap`,
                 Object.keys(feeMap).length + " users who paid fees",
-            )
+            );
 
             const t1 = Date.now();
             const liqMap = await generateLpSnapshot(
@@ -271,7 +274,7 @@ const createMerkleRootFileName = (
                 markets,
                 Number(DEFAULT_BLOCKS_PER_SAMPLE),
                 shouldFailOnBlockMismatch,
-				false, // !isEstimating
+                false, // !isEstimating
                 shouldMemoizeMarketInfo
                     ? {
                           epoch: chosenEpoch,
@@ -501,7 +504,7 @@ const createMerkleRootFileName = (
                         const response = await fetch(
                             `${STRAPI_URL}/reward-users`,
                             {
-								method: "PUT",
+                                method: "PUT",
                                 headers: {
                                     "Content-Type": "application/json",
                                     Authorization: `Bearer ${token}`,
