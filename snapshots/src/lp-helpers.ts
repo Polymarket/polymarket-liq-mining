@@ -88,7 +88,9 @@ export interface RewardToken {
 
 export interface RewardTokenFromStrapi {
     reward_token: RewardToken;
-    fees_token_supply: string;
+    amm_fees_token_supply: string;
+    clob_fees_token_supply: string;
+    clob_liqudity_token_supply: string;
 }
 
 export interface RewardEpochFromStrapi {
@@ -146,7 +148,7 @@ export const ensureGoodDataFromStrapi = (
         throw new Error("No Reward Markets!");
     }
 
-    if (!reward_tokens[0].fees_token_supply) {
+    if (!reward_tokens[0].amm_fees_token_supply) {
         throw new Error("No Fee Token Supply Set");
     }
 
@@ -181,7 +183,7 @@ export const cleanAndSeparateEpochPerToken = (
         if (!acc[curr.reward_token.id]) {
             acc[curr.reward_token.id] = {
                 feeTokenSupply: BigNumber.from(
-                    curr.fees_token_supply,
+                    curr.amm_fees_token_supply,
                 ).toNumber(),
             };
         }

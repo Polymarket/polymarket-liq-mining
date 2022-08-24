@@ -36,7 +36,7 @@ const ensureGoodDataFromStrapi = (epochInfo) => {
     if (!reward_markets || reward_markets.length === 0) {
         throw new Error("No Reward Markets!");
     }
-    if (!reward_tokens[0].fees_token_supply) {
+    if (!reward_tokens[0].amm_fees_token_supply) {
         throw new Error("No Fee Token Supply Set");
     }
     if (!reward_tokens[0].reward_token || !reward_tokens[0].reward_token.name) {
@@ -62,7 +62,7 @@ const cleanAndSeparateEpochPerToken = (epochInfo) => {
     const feeMap = epochInfo.reward_tokens.reduce((acc, curr) => {
         if (!acc[curr.reward_token.id]) {
             acc[curr.reward_token.id] = {
-                feeTokenSupply: bignumber_1.BigNumber.from(curr.fees_token_supply).toNumber(),
+                feeTokenSupply: bignumber_1.BigNumber.from(curr.amm_fees_token_supply).toNumber(),
             };
         }
         return acc;

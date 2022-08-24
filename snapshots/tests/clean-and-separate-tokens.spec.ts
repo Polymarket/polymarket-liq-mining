@@ -29,7 +29,7 @@ describe("clean and separate epoch per token", () => {
               id: 1,
             },
           },
-          fees_token_supply: "100000",
+          amm_fees_token_supply: "100000",
         },
         {
           id: 2,
@@ -41,7 +41,7 @@ describe("clean and separate epoch per token", () => {
               id: 1,
             },
           },
-          fees_token_supply: "50000",
+          amm_fees_token_supply: "50000",
         },
       ],
       reward_markets: [
@@ -101,7 +101,7 @@ describe("clean and separate epoch per token", () => {
           id: 1,
         },
       },
-      fees_token_supply: "500000",
+      amm_fees_token_supply: "500000",
     };
 
     mockEpochInfo.reward_tokens.push(thirdToken);
