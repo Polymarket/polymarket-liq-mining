@@ -36,6 +36,7 @@ import {
     STRAPI_ADMIN_PASSWORD,
 } from "../src/constants";
 import { getFeesSnapshot } from "../src/sql_fees";
+import { getClobLpSnapshot } from "../src/clob-liq";
 
 dotenv.config();
 
@@ -113,7 +114,7 @@ const createMerkleRootFileName = (
         return;
     }
     // which epoch?
-    const epochs = await fetchRewardEpochs(STRAPI_URL);
+    const epochs = await fetchRewardEpochs(STRAPI_URL as string);
     const { chosenEpoch } = await inquirer.prompt([
         {
             name: "chosenEpoch",
@@ -133,7 +134,7 @@ const createMerkleRootFileName = (
 
     // Allow hijacking when local
     let hijack = false;
-    let hijackAddress = null;
+    let hijackAddress = "";
     if (environment === "local") {
         const { shouldHijackLargestAddressForTesting } = await inquirer.prompt([
             {
@@ -176,17 +177,20 @@ const createMerkleRootFileName = (
     const epochInfo: RewardEpochFromStrapi = await epochRes.json();
     ensureGoodDataFromStrapi(epochInfo);
 
+    // here
+
     const { startTimestamp, endTimestamp, tokenMap } =
         cleanAndSeparateEpochPerToken(epochInfo);
     console.log("epochInfo", epochInfo);
     for (const tokenId of Object.keys(tokenMap)) {
-        const { markets, feeTokenSupply } = tokenMap[tokenId];
+        const { markets, feeTokenSupply, clobLiqSupply } = tokenMap[tokenId];
         const tokenDataResponse = await fetch(
             `${STRAPI_URL}/reward-tokens/${tokenId}`,
         );
         const tokenData: RewardToken = await tokenDataResponse.json();
         console.log({ tokenData });
         console.log("feeTokenSupply", feeTokenSupply);
+        console.log("clobLiqSupply", clobLiqSupply);
         console.log(`markets for token #${tokenId}`, markets);
         console.log("start Date", new Date(startTimestamp));
         console.log("end Date", new Date(endTimestamp));
@@ -196,7 +200,7 @@ const createMerkleRootFileName = (
         // SDK
         // ------------------------------------------------
         let sdk: DistributorSdk;
-        let merkleInfo: MerkleDistributorInfo;
+        let merkleInfo: MerkleDistributorInfo | null = null;
 
         try {
             const mnemonic = process.env.MNEMONIC_FOR_ADMIN;
@@ -225,6 +229,7 @@ const createMerkleRootFileName = (
             });
         } catch (error) {
             console.log(`Error instantiating SDK: ${error}`);
+            throw new Error("Can't instantiate SDK");
         }
 
         // ------------------------------------------------
@@ -259,12 +264,24 @@ const createMerkleRootFileName = (
                 },
             ]);
 
-            const feeMap = await getFeesSnapshot(epochInfo, feeTokenSupply);
+            const feeMap = await getFeesSnapshot(epochInfo, feeTokenSupply); // will be similar to this
 
             console.log(`${tokenId} feeMap`, feeMap);
             console.log(
                 `${tokenId} feeMap`,
                 Object.keys(feeMap).length + " users who paid fees",
+            );
+
+            const clobLiqMap = await getClobLpSnapshot(
+                epochInfo,
+                clobLiqSupply,
+            );
+
+            console.log(`${tokenId} clobLiqMap`, clobLiqMap);
+            console.log(
+                `${tokenId} clobLiqMap`,
+                Object.keys(clobLiqMap).length +
+                    " users who qualified in clob liq program",
             );
 
             const t1 = Date.now();
@@ -293,6 +310,7 @@ const createMerkleRootFileName = (
             let currentEpochUserMap = combineMaps([
                 liqMap as MapOfCount,
                 feeMap as MapOfCount,
+                clobLiqMap as MapOfCount,
             ]);
 
             // // ------------------------------------------------
@@ -325,7 +343,7 @@ const createMerkleRootFileName = (
                 prevMerkleFile = fs
                     .readFileSync(
                         createMerkleRootFileName(
-                            SNAPSHOT_BASE_FILE_PATH,
+                            SNAPSHOT_BASE_FILE_PATH as string,
                             chosenEpoch - 1,
                             tokenData.symbol,
                         ),
@@ -371,16 +389,21 @@ const createMerkleRootFileName = (
                         prevMerkleInfo,
                     );
                     console.log("previousClaims", previousClaims);
-                    console.log("merkleInfo", merkleInfo);
 
                     merkleInfo = combineMerkleInfo(
                         previousClaims,
                         currentEpochUserMap,
                         isUSDC,
                     );
+                    console.log("merkleInfo", merkleInfo);
                 } catch (error) {
                     console.log("error", error);
+                    throw new Error();
                 }
+            }
+
+            if (!merkleInfo) {
+                throw new Error("merkle info not defined");
             }
 
             console.log(
@@ -396,7 +419,7 @@ const createMerkleRootFileName = (
             try {
                 fs.writeFileSync(
                     createMerkleRootFileName(
-                        SNAPSHOT_BASE_FILE_PATH,
+                        SNAPSHOT_BASE_FILE_PATH as string,
                         chosenEpoch,
                         tokenData.symbol,
                     ),
@@ -429,7 +452,7 @@ const createMerkleRootFileName = (
                 const file = fs
                     .readFileSync(
                         createMerkleRootFileName(
-                            SNAPSHOT_BASE_FILE_PATH,
+                            SNAPSHOT_BASE_FILE_PATH as string,
                             chosenEpoch,
                             tokenData.symbol,
                         ),
@@ -539,7 +562,9 @@ const createMerkleRootFileName = (
                 sdk.freeze()
                     .then((freezeTx) => {
                         console.log("freezeTx", freezeTx);
-                        return sdk.updateMerkleRoot(merkleInfo.merkleRoot);
+                        return sdk.updateMerkleRoot(
+                            (merkleInfo as MerkleDistributorInfo).merkleRoot,
+                        );
                     })
                     .then((updateMerkleRootTx) => {
                         console.log("updateMerkleRootTx", updateMerkleRootTx);
