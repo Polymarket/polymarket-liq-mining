@@ -197,10 +197,16 @@ export const cleanAndSeparateEpochPerToken = (
 
     const clobLiqMap = epochInfo.reward_tokens.reduce((acc, curr) => {
         if (!acc[curr.reward_token.id]) {
-            acc[curr.reward_token.id] = {
-                feeTokenSupply: BigNumber.from(
+            let supply: number;
+            try {
+                supply = BigNumber.from(
                     curr.clob_liqudity_token_supply,
-                ).toNumber(),
+                ).toNumber();
+            } catch (e) {
+                supply = 0;
+            }
+            acc[curr.reward_token.id] = {
+                feeTokenSupply: supply,
             };
         }
         return acc;

@@ -132,6 +132,33 @@ describe("clean and separate epoch per token", () => {
         );
     });
 
+    it("should not fail if clob_liqudity_token_supply is null", () => {
+        const thirdToken = {
+            id: 3,
+            reward_token: {
+                id: 3,
+                symbol: token3Symbol,
+                name: "LOL",
+                icon: {
+                    id: 1,
+                },
+            },
+            amm_fees_token_supply: "500000",
+            clob_liqudity_token_supply: null,
+        };
+
+        mockEpochInfo.reward_tokens.push(thirdToken);
+
+        const expected = cleanAndSeparateEpochPerToken(mockEpochInfo);
+        expect(expected.tokenMap[token3Id].markets.length).to.eq(0);
+        expect(expected.tokenMap[token3Id].feeTokenSupply).to.eq(
+            BigNumber.from("500000").toNumber(),
+        );
+        expect(expected.tokenMap[token3Id].clobLiqSupply).to.eq(
+            BigNumber.from("0").toNumber(),
+        );
+    });
+
     it("should not fail if only adding an extra liq token to an existing market", () => {
         const thirdSupply = "110000";
 
