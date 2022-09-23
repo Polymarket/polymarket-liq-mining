@@ -1,6 +1,6 @@
 import { RewardEpochFromStrapi } from "./lp-helpers";
 import { MapOfCount } from "./interfaces";
-import fetch from "cross-fetch";
+import "cross-fetch";
 import { POLY_INTL_ID } from "./constants";
 
 export interface rewardsInt {
@@ -19,8 +19,9 @@ export const getMarketsIncludedInEpoch = async (
     epoch: number,
 ): Promise<string[]> => {
     let marketsList: string[] = [];
+    console.log(POLY_INTL_ID);
     await fetch(
-        `https://clob.polymarket.com/markets-included-in-epoch?epoch=${epoch.toString()}}`,
+        `https://clob.polymarket.com/markets-included-in-epoch?epoch=${epoch.toString()}`,
         {
             method: "GET",
             headers: {
@@ -54,7 +55,12 @@ export const getTradersInEpoch = async (
                 },
             },
         );
-        const rewards: rewardsInt[] = data.json()["rewards"];
+
+        const buff = await data.arrayBuffer().then(Buffer.from);
+
+        console.log(JSON.parse(buff.toString())["rewards"]);
+        JSON.parse(buff.toString());
+        const rewards: rewardsInt[] = JSON.parse(buff.toString())["rewards"];
         for (var reward of rewards) {
             makers.add(reward.maker_address);
         }
