@@ -273,7 +273,7 @@ const createMerkleRootFileName = (
             );
 
             const clobLiqMap = await getClobLpSnapshot(
-                epochInfo,
+                epochInfo.epoch,
                 clobLiqSupply,
             );
 

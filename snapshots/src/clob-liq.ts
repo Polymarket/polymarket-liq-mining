@@ -58,8 +58,6 @@ export const getTradersInEpoch = async (
 
         const buff = await data.arrayBuffer().then(Buffer.from);
 
-        console.log(JSON.parse(buff.toString())["rewards"]);
-        JSON.parse(buff.toString());
         const rewards: rewardsInt[] = JSON.parse(buff.toString())["rewards"];
         for (var reward of rewards) {
             makers.add(reward.maker_address);
@@ -81,23 +79,24 @@ export const getLiquidtyRewardsForMakers = async (
                 method: "GET",
             },
         );
-        const makerScore: makerScore = await data.json();
-        const score = parseFloat(makerScore.qfinal);
+        const buff = await data.arrayBuffer().then(Buffer.from);
+
+        const score = parseFloat(JSON.parse(buff.toString())["qfinal"]);
         scoreMapping[maker] = score * feeTokenSupply;
     }
     return scoreMapping;
 };
 
 export const getClobLpSnapshot = async (
-    epoch: RewardEpochFromStrapi,
+    epoch: number,
     feeTokenSupply: number,
 ): Promise<MapOfCount> => {
     // get markets
 
-    const marketsList = await getMarketsIncludedInEpoch(epoch.epoch);
-    const makers = await getTradersInEpoch(epoch.epoch, marketsList);
+    const marketsList = await getMarketsIncludedInEpoch(epoch);
+    const makers = await getTradersInEpoch(epoch, marketsList);
     const liqRewardsPerMaker = await getLiquidtyRewardsForMakers(
-        epoch.epoch,
+        epoch,
         Array.from(makers),
         feeTokenSupply,
     );
