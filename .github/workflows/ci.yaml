@@ -1,0 +1,22 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Install Dependencies
+        run: yarn
+      - name: Run Tests
+        working-directory: ./snapshots
+        run: yarn test
