@@ -34,6 +34,8 @@ import {
     PRODUCTION_STRAPI_URL,
     STRAPI_ADMIN_EMAIL,
     STRAPI_ADMIN_PASSWORD,
+    STAGING_STRAPI_URL,
+    STAGING_RPC_URL,
 } from "../src/constants";
 import { getFeesSnapshot } from "../src/sql_fees";
 import { getClobLpSnapshot } from "../src/clob-liq";
@@ -82,6 +84,7 @@ const createMerkleRootFileName = (
             choices: [
                 { name: `local`, value: "local" },
                 { name: `production`, value: "production" },
+                { name: `staging`, value: "production" },
             ],
         },
     ]);
@@ -93,17 +96,35 @@ const createMerkleRootFileName = (
         "MATIC_RPC_URL",
     ]);
     const validLocalEnvVars = await validateEnvVars(["LOCAL_RPC_URL"]);
+    const validStagingEnvVars = await validateEnvVars([
+        "STAGING_RPC_URL",
+        "STAGING_RPC_URL",
+    ]);
     if (environment === "local" && !validLocalEnvVars) return;
-    if (environment !== "local" && !validProdEnvVars) return;
+    if (environment == "staging" && !validStagingEnvVars) return;
+    if (environment == "production" && !validProdEnvVars) return;
 
     // set env dependent vars for execution below
     const STRAPI_URL =
-        environment === "local" ? LOCAL_STRAPI_URL : PRODUCTION_STRAPI_URL;
+        environment === "local"
+            ? LOCAL_STRAPI_URL
+            : environment == "staging"
+            ? STAGING_STRAPI_URL
+            : PRODUCTION_STRAPI_URL;
 
     const RPC_URL =
-        environment === "local" ? LOCAL_RPC_URL : PRODUCTION_RPC_URL;
+        environment === "local"
+            ? LOCAL_RPC_URL
+            : environment == "staging"
+            ? STAGING_RPC_URL
+            : PRODUCTION_RPC_URL;
 
-    const CHAIN_ID = environment === "local" ? 31337 : 137; // hardhat or matic
+    const CHAIN_ID =
+        environment === "local"
+            ? 31337
+            : environment === "staging"
+            ? 80001
+            : 137; // hardhat or mumbai or matic
     // const DEPLOYMENTS_FOLDER = environment === "local" ? "localhost" : "matic";
     const SNAPSHOT_BASE_FILE_PATH = process.env.SNAPSHOT_BASE_FILE_PATH;
     console.log("DEFAULT_BLOCKS_PER_SAMPLE", DEFAULT_BLOCKS_PER_SAMPLE);
@@ -273,6 +294,7 @@ const createMerkleRootFileName = (
             );
 
             const clobLiqMap = await getClobLpSnapshot(
+                // give staging or not here
                 epochInfo.epoch,
                 clobLiqSupply,
             );
