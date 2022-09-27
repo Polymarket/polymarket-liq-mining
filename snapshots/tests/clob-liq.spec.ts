@@ -16,17 +16,17 @@ describe("clob liq rewards calculated correctly", () => {
             "https://clob.polymarket.com/markets-included-in-epoch?epoch=30",
             JSON.stringify({
                 markets: [
-                    "66840793208895902134770756801876217714621927881254495944557040037466903434752",
-                    "93483829706271419755141541597999290384499264524196374818190642418621166604124",
+                    "0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
+                    "0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
                 ],
             }),
         );
         const markets = await getMarketsIncludedInEpoch(TEST_URL, 30);
         expect(markets[0]).to.eq(
-            "66840793208895902134770756801876217714621927881254495944557040037466903434752",
+            "0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
         );
         expect(markets[1]).to.eq(
-            "93483829706271419755141541597999290384499264524196374818190642418621166604124",
+            "0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
         );
     });
 
@@ -34,71 +34,77 @@ describe("clob liq rewards calculated correctly", () => {
         fetchMock.restore();
         fetchMock
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=66840793208895902134770756801876217714621927881254495944557040037466903434752",
+                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
                 JSON.stringify({
                     rewards: [
                         {
                             epoch: 30,
-                            market: "66840793208895902134770756801876217714621927881254495944557040037466903434752",
+                            market: "0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
                             maker_address:
-                                "312510db-08c6-f089-cc99-5c72f6951882",
+                                "0x11FAe40C66A22907A51C9b248e3dadD57e161f58",
                             qfinal: ".25",
                         },
                         {
                             epoch: 30,
-                            market: "66840793208895902134770756801876217714621927881254495944557040037466903434752",
+                            market: "0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
                             maker_address:
-                                "f4f247b7-4ac7-ff29-a152-04fda0a8755a",
+                                "0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841",
                             qfinal: ".75",
                         },
                     ],
                 }),
             )
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=93483829706271419755141541597999290384499264524196374818190642418621166604124",
+                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
                 JSON.stringify({
                     rewards: [
                         {
                             epoch: 30,
-                            market: "93483829706271419755141541597999290384499264524196374818190642418621166604124",
+                            market: "0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
                             maker_address:
-                                "c5e247b7-4ac7-ff29-a152-04fda0a8766b",
+                                "0x94385591c282b9bdef577917d86517b6de4c1f65",
                             qfinal: ".1123124",
                         },
                         {
                             epoch: 30,
-                            market: "93483829706271419755141541597999290384499264524196374818190642418621166604124",
+                            market: "0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
                             maker_address:
-                                "f4f247b7-4ac7-ff29-a152-04fda0a8755a",
+                                "0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841",
                             qfinal: ".8876876",
                         },
                     ],
                 }),
             );
         const traders = await getTradersInEpoch(TEST_URL, 30, [
-            "66840793208895902134770756801876217714621927881254495944557040037466903434752",
-            "93483829706271419755141541597999290384499264524196374818190642418621166604124",
+            "0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
+            "0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
         ]);
         expect(traders.size).to.eq(3);
-        expect(traders.has("312510db-08c6-f089-cc99-5c72f6951882")).to.eq(true);
-        expect(traders.has("f4f247b7-4ac7-ff29-a152-04fda0a8755a")).to.eq(true);
-        expect(traders.has("c5e247b7-4ac7-ff29-a152-04fda0a8766b")).to.eq(true);
+        expect(traders.has("0x11FAe40C66A22907A51C9b248e3dadD57e161f58")).to.eq(
+            true,
+        );
+        expect(traders.has("0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841")).to.eq(
+            true,
+        );
+        expect(traders.has("0x94385591c282b9bdef577917d86517b6de4c1f65")).to.eq(
+            true,
+        );
     });
 
     it("should get liquidity rewards for makers", async () => {
         fetchMock.restore();
         fetchMock
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-maker-address?epoch=30&maker_address=312510db-08c6-f089-cc99-5c72f6951882",
+                "https://clob.polymarket.com/liquidity-rewards-by-maker-address?epoch=30&maker_address=0x11FAe40C66A22907A51C9b248e3dadD57e161f58",
                 JSON.stringify({
-                    maker_address: "312510db-08c6-f089-cc99-5c72f6951882",
+                    maker_address: "0x11FAe40C66A22907A51C9b248e3dadD57e161f58",
                     qfinal: ".33",
                 }),
             )
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-maker-address?epoch=30&maker_address=f4f247b7-4ac7-ff29-a152-04fda0a8755a",
+                "https://clob.polymarket.com/liquidity-rewards-by-maker-address?epoch=30&maker_address=0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841",
                 JSON.stringify({
-                    maker_address: "f4f247b7-4ac7-ff29-a152-04fda0a8755a",
+                    maker_address: "0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841",
                     qfinal: ".67",
                 }),
             );
@@ -106,13 +112,17 @@ describe("clob liq rewards calculated correctly", () => {
             TEST_URL,
             30,
             [
-                "312510db-08c6-f089-cc99-5c72f6951882",
-                "f4f247b7-4ac7-ff29-a152-04fda0a8755a",
+                "0x11FAe40C66A22907A51C9b248e3dadD57e161f58",
+                "0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841",
             ],
             1000,
         );
-        expect(liqRewards["312510db-08c6-f089-cc99-5c72f6951882"]).to.eq(330);
-        expect(liqRewards["f4f247b7-4ac7-ff29-a152-04fda0a8755a"]).to.eq(670);
+        expect(liqRewards["0x11FAe40C66A22907A51C9b248e3dadD57e161f58"]).to.eq(
+            330,
+        );
+        expect(liqRewards["0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841"]).to.eq(
+            670,
+        );
     });
 
     it("should get clob lp snapshot", async () => {
@@ -122,77 +132,83 @@ describe("clob liq rewards calculated correctly", () => {
                 "https://clob.polymarket.com/markets-included-in-epoch?epoch=30",
                 JSON.stringify({
                     markets: [
-                        "66840793208895902134770756801876217714621927881254495944557040037466903434752",
-                        "93483829706271419755141541597999290384499264524196374818190642418621166604124",
+                        "0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
+                        "0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
                     ],
                 }),
             )
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=66840793208895902134770756801876217714621927881254495944557040037466903434752",
+                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
                 JSON.stringify({
                     rewards: [
                         {
                             epoch: 30,
-                            market: "66840793208895902134770756801876217714621927881254495944557040037466903434752",
+                            market: "0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
                             maker_address:
-                                "312510db-08c6-f089-cc99-5c72f6951882",
+                                "0x11FAe40C66A22907A51C9b248e3dadD57e161f58",
                             qfinal: ".25",
                         },
                         {
                             epoch: 30,
-                            market: "66840793208895902134770756801876217714621927881254495944557040037466903434752",
+                            market: "0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
                             maker_address:
-                                "f4f247b7-4ac7-ff29-a152-04fda0a8755a",
+                                "0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841",
                             qfinal: ".75",
                         },
                     ],
                 }),
             )
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=93483829706271419755141541597999290384499264524196374818190642418621166604124",
+                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
                 JSON.stringify({
                     rewards: [
                         {
                             epoch: 30,
-                            market: "93483829706271419755141541597999290384499264524196374818190642418621166604124",
+                            market: "0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
                             maker_address:
-                                "c5e247b7-4ac7-ff29-a152-04fda0a8766b",
+                                "0x94385591c282b9bdef577917d86517b6de4c1f65",
                             qfinal: ".1123124",
                         },
                         {
                             epoch: 30,
-                            market: "93483829706271419755141541597999290384499264524196374818190642418621166604124",
+                            market: "0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
                             maker_address:
-                                "f4f247b7-4ac7-ff29-a152-04fda0a8755a",
+                                "0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841",
                             qfinal: ".8876876",
                         },
                     ],
                 }),
             )
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-maker-address?epoch=30&maker_address=312510db-08c6-f089-cc99-5c72f6951882",
+                "https://clob.polymarket.com/liquidity-rewards-by-maker-address?epoch=30&maker_address=0x11FAe40C66A22907A51C9b248e3dadD57e161f58",
                 JSON.stringify({
-                    maker_address: "312510db-08c6-f089-cc99-5c72f6951882",
+                    maker_address: "0x11FAe40C66A22907A51C9b248e3dadD57e161f58",
                     qfinal: ".33",
                 }),
             )
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-maker-address?epoch=30&maker_address=f4f247b7-4ac7-ff29-a152-04fda0a8755a",
+                "https://clob.polymarket.com/liquidity-rewards-by-maker-address?epoch=30&maker_address=0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841",
                 JSON.stringify({
-                    maker_address: "f4f247b7-4ac7-ff29-a152-04fda0a8755a",
+                    maker_address: "0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841",
                     qfinal: ".67",
                 }),
             )
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-maker-address?epoch=30&maker_address=c5e247b7-4ac7-ff29-a152-04fda0a8766b",
+                "https://clob.polymarket.com/liquidity-rewards-by-maker-address?epoch=30&maker_address=0x94385591c282b9bdef577917d86517b6de4c1f65",
                 JSON.stringify({
-                    maker_address: "c5e247b7-4ac7-ff29-a152-04fda0a8766b",
+                    maker_address: "0x94385591c282b9bdef577917d86517b6de4c1f65",
                     qfinal: "0.0",
                 }),
             );
         const liqRewards = await getClobLpSnapshot(TEST_URL, 30, 1000);
-        expect(liqRewards["312510db-08c6-f089-cc99-5c72f6951882"]).to.eq(330);
-        expect(liqRewards["f4f247b7-4ac7-ff29-a152-04fda0a8755a"]).to.eq(670);
-        expect(liqRewards["c5e247b7-4ac7-ff29-a152-04fda0a8766b"]).to.eq(0);
+        expect(liqRewards["0x11FAe40C66A22907A51C9b248e3dadD57e161f58"]).to.eq(
+            330,
+        );
+        expect(liqRewards["0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841"]).to.eq(
+            670,
+        );
+        expect(liqRewards["0x94385591c282b9bdef577917d86517b6de4c1f65"]).to.eq(
+            0,
+        );
     });
 });
