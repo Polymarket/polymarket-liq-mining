@@ -72,6 +72,7 @@ const createMerkleRootFileName = (
         "SNAPSHOT_BASE_FILE_PATH",
         "METABASEUSER",
         "METABASEPASSWORD",
+        "POLY_INTL_ID",
     ];
     const validEnvVars = await validateEnvVars(CHECK_ENV_VARS);
     if (!validEnvVars) return;
@@ -84,7 +85,7 @@ const createMerkleRootFileName = (
             choices: [
                 { name: `local`, value: "local" },
                 { name: `production`, value: "production" },
-                { name: `staging`, value: "production" },
+                { name: `staging`, value: "staging" },
             ],
         },
     ]);
@@ -97,7 +98,7 @@ const createMerkleRootFileName = (
     ]);
     const validLocalEnvVars = await validateEnvVars(["LOCAL_RPC_URL"]);
     const validStagingEnvVars = await validateEnvVars([
-        "STAGING_RPC_URL",
+        "STAGING_STRAPI_URL",
         "STAGING_RPC_URL",
     ]);
     if (environment === "local" && !validLocalEnvVars) return;
@@ -125,6 +126,11 @@ const createMerkleRootFileName = (
             : environment === "staging"
             ? 80001
             : 137; // hardhat or mumbai or matic
+
+    const CLOB_URL =
+        environment === "staging"
+            ? "https://clob-staging.polymarket.com"
+            : "https://clob.polymarket.com";
     // const DEPLOYMENTS_FOLDER = environment === "local" ? "localhost" : "matic";
     const SNAPSHOT_BASE_FILE_PATH = process.env.SNAPSHOT_BASE_FILE_PATH;
     console.log("DEFAULT_BLOCKS_PER_SAMPLE", DEFAULT_BLOCKS_PER_SAMPLE);
@@ -197,8 +203,6 @@ const createMerkleRootFileName = (
 
     const epochInfo: RewardEpochFromStrapi = await epochRes.json();
     ensureGoodDataFromStrapi(epochInfo);
-
-    // here
 
     const { startTimestamp, endTimestamp, tokenMap } =
         cleanAndSeparateEpochPerToken(epochInfo);
@@ -285,7 +289,7 @@ const createMerkleRootFileName = (
                 },
             ]);
 
-            const feeMap = await getFeesSnapshot(epochInfo, feeTokenSupply); // will be similar to this
+            const feeMap = await getFeesSnapshot(epochInfo, feeTokenSupply);
 
             console.log(`${tokenId} feeMap`, feeMap);
             console.log(
@@ -295,6 +299,7 @@ const createMerkleRootFileName = (
 
             const clobLiqMap = await getClobLpSnapshot(
                 // give staging or not here
+                CLOB_URL,
                 epochInfo.epoch,
                 clobLiqSupply,
             );

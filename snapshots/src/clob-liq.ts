@@ -1,6 +1,5 @@
-import { RewardEpochFromStrapi } from "./lp-helpers";
 import { MapOfCount } from "./interfaces";
-import "cross-fetch";
+import "cross-fetch/polyfill"; // polyfill vs ponyfill
 import { POLY_INTL_ID } from "./constants";
 
 export interface rewardsInt {
@@ -16,12 +15,12 @@ export interface makerScore {
 }
 
 export const getMarketsIncludedInEpoch = async (
+    clobUrl: string,
     epoch: number,
 ): Promise<string[]> => {
     let marketsList: string[] = [];
-    console.log(POLY_INTL_ID);
     await fetch(
-        `https://clob.polymarket.com/markets-included-in-epoch?epoch=${epoch.toString()}`,
+        `${clobUrl}/markets-included-in-epoch?epoch=${epoch.toString()}`,
         {
             method: "GET",
             headers: {
@@ -31,7 +30,7 @@ export const getMarketsIncludedInEpoch = async (
     )
         .then((response) => response.json())
         .then((data) => {
-            marketsList = data.map((x) => String(x));
+            marketsList = data["markets"].map((x) => String(x));
         })
         .catch((error) => {
             console.error("Error:", error);
@@ -41,13 +40,14 @@ export const getMarketsIncludedInEpoch = async (
 };
 
 export const getTradersInEpoch = async (
+    clobUrl: string,
     epoch: number,
     marketsList: string[],
 ): Promise<Set<string>> => {
     let makers = new Set<string>();
     for (var market of marketsList) {
         const data = await fetch(
-            `https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=${epoch.toString()}&market=${market}`,
+            `${clobUrl}/liquidity-rewards-by-epoch?epoch=${epoch.toString()}&market=${market}`,
             {
                 method: "GET",
                 headers: {
@@ -67,6 +67,7 @@ export const getTradersInEpoch = async (
 };
 
 export const getLiquidtyRewardsForMakers = async (
+    clobUrl: string,
     epoch: number,
     makerList: string[],
     feeTokenSupply: number,
@@ -74,7 +75,7 @@ export const getLiquidtyRewardsForMakers = async (
     let scoreMapping = {};
     for (var maker of makerList) {
         const data = await fetch(
-            `https://clob.polymarket.com/liquidity-rewards-by-maker-address?epoch=${epoch.toString()}&maker_address=${maker}`,
+            `${clobUrl}/liquidity-rewards-by-maker-address?epoch=${epoch.toString()}&maker_address=${maker}`,
             {
                 method: "GET",
             },
@@ -88,14 +89,16 @@ export const getLiquidtyRewardsForMakers = async (
 };
 
 export const getClobLpSnapshot = async (
+    clobUrl: string,
     epoch: number,
     feeTokenSupply: number,
 ): Promise<MapOfCount> => {
     // get markets
 
-    const marketsList = await getMarketsIncludedInEpoch(epoch);
-    const makers = await getTradersInEpoch(epoch, marketsList);
+    const marketsList = await getMarketsIncludedInEpoch(clobUrl, epoch);
+    const makers = await getTradersInEpoch(clobUrl, epoch, marketsList);
     const liqRewardsPerMaker = await getLiquidtyRewardsForMakers(
+        clobUrl,
         epoch,
         Array.from(makers),
         feeTokenSupply,

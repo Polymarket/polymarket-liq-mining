@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { fetch } from "cross-fetch";
 import fetchMock from "fetch-mock";
 import {
     getMarketsIncludedInEpoch,
@@ -7,16 +8,20 @@ import {
     getClobLpSnapshot,
 } from "../src/clob-liq";
 
+const TEST_URL = "https://clob.polymarket.com";
+
 describe("clob liq rewards calculated correctly", () => {
     it("should get markets included in epoch", async () => {
         fetchMock.once(
             "https://clob.polymarket.com/markets-included-in-epoch?epoch=30",
-            JSON.stringify([
-                "66840793208895902134770756801876217714621927881254495944557040037466903434752",
-                "93483829706271419755141541597999290384499264524196374818190642418621166604124",
-            ]),
+            JSON.stringify({
+                markets: [
+                    "66840793208895902134770756801876217714621927881254495944557040037466903434752",
+                    "93483829706271419755141541597999290384499264524196374818190642418621166604124",
+                ],
+            }),
         );
-        const markets = await getMarketsIncludedInEpoch(30);
+        const markets = await getMarketsIncludedInEpoch(TEST_URL, 30);
         expect(markets[0]).to.eq(
             "66840793208895902134770756801876217714621927881254495944557040037466903434752",
         );
@@ -70,7 +75,7 @@ describe("clob liq rewards calculated correctly", () => {
                     ],
                 }),
             );
-        const traders = await getTradersInEpoch(30, [
+        const traders = await getTradersInEpoch(TEST_URL, 30, [
             "66840793208895902134770756801876217714621927881254495944557040037466903434752",
             "93483829706271419755141541597999290384499264524196374818190642418621166604124",
         ]);
@@ -98,6 +103,7 @@ describe("clob liq rewards calculated correctly", () => {
                 }),
             );
         const liqRewards = await getLiquidtyRewardsForMakers(
+            TEST_URL,
             30,
             [
                 "312510db-08c6-f089-cc99-5c72f6951882",
@@ -114,10 +120,12 @@ describe("clob liq rewards calculated correctly", () => {
         fetchMock
             .once(
                 "https://clob.polymarket.com/markets-included-in-epoch?epoch=30",
-                JSON.stringify([
-                    "66840793208895902134770756801876217714621927881254495944557040037466903434752",
-                    "93483829706271419755141541597999290384499264524196374818190642418621166604124",
-                ]),
+                JSON.stringify({
+                    markets: [
+                        "66840793208895902134770756801876217714621927881254495944557040037466903434752",
+                        "93483829706271419755141541597999290384499264524196374818190642418621166604124",
+                    ],
+                }),
             )
             .once(
                 "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=66840793208895902134770756801876217714621927881254495944557040037466903434752",
@@ -182,7 +190,7 @@ describe("clob liq rewards calculated correctly", () => {
                     qfinal: "0.0",
                 }),
             );
-        const liqRewards = await getClobLpSnapshot(30, 1000);
+        const liqRewards = await getClobLpSnapshot(TEST_URL, 30, 1000);
         expect(liqRewards["312510db-08c6-f089-cc99-5c72f6951882"]).to.eq(330);
         expect(liqRewards["f4f247b7-4ac7-ff29-a152-04fda0a8755a"]).to.eq(670);
         expect(liqRewards["c5e247b7-4ac7-ff29-a152-04fda0a8766b"]).to.eq(0);
