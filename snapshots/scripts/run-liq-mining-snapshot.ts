@@ -126,7 +126,9 @@ const createMerkleRootFileName = (
                         value: each.epoch,
                     };
                 }),
-            ],
+            ].sort((a, b) => {
+                return b.value - a.value;
+            }),
         },
     ]);
     console.log("Chosen epoch:", chosenEpoch);
