@@ -122,21 +122,21 @@ export const getUsersWhoPaidFeesInEpochQuery = gql`
 
 
 export const getFixedProductMarketMakerQuery = gql`
-  query fpmm($market: String!, $block: Int!) {
-    fixedProductMarketMaker(id: $market, block: { number: $block }) {
-      id
-      poolMembers {
-        funder {
-          id
+    query fpmm($market: String!, $block: Int!) {
+        fixedProductMarketMaker(id: $market, block: { number: $block }) {
+            id
+            poolMembers(orderBy: amount, orderDirection: desc) {
+                funder {
+                    id
+                }
+                amount
+            }
+            scaledLiquidityParameter
+            outcomeTokenPrices
+            outcomeTokenAmounts
+            totalSupply
         }
-        amount
-      }
-      scaledLiquidityParameter
-      outcomeTokenPrices
-      outcomeTokenAmounts
-      totalSupply
     }
-  }
 `;
 
 export const firstLiquidityAddedQuery = gql`
