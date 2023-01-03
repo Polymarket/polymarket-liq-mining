@@ -3,7 +3,7 @@ import { fetch } from "cross-fetch";
 import fetchMock from "fetch-mock";
 import {
     getMarketsIncludedInEpoch,
-    getTradersInEpoch,
+    getMakersInEpoch,
     getLiquidtyRewardsForMakers,
     getClobLpSnapshot,
 } from "../src/clob-liq";
@@ -30,7 +30,7 @@ describe("clob liq rewards calculated correctly", () => {
         );
     });
 
-    it("should get traders in epoch", async () => {
+    it("should get makers in epoch", async () => {
         fetchMock.restore();
         fetchMock
             .once(
@@ -75,18 +75,18 @@ describe("clob liq rewards calculated correctly", () => {
                     ],
                 }),
             );
-        const traders = await getTradersInEpoch(TEST_URL, 30, [
+        const makers = await getMakersInEpoch(TEST_URL, 30, [
             "0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
             "0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
         ]);
-        expect(traders.size).to.eq(3);
-        expect(traders.has("0x11FAe40C66A22907A51C9b248e3dadD57e161f58")).to.eq(
+        expect(makers.size).to.eq(3);
+        expect(makers.has("0x11FAe40C66A22907A51C9b248e3dadD57e161f58")).to.eq(
             true,
         );
-        expect(traders.has("0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841")).to.eq(
+        expect(makers.has("0xEA5981CA48Dc40C950fC1B2496c4a0Ef900bB841")).to.eq(
             true,
         );
-        expect(traders.has("0x94385591c282b9bdef577917d86517b6de4c1f65")).to.eq(
+        expect(makers.has("0x94385591c282b9bdef577917d86517b6de4c1f65")).to.eq(
             true,
         );
     });

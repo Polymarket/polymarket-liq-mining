@@ -39,7 +39,7 @@ export const getMarketsIncludedInEpoch = async (
     return marketsList;
 };
 
-export const getTradersInEpoch = async (
+export const getMakersInEpoch = async (
     clobUrl: string,
     epoch: number,
     marketsList: string[],
@@ -72,8 +72,8 @@ export const getLiquidtyRewardsForMakers = async (
     makerList: string[],
     feeTokenSupply: number,
 ): Promise<MapOfCount> => {
-    let scoreMapping = {};
-    for (var maker of makerList) {
+    const scoreMapping = {};
+    for (const maker of makerList) {
         const data = await fetch(
             `${clobUrl}/liquidity-rewards-by-maker-address?epoch=${epoch.toString()}&maker_address=${maker}`,
             {
@@ -96,7 +96,7 @@ export const getClobLpSnapshot = async (
     // get markets
 
     const marketsList = await getMarketsIncludedInEpoch(clobUrl, epoch);
-    const makers = await getTradersInEpoch(clobUrl, epoch, marketsList);
+    const makers = await getMakersInEpoch(clobUrl, epoch, marketsList);
     const liqRewardsPerMaker = await getLiquidtyRewardsForMakers(
         clobUrl,
         epoch,
