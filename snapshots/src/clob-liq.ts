@@ -47,7 +47,7 @@ export const getTradersInEpoch = async (
     let makers = new Set<string>();
     for (var market of marketsList) {
         const data = await fetch(
-            `${clobUrl}/liquidity-rewards-by-epoch?epoch=${epoch.toString()}&market=${market}`,
+            `${clobUrl}/liquidity-rewards-by-epoch?epoch=${epoch.toString()}&condition_id=${market}`,
             {
                 method: "GET",
                 headers: {

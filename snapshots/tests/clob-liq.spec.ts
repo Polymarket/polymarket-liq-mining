@@ -34,7 +34,7 @@ describe("clob liq rewards calculated correctly", () => {
         fetchMock.restore();
         fetchMock
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
+                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&condition_id=0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
                 JSON.stringify({
                     rewards: [
                         {
@@ -55,7 +55,7 @@ describe("clob liq rewards calculated correctly", () => {
                 }),
             )
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
+                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&condition_id=0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
                 JSON.stringify({
                     rewards: [
                         {
@@ -138,7 +138,7 @@ describe("clob liq rewards calculated correctly", () => {
                 }),
             )
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
+                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&condition_id=0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af",
                 JSON.stringify({
                     rewards: [
                         {
@@ -159,7 +159,7 @@ describe("clob liq rewards calculated correctly", () => {
                 }),
             )
             .once(
-                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&market=0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
+                "https://clob.polymarket.com/liquidity-rewards-by-epoch?epoch=30&condition_id=0x11aa40a5fdf9ca528a3f40f0960addf98993b717e66a35bf09fe5443b5ba82c2",
                 JSON.stringify({
                     rewards: [
                         {
