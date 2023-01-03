@@ -4,7 +4,7 @@ import fetchMock from "fetch-mock";
 import {
     getMarketsIncludedInEpoch,
     getMakersInEpoch,
-    getLiquidtyRewardsForMakers,
+    getLiquidityRewardsForMakers,
     getClobLpSnapshot,
 } from "../src/clob-liq";
 
@@ -108,7 +108,7 @@ describe("clob liq rewards calculated correctly", () => {
                     qfinal: ".67",
                 }),
             );
-        const liqRewards = await getLiquidtyRewardsForMakers(
+        const liqRewards = await getLiquidityRewardsForMakers(
             TEST_URL,
             30,
             [
