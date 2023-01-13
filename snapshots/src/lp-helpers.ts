@@ -145,9 +145,9 @@ export const ensureGoodDataFromStrapi = (
         throw new Error("No Reward Tokens!");
     }
 
-    if (!reward_markets || reward_markets.length === 0) {
-        throw new Error("No Reward Markets!");
-    }
+    // if (!reward_markets || reward_markets.length === 0) {
+    //     throw new Error("No Reward Markets!");
+    // }
 
     if (!reward_tokens[0].amm_fees_token_supply) {
         throw new Error("No Fee Token Supply Set");
@@ -161,12 +161,12 @@ export const ensureGoodDataFromStrapi = (
         throw new Error("No Reward Token Set!");
     }
 
-    if (
-        !reward_markets[0].market ||
-        !reward_markets[0].market.marketMakerAddress
-    ) {
-        throw new Error("No Market Maker Address!");
-    }
+    // if (
+    //     !reward_markets[0].market ||
+    //     !reward_markets[0].market.marketMakerAddress
+    // ) {
+    //     throw new Error("No Market Maker Address!");
+    // }
 
     return true;
 };
