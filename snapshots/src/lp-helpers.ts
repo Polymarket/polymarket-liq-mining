@@ -105,6 +105,7 @@ interface TokenMap {
     [tokenName: string]: {
         markets: LpMarketInfo[];
         feeTokenSupply: number;
+        clobLiqSupply: number;
     };
 }
 
@@ -152,6 +153,10 @@ export const ensureGoodDataFromStrapi = (
         throw new Error("No Fee Token Supply Set");
     }
 
+    if (!reward_tokens[0].clob_liqudity_token_supply) {
+        throw new Error("No CLOB Liqudity Token Supply Set");
+    }
+
     if (!reward_tokens[0].reward_token || !reward_tokens[0].reward_token.name) {
         throw new Error("No Reward Token Set!");
     }
@@ -185,6 +190,23 @@ export const cleanAndSeparateEpochPerToken = (
                 feeTokenSupply: BigNumber.from(
                     curr.amm_fees_token_supply,
                 ).toNumber(),
+            };
+        }
+        return acc;
+    }, {});
+
+    const clobLiqMap = epochInfo.reward_tokens.reduce((acc, curr) => {
+        if (!acc[curr.reward_token.id]) {
+            let supply: number;
+            try {
+                supply = BigNumber.from(
+                    curr.clob_liqudity_token_supply,
+                ).toNumber();
+            } catch (e) {
+                supply = 0;
+            }
+            acc[curr.reward_token.id] = {
+                feeTokenSupply: supply,
             };
         }
         return acc;
@@ -242,6 +264,7 @@ export const cleanAndSeparateEpochPerToken = (
             acc[tokenId] = {
                 markets: liqMap[tokenId]?.markets ?? [],
                 feeTokenSupply: feeMap[tokenId]?.feeTokenSupply ?? 0,
+                clobLiqSupply: clobLiqMap[tokenId]?.feeTokenSupply ?? 0,
             };
         }
 
