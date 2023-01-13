@@ -204,7 +204,7 @@ const createMerkleRootFileName = (
     const epochRes = await fetch(`${STRAPI_URL}/reward-epoches/${chosenEpoch}`);
 
     const epochInfo: RewardEpochFromStrapi = await epochRes.json();
-    //ensureGoodDataFromStrapi(epochInfo);
+    ensureGoodDataFromStrapi(epochInfo);
 
     const { startTimestamp, endTimestamp, tokenMap } =
         cleanAndSeparateEpochPerToken(epochInfo);
