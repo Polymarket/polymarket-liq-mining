@@ -306,13 +306,6 @@ const createMerkleRootFileName = (
                 tokenId,
             );
 
-            // const clobLiqMap = await getClobLpSnapshot(
-            //     // give staging or not here
-            //     CLOB_URL,
-            //     epochInfo.epoch,
-            //     clobLiqSupply,
-            // );
-
             console.log(`${tokenId} clobLiqMap`, clobLiqMap);
             console.log(
                 `${tokenId} clobLiqMap`,
