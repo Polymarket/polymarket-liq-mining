@@ -14,6 +14,35 @@ export interface makerScore {
     qfinal: string;
 }
 
+export const getMarketAllocations = async (
+    strapiUrl: string,
+    tokenId: string,
+    epoch: number,
+): Promise<{ [market: string]: number }> => {
+    const marketToReward: { [market: string]: number } = {};
+    await fetch(`${strapiUrl}/reward-epoches/${epoch.toString()}`)
+        .then((response) => response.json())
+        .then((data) => {
+            const rewardMarkets = data["reward_markets"];
+            for (var market of rewardMarkets) {
+                const rewardTokensLiquidity = market["reward_tokens_liquidity"];
+                for (var rewardToken of rewardTokensLiquidity) {
+                    if (
+                        rewardToken["reward_token"]["name"].toLowerCase() ==
+                        tokenId.toLowerCase()
+                    ) {
+                        const conditionId =
+                            market["market"]["conditionId"].toLowerCase();
+                        marketToReward[conditionId] = Number(
+                            rewardToken["clob_token_supply"],
+                        );
+                    }
+                }
+            }
+        });
+    return marketToReward;
+};
+
 export const getMarketsIncludedInEpoch = async (
     clobUrl: string,
     epoch: number,
@@ -70,7 +99,9 @@ export const getLiquidityRewardsForMakers = async (
     clobUrl: string,
     epoch: number,
     makerList: string[],
-    feeTokenSupply: number,
+    marketAllocations: {
+        [market: string]: number;
+    },
 ): Promise<MapOfCount> => {
     const scoreMapping = {};
     for (const maker of makerList) {
@@ -80,20 +111,37 @@ export const getLiquidityRewardsForMakers = async (
                 method: "GET",
             },
         );
-        const buff = await data.arrayBuffer().then(Buffer.from);
+        const values = JSON.parse(
+            (await data.arrayBuffer().then(Buffer.from)).toString(),
+        );
 
-        const score = parseFloat(JSON.parse(buff.toString())["qfinal"]);
-        scoreMapping[maker] = score * feeTokenSupply;
+        for (var value of values) {
+            const market = value["market"].toLowerCase();
+            const allocationForMarket = marketAllocations[market];
+            const qFinal = parseFloat(value["qfinal"]);
+            const score = qFinal * allocationForMarket;
+            if (scoreMapping[maker] !== undefined) {
+                scoreMapping[maker] = scoreMapping[maker] + score;
+            } else {
+                scoreMapping[maker] = score;
+            }
+        }
     }
     return scoreMapping;
 };
 
 export const getClobLpSnapshot = async (
+    strapiUrl: string,
     clobUrl: string,
     epoch: number,
-    feeTokenSupply: number,
+    tokenId: string,
 ): Promise<MapOfCount> => {
     // get markets
+    const marketAllocations = await getMarketAllocations(
+        strapiUrl,
+        tokenId,
+        epoch,
+    );
 
     const marketsList = await getMarketsIncludedInEpoch(clobUrl, epoch);
     const makers = await getMakersInEpoch(clobUrl, epoch, marketsList);
@@ -101,7 +149,7 @@ export const getClobLpSnapshot = async (
         clobUrl,
         epoch,
         Array.from(makers),
-        feeTokenSupply,
+        marketAllocations,
     );
 
     return liqRewardsPerMaker;
