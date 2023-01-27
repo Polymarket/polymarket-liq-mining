@@ -24,12 +24,12 @@ export const getMarketAllocations = async (
         .then((response) => response.json())
         .then((data) => {
             const rewardMarkets = data["reward_markets"];
-            for (var market of rewardMarkets) {
+            for (const market of rewardMarkets) {
                 const rewardTokensLiquidity = market["reward_tokens_liquidity"];
-                for (var rewardToken of rewardTokensLiquidity) {
+                for (const rewardToken of rewardTokensLiquidity) {
                     if (
-                        rewardToken["reward_token"]["name"].toLowerCase() ==
-                        tokenId.toLowerCase()
+                        rewardToken["reward_token"]["id"] ==
+                        tokenId
                     ) {
                         const conditionId =
                             market["market"]["conditionId"].toLowerCase();
@@ -73,8 +73,8 @@ export const getMakersInEpoch = async (
     epoch: number,
     marketsList: string[],
 ): Promise<Set<string>> => {
-    let makers = new Set<string>();
-    for (var market of marketsList) {
+    const makers = new Set<string>();
+    for (const market of marketsList) {
         const data = await fetch(
             `${clobUrl}/liquidity-rewards-by-epoch?epoch=${epoch.toString()}&condition_id=${market}`,
             {
@@ -88,7 +88,7 @@ export const getMakersInEpoch = async (
         const buff = await data.arrayBuffer().then(Buffer.from);
 
         const rewards: rewardsInt[] = JSON.parse(buff.toString())["rewards"];
-        for (var reward of rewards) {
+        for (const reward of rewards) {
             makers.add(reward.maker_address);
         }
     }
@@ -115,7 +115,7 @@ export const getLiquidityRewardsForMakers = async (
             (await data.arrayBuffer().then(Buffer.from)).toString(),
         );
 
-        for (var value of values) {
+        for (const value of values) {
             const market = value["market"].toLowerCase();
             const allocationForMarket = marketAllocations[market];
             const qFinal = parseFloat(value["qfinal"]);
@@ -142,6 +142,9 @@ export const getClobLpSnapshot = async (
         tokenId,
         epoch,
     );
+
+    console.log("Market allocations: ", marketAllocations);
+    console.log("Token ID: ", tokenId);
 
     const marketsList = await getMarketsIncludedInEpoch(clobUrl, epoch);
     const makers = await getMakersInEpoch(clobUrl, epoch, marketsList);
