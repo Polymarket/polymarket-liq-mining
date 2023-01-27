@@ -88,12 +88,12 @@ describe("clob liq rewards calculated correctly", () => {
         );
         const usdcMarketAllocations = await getMarketAllocations(
             TEST_STRAPI_URL,
-            "usdc",
+            "2",
             43,
         );
         const umaMarketAllocations = await getMarketAllocations(
             TEST_STRAPI_URL,
-            "uma",
+            "1",
             43,
         );
         expect(
@@ -403,7 +403,7 @@ describe("clob liq rewards calculated correctly", () => {
             TEST_STRAPI_URL,
             TEST_URL,
             30,
-            "usdc",
+            "2",
         );
         expect(liqRewards["0x11FAe40C66A22907A51C9b248e3dadD57e161f58"]).to.eq(
             330,
