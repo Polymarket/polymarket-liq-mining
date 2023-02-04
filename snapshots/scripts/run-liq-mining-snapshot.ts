@@ -314,30 +314,30 @@ const createMerkleRootFileName = (
             );
 
             const t1 = Date.now();
-            const liqMap = await generateLpSnapshot(
-                startTimestamp,
-                endTimestamp,
-                markets,
-                Number(DEFAULT_BLOCKS_PER_SAMPLE),
-                shouldFailOnBlockMismatch,
-                false, // !isEstimating
-                shouldMemoizeMarketInfo
-                    ? {
-                          epoch: chosenEpoch,
-                          tokenSymbol: tokenData.symbol.toUpperCase(),
-                      }
-                    : undefined,
-            );
+            // const liqMap = await generateLpSnapshot(
+            //     startTimestamp,
+            //     endTimestamp,
+            //     markets,
+            //     Number(DEFAULT_BLOCKS_PER_SAMPLE),
+            //     shouldFailOnBlockMismatch,
+            //     false, // !isEstimating
+            //     shouldMemoizeMarketInfo
+            //         ? {
+            //               epoch: chosenEpoch,
+            //               tokenSymbol: tokenData.symbol.toUpperCase(),
+            //           }
+            //         : undefined,
+            // );
 
             // console.log(`${tokenId} liqMap`, liqMap);
-            console.log(
-                `${tokenId} liqMap`,
-                Object.keys(liqMap).length + " liquidity providers",
-            );
+            // console.log(
+            //     `${tokenId} liqMap`,
+            //     Object.keys(liqMap).length + " liquidity providers",
+            // );
             const t2 = Date.now();
             const t3 = Date.now();
             let currentEpochUserMap = combineMaps([
-                liqMap as MapOfCount,
+                // liqMap as MapOfCount,
                 feeMap as MapOfCount,
                 clobLiqMap as MapOfCount,
             ]);
