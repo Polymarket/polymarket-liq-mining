@@ -27,10 +27,7 @@ export const getMarketAllocations = async (
             for (const market of rewardMarkets) {
                 const rewardTokensLiquidity = market["reward_tokens_liquidity"];
                 for (const rewardToken of rewardTokensLiquidity) {
-                    if (
-                        rewardToken["reward_token"]["id"] ==
-                        tokenId
-                    ) {
+                    if (rewardToken["reward_token"]["id"] == tokenId) {
                         const conditionId =
                             market["market"]["conditionId"].toLowerCase();
                         marketToReward[conditionId] = Number(
@@ -116,15 +113,19 @@ export const getLiquidityRewardsForMakers = async (
         );
 
         for (const value of values) {
-            const market = value["market"].toLowerCase();
-            const allocationForMarket = marketAllocations[market];
-            const qFinal = parseFloat(value["qfinal"]);
-            const score = qFinal * allocationForMarket;
-            if (scoreMapping[maker] !== undefined) {
-                scoreMapping[maker] = scoreMapping[maker] + score;
-            } else {
-                scoreMapping[maker] = score;
-            }
+            try {
+                const market = value["market"].toLowerCase();
+                const allocationForMarket = marketAllocations[market];
+                const qFinal = parseFloat(value["qfinal"]);
+                const score = qFinal * allocationForMarket;
+                if (score > 0) {
+                    if (scoreMapping[maker] !== undefined) {
+                        scoreMapping[maker] = scoreMapping[maker] + score;
+                    } else {
+                        scoreMapping[maker] = score;
+                    }
+                }
+            } catch {}
         }
     }
     return scoreMapping;
