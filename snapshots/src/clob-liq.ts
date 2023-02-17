@@ -118,10 +118,12 @@ export const getLiquidityRewardsForMakers = async (
                 const allocationForMarket = marketAllocations[market];
                 const qFinal = parseFloat(value["qfinal"]);
                 const score = qFinal * allocationForMarket;
-                if (scoreMapping[maker] !== undefined) {
-                    scoreMapping[maker] = scoreMapping[maker] + score;
-                } else {
-                    scoreMapping[maker] = score;
+                if (score > 0) {
+                    if (scoreMapping[maker] !== undefined) {
+                        scoreMapping[maker] = scoreMapping[maker] + score;
+                    } else {
+                        scoreMapping[maker] = score;
+                    }
                 }
             } catch {}
         }
