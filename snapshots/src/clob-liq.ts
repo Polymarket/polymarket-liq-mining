@@ -27,10 +27,7 @@ export const getMarketAllocations = async (
             for (const market of rewardMarkets) {
                 const rewardTokensLiquidity = market["reward_tokens_liquidity"];
                 for (const rewardToken of rewardTokensLiquidity) {
-                    if (
-                        rewardToken["reward_token"]["id"].toLowerCase() ==
-                        tokenId
-                    ) {
+                    if (rewardToken["reward_token"]["id"] == tokenId) {
                         const conditionId =
                             market["market"]["conditionId"].toLowerCase();
                         marketToReward[conditionId] = Number(
