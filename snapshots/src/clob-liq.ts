@@ -24,12 +24,12 @@ export const getMarketAllocations = async (
         .then((response) => response.json())
         .then((data) => {
             const rewardMarkets = data["reward_markets"];
-            for (const market of rewardMarkets) {
+            for (var market of rewardMarkets) {
                 const rewardTokensLiquidity = market["reward_tokens_liquidity"];
-                for (const rewardToken of rewardTokensLiquidity) {
+                for (var rewardToken of rewardTokensLiquidity) {
                     if (
-                        rewardToken["reward_token"]["id"] ==
-                        tokenId
+                        rewardToken["reward_token"]["name"].toLowerCase() ==
+                        tokenId.toLowerCase()
                     ) {
                         const conditionId =
                             market["market"]["conditionId"].toLowerCase();
@@ -73,8 +73,8 @@ export const getMakersInEpoch = async (
     epoch: number,
     marketsList: string[],
 ): Promise<Set<string>> => {
-    const makers = new Set<string>();
-    for (const market of marketsList) {
+    let makers = new Set<string>();
+    for (var market of marketsList) {
         const data = await fetch(
             `${clobUrl}/liquidity-rewards-by-epoch?epoch=${epoch.toString()}&condition_id=${market}`,
             {
@@ -88,7 +88,7 @@ export const getMakersInEpoch = async (
         const buff = await data.arrayBuffer().then(Buffer.from);
 
         const rewards: rewardsInt[] = JSON.parse(buff.toString())["rewards"];
-        for (const reward of rewards) {
+        for (var reward of rewards) {
             makers.add(reward.maker_address);
         }
     }
@@ -115,16 +115,18 @@ export const getLiquidityRewardsForMakers = async (
             (await data.arrayBuffer().then(Buffer.from)).toString(),
         );
 
-        for (const value of values) {
-            const market = value["market"].toLowerCase();
-            const allocationForMarket = marketAllocations[market];
-            const qFinal = parseFloat(value["qfinal"]);
-            const score = qFinal * allocationForMarket;
-            if (scoreMapping[maker] !== undefined) {
-                scoreMapping[maker] = scoreMapping[maker] + score;
-            } else {
-                scoreMapping[maker] = score;
-            }
+        for (var value of values) {
+            try {
+                const market = value["market"].toLowerCase();
+                const allocationForMarket = marketAllocations[market];
+                const qFinal = parseFloat(value["qfinal"]);
+                const score = qFinal * allocationForMarket;
+                if (scoreMapping[maker] !== undefined) {
+                    scoreMapping[maker] = scoreMapping[maker] + score;
+                } else {
+                    scoreMapping[maker] = score;
+                }
+            } catch {}
         }
     }
     return scoreMapping;
@@ -142,9 +144,6 @@ export const getClobLpSnapshot = async (
         tokenId,
         epoch,
     );
-
-    console.log("Market allocations: ", marketAllocations);
-    console.log("Token ID: ", tokenId);
 
     const marketsList = await getMarketsIncludedInEpoch(clobUrl, epoch);
     const makers = await getMakersInEpoch(clobUrl, epoch, marketsList);
