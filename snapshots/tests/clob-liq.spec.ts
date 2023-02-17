@@ -412,7 +412,7 @@ describe("clob liq rewards calculated correctly", () => {
             670,
         );
         expect(liqRewards["0x94385591c282b9bdef577917d86517b6de4c1f65"]).to.eq(
-            0,
+            undefined,
         );
     });
 });
