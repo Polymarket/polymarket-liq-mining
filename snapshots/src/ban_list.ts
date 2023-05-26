@@ -1,6 +1,6 @@
 /**
  * A list of addresses currently excluded from the snapshot calculation
- */
+ */ 
 
 export const EXCLUDED_ACCOUNTS = [
     "0x778f6b920f7b96b0a76b1711b495e429b932e2c3",
