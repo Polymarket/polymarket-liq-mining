@@ -1,19 +1,36 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.calculatePercentOfSampleToUse = exports.calculateTokensPerSample = exports.createArrayOfSamples = exports.validateEventStartBlock = exports.calculateSamplesPerEvent = exports.lowerCaseMarketMakers = exports.getStartAndEndBlock = exports.updateTokensPerBlockReward = exports.cleanAndSeparateEpochPerToken = exports.ensureGoodDataFromStrapi = exports.BlockOrderError = exports.LpCalculation = void 0;
+exports.calculatePercentOfSampleToUse =
+    exports.calculateTokensPerSample =
+    exports.createArrayOfSamples =
+    exports.validateEventStartBlock =
+    exports.calculateSamplesPerEvent =
+    exports.lowerCaseMarketMakers =
+    exports.getStartAndEndBlock =
+    exports.updateTokensPerBlockReward =
+    exports.cleanAndSeparateEpochPerToken =
+    exports.ensureGoodDataFromStrapi =
+    exports.BlockOrderError =
+    exports.LpCalculation =
+        void 0;
 const helpers_1 = require("./helpers");
 const bignumber_1 = require("@ethersproject/bignumber");
 var LpCalculation;
 (function (LpCalculation) {
     LpCalculation["PerBlock"] = "perBlock";
     LpCalculation["PerMarket"] = "perMarket";
-})(LpCalculation = exports.LpCalculation || (exports.LpCalculation = {}));
+})((LpCalculation = exports.LpCalculation || (exports.LpCalculation = {})));
 var BlockOrderError;
 (function (BlockOrderError) {
     BlockOrderError["NotSet"] = "all blocks are not set!";
-    BlockOrderError["StartBeforeEventEnd"] = "reward market start block is after event block!";
-    BlockOrderError["EndBeforeEventStart"] = "reward market end block is before event block!";
-})(BlockOrderError = exports.BlockOrderError || (exports.BlockOrderError = {}));
+    BlockOrderError["StartBeforeEventEnd"] =
+        "reward market start block is after event block!";
+    BlockOrderError["EndBeforeEventStart"] =
+        "reward market end block is before event block!";
+})(
+    (BlockOrderError =
+        exports.BlockOrderError || (exports.BlockOrderError = {})),
+);
 /**
  * Throws errors if properties we need from Strapi are not present
  * @param epochInfo
@@ -42,8 +59,10 @@ const ensureGoodDataFromStrapi = (epochInfo) => {
     if (!reward_tokens[0].reward_token || !reward_tokens[0].reward_token.name) {
         throw new Error("No Reward Token Set!");
     }
-    if (!reward_markets[0].market ||
-        !reward_markets[0].market.marketMakerAddress) {
+    if (
+        !reward_markets[0].market ||
+        !reward_markets[0].market.marketMakerAddress
+    ) {
         throw new Error("No Market Maker Address!");
     }
     return true;
@@ -62,7 +81,9 @@ const cleanAndSeparateEpochPerToken = (epochInfo) => {
     const feeMap = epochInfo.reward_tokens.reduce((acc, curr) => {
         if (!acc[curr.reward_token.id]) {
             acc[curr.reward_token.id] = {
-                feeTokenSupply: bignumber_1.BigNumber.from(curr.amm_fees_token_supply).toNumber(),
+                feeTokenSupply: bignumber_1.BigNumber.from(
+                    curr.amm_fees_token_supply,
+                ).toNumber(),
             };
         }
         return acc;
@@ -78,23 +99,33 @@ const cleanAndSeparateEpochPerToken = (epochInfo) => {
             const eventStartDate = getDateMs(curr.event_start_date);
             const rewardMarketEndDate = getDateMs(curr.reward_end_date);
             const marketMaker = curr.market.marketMakerAddress.toLowerCase();
-            if (rewardMarketStartDate &&
+            if (
+                rewardMarketStartDate &&
                 rewardMarketEndDate &&
-                eventStartDate) {
-                const hasError = exports.validateEventStartBlock(rewardMarketStartDate, eventStartDate, rewardMarketEndDate, marketMaker);
+                eventStartDate
+            ) {
+                const hasError = exports.validateEventStartBlock(
+                    rewardMarketStartDate,
+                    eventStartDate,
+                    rewardMarketEndDate,
+                    marketMaker,
+                );
                 if (hasError) {
                     throw new Error(hasError);
                 }
             }
             acc[token.reward_token.id].markets.push({
-                amount: bignumber_1.BigNumber.from(token.lp_token_supply).toNumber(),
+                amount: bignumber_1.BigNumber.from(
+                    token.lp_token_supply,
+                ).toNumber(),
                 howToCalculate: token.token_calculation,
                 marketMaker,
                 rewardMarketStartDate,
                 eventStartDate,
-                preEventPercent: typeof curr.pre_event_percent === "number"
-                    ? curr.pre_event_percent / 100
-                    : null,
+                preEventPercent:
+                    typeof curr.pre_event_percent === "number"
+                        ? curr.pre_event_percent / 100
+                        : null,
                 rewardMarketEndDate,
             });
         });
@@ -105,8 +136,20 @@ const cleanAndSeparateEpochPerToken = (epochInfo) => {
         var _a, _b, _c, _d;
         if (!acc[tokenId]) {
             acc[tokenId] = {
-                markets: (_b = (_a = liqMap[tokenId]) === null || _a === void 0 ? void 0 : _a.markets) !== null && _b !== void 0 ? _b : [],
-                feeTokenSupply: (_d = (_c = feeMap[tokenId]) === null || _c === void 0 ? void 0 : _c.feeTokenSupply) !== null && _d !== void 0 ? _d : 0,
+                markets:
+                    (_b =
+                        (_a = liqMap[tokenId]) === null || _a === void 0
+                            ? void 0
+                            : _a.markets) !== null && _b !== void 0
+                        ? _b
+                        : [],
+                feeTokenSupply:
+                    (_d =
+                        (_c = feeMap[tokenId]) === null || _c === void 0
+                            ? void 0
+                            : _c.feeTokenSupply) !== null && _d !== void 0
+                        ? _d
+                        : 0,
             };
         }
         return acc;
@@ -127,11 +170,19 @@ exports.cleanAndSeparateEpochPerToken = cleanAndSeparateEpochPerToken;
  * @param perBlockReward
  * @returns MapOfCount
  */
-const updateTokensPerBlockReward = (userTokensPerEpoch, liquidityAcrossBlocks, perBlockReward) => {
+const updateTokensPerBlockReward = (
+    userTokensPerEpoch,
+    liquidityAcrossBlocks,
+    perBlockReward,
+) => {
     let updatedMap = Object.assign({}, userTokensPerEpoch);
     for (const liquidityAtBlock of liquidityAcrossBlocks) {
         const sumOfBlockLiquidity = helpers_1.sumValues(liquidityAtBlock);
-        const blockPoints = helpers_1.makePayoutsMap(liquidityAtBlock, sumOfBlockLiquidity, perBlockReward);
+        const blockPoints = helpers_1.makePayoutsMap(
+            liquidityAtBlock,
+            sumOfBlockLiquidity,
+            perBlockReward,
+        );
         updatedMap = helpers_1.combineMaps([blockPoints, updatedMap]);
     }
     return updatedMap;
@@ -146,7 +197,14 @@ exports.updateTokensPerBlockReward = updateTokensPerBlockReward;
  * @param marketEndBlock
  * @returns howToCalculate, startBlock, endBlock
  */
-const getStartAndEndBlock = ({ epochStartBlock, epochEndBlock, marketStartBlock, marketEndBlock, rewardMarketEndBlock, rewardMarketStartBlock, }) => {
+const getStartAndEndBlock = ({
+    epochStartBlock,
+    epochEndBlock,
+    marketStartBlock,
+    marketEndBlock,
+    rewardMarketEndBlock,
+    rewardMarketStartBlock,
+}) => {
     if (!marketStartBlock) {
         throw new Error("The market has not started!");
     }
@@ -159,8 +217,10 @@ const getStartAndEndBlock = ({ epochStartBlock, epochEndBlock, marketStartBlock,
         startBlock = epochStartBlock;
     }
     // epoch started before market or epoch has not started
-    if ((epochStartBlock && epochStartBlock < marketStartBlock) ||
-        !epochStartBlock) {
+    if (
+        (epochStartBlock && epochStartBlock < marketStartBlock) ||
+        !epochStartBlock
+    ) {
         startBlock = marketStartBlock;
     }
     // if rewardMarket has a specific start date, use it
@@ -174,13 +234,17 @@ const getStartAndEndBlock = ({ epochStartBlock, epochEndBlock, marketStartBlock,
         endBlock = null;
     }
     // epoch ended before market or epoch ended and market is still live
-    if ((epochEndBlock && marketEndBlock && epochEndBlock <= marketEndBlock) ||
-        (epochEndBlock && !marketEndBlock)) {
+    if (
+        (epochEndBlock && marketEndBlock && epochEndBlock <= marketEndBlock) ||
+        (epochEndBlock && !marketEndBlock)
+    ) {
         endBlock = epochEndBlock;
     }
     // market ended before epoch or market ended and epoch has not finished
-    if ((epochEndBlock && marketEndBlock && epochEndBlock > marketEndBlock) ||
-        (!epochEndBlock && marketEndBlock)) {
+    if (
+        (epochEndBlock && marketEndBlock && epochEndBlock > marketEndBlock) ||
+        (!epochEndBlock && marketEndBlock)
+    ) {
         endBlock = marketEndBlock;
     }
     // if rewardMarket has a specific end date, use it
@@ -199,7 +263,11 @@ exports.getStartAndEndBlock = getStartAndEndBlock;
  * @returns LpMarketInfo[]
  */
 const lowerCaseMarketMakers = (markets) => {
-    return markets.map((market) => (Object.assign(Object.assign({}, market), { marketMaker: market.marketMaker.toLowerCase() })));
+    return markets.map((market) =>
+        Object.assign(Object.assign({}, market), {
+            marketMaker: market.marketMaker.toLowerCase(),
+        }),
+    );
 };
 exports.lowerCaseMarketMakers = lowerCaseMarketMakers;
 /**
@@ -215,7 +283,12 @@ const calculateSamplesPerEvent = (startBlock, endBlock, samplesPerMarket) => {
     return samples;
 };
 exports.calculateSamplesPerEvent = calculateSamplesPerEvent;
-const validateEventStartBlock = (startBlock, eventBlock, endBlock, marketMaker) => {
+const validateEventStartBlock = (
+    startBlock,
+    eventBlock,
+    endBlock,
+    marketMaker,
+) => {
     console.log("in validateEventStartBlock, market maker:", marketMaker);
     if (!startBlock || !eventBlock || !endBlock) {
         return BlockOrderError.NotSet;
@@ -229,7 +302,12 @@ const validateEventStartBlock = (startBlock, eventBlock, endBlock, marketMaker) 
     return null;
 };
 exports.validateEventStartBlock = validateEventStartBlock;
-const createArrayOfSamples = (startBlock, endBlock, eventStartBlock, blocksPerSample) => {
+const createArrayOfSamples = (
+    startBlock,
+    endBlock,
+    eventStartBlock,
+    blocksPerSample,
+) => {
     const arrayOfSamples = [[]];
     for (let block = startBlock; block <= endBlock; block += blocksPerSample) {
         if (eventStartBlock && block >= eventStartBlock) {
@@ -237,8 +315,7 @@ const createArrayOfSamples = (startBlock, endBlock, eventStartBlock, blocksPerSa
                 arrayOfSamples.push([]);
             }
             arrayOfSamples[1].push(block);
-        }
-        else {
+        } else {
             arrayOfSamples[0].push(block);
         }
     }
@@ -266,25 +343,31 @@ exports.calculateTokensPerSample = calculateTokensPerSample;
 const calculatePercentOfSampleToUse = (isSampleDuringEvent, timestamps) => {
     const { now, startTime, endTime, eventStartTime } = timestamps;
     // if there is an event event, and the sample of timestamps is during event, then eventStartBlock is start block
-    const sb = eventStartTime !== null && isSampleDuringEvent
-        ? eventStartTime
-        : startTime;
+    const sb =
+        eventStartTime !== null && isSampleDuringEvent
+            ? eventStartTime
+            : startTime;
     if (sb === eventStartTime) {
         console.log("using eventStartTime as start:", sb);
     }
     if (now < sb) {
-        console.log(`now: ${now} is before startTime: ${sb} - using NONE of the supply`);
+        console.log(
+            `now: ${now} is before startTime: ${sb} - using NONE of the supply`,
+        );
         return 0;
     }
     // if there is an event, and sample is before event, then end block is event start block
-    const eb = eventStartTime !== null && !isSampleDuringEvent
-        ? eventStartTime
-        : endTime;
+    const eb =
+        eventStartTime !== null && !isSampleDuringEvent
+            ? eventStartTime
+            : endTime;
     if (eb === eventStartTime) {
         console.log("using eventStartTime as end block:", eb);
     }
     if (now >= eb) {
-        console.log(`now: ${now} is after endTime: ${eb} - using ALL of the supply`);
+        console.log(
+            `now: ${now} is after endTime: ${eb} - using ALL of the supply`,
+        );
         return 1;
     }
     const percentOfSampleBeingUsed = (now - sb) / (eb - sb);
