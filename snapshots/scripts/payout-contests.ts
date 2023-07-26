@@ -19,6 +19,30 @@ const confirmRiskyWithMessage = async (message: string) => {
     return confirm;
 };
 
+// IMPORTANT NOTE:
+// --------------------------------------------------------------------------------------
+
+// Polygon USD Coin (PoS), USDC, or any of bridged Polygon tokens are not EIP-3009 compatible.
+
+// They have transferWithAuthorization function, but you need to use a different EIP-712 message for signing. See here for more details.
+
+// EIP-3009:
+
+// EIP712Domain: [
+//   { name: 'name', type: 'string' },
+//   { name: 'version', type: 'string' },
+//   { name: 'chainId', type: 'uint256' },
+//   { name: 'verifyingContract', type: 'address' }
+// ]
+// Polygon:
+
+// EIP712Domain: [
+//   { name: 'name', type: 'string' },
+//   { name: 'version', type: 'string' },
+//   { name: 'verifyingContract', type: 'address' },
+//   { name: 'salt', type: 'bytes32' }
+// ]
+
 const transferTokens = async () => {
     const PRIV_KEY = process.env.PRIV_KEY;
     const RPC_URL = process.env.RPC_URL;
@@ -29,10 +53,6 @@ const transferTokens = async () => {
     console.log("Wallet address", wallet.address);
 
     const signer = wallet.connect(provider);
-
-    //console.log(usdcAbi);
-
-    //console.log(Array.isArray(JSON.parse(usdcAbi)));
 
     const usdc = new ethers.Contract(
         "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", // Polygon USDC
@@ -57,8 +77,11 @@ const transferTokens = async () => {
         domain: {
             name: "USD Coin (PoS)",
             version: "1",
-            chainId: 137,
             verifyingContract: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+            salt: ethers.utils.hexZeroPad(
+                ethers.BigNumber.from(137).toHexString(),
+                32,
+            ),
         },
         primaryType: "TransferWithAuthorization",
         message: {
@@ -81,25 +104,26 @@ const transferTokens = async () => {
     const r = ethers.utils.splitSignature(signature).r;
     const s = ethers.utils.splitSignature(signature).s;
 
-    // const transfer = await usdc.transferWithAuthorization(
-    //     "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
-    //     "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
-    //     1000000,
-    //     0,
-    //     expiry,
-    //     nonce,
-    //     v,
-    //     r,
-    //     s,
-    //     {
-    //         gasPrice: 100_000_000_000,
-    //         gasLimit: 200_000,
-    //     },
-    // );
-    // console.log(transfer.hash);
+    const transfer = await usdc.transferWithAuthorization(
+        "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
+        "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
+        1000000,
+        0,
+        expiry,
+        nonce,
+        v,
+        r,
+        s,
+        {
+            gasPrice: 100_000_000_000,
+            gasLimit: 200_000,
+        },
+    );
+    console.log(transfer.hash);
 };
 
 (async () => {
+    //await transferTokensTwo();
     await transferTokens();
     const CHECK_ENV_VARS = ["CONTESTS_API_URL"];
     const validEnvVars = await validateEnvVars(CHECK_ENV_VARS);
