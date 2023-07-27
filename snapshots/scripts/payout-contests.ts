@@ -29,6 +29,28 @@ const confirmRiskyWithMessage = async (message: string) => {
     return confirm;
 };
 
+const hasEnoughBalance = async (amount: number): Promise<boolean> => {
+    const PRIV_KEY = process.env.PRIV_KEY;
+    const RPC_URL = process.env.RPC_URL;
+
+    const provider = new ethers.providers.JsonRpcProvider(RPC_URL as string);
+    const wallet = new ethers.Wallet(PRIV_KEY as string);
+
+    const address = wallet.address;
+
+    const signer = wallet.connect(provider);
+
+    const usdc = new ethers.Contract(
+        USDC_ADDRESS, // Polygon USDC
+        usdcAbi,
+        signer,
+    );
+
+    const balance = await usdc.balanceOf(address);
+
+    return balance.gte(amount * 10 ** 6);
+};
+
 // IMPORTANT NOTE:
 // --------------------------------------------------------------------------------------
 
@@ -154,7 +176,7 @@ const transferTokens = async (
 };
 
 (async () => {
-    const CHECK_ENV_VARS = ["CONTESTS_API_URL"];
+    const CHECK_ENV_VARS = ["CONTESTS_API_URL", "PRIV_KEY", "RPC_URL"];
     const validEnvVars = await validateEnvVars(CHECK_ENV_VARS);
     if (!validEnvVars) return;
 
@@ -208,7 +230,11 @@ const transferTokens = async (
         0,
     );
 
-    // check usdc balance here
+    const sufficientBalance = await hasEnoughBalance(totalToDistribute);
+    if (!sufficientBalance) {
+        console.log("please add more USDC to the distributor address");
+        return;
+    }
 
     const numberOfPrizes: number = contestInfo.prizes.length;
 
