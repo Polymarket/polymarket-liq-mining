@@ -1,9 +1,10 @@
 import * as dotenv from "dotenv";
 import fetch from "cross-fetch";
 import inquirer from "inquirer";
-import { ethers } from "ethers";
+import { Contract, ethers } from "ethers";
 import { validateEnvVars } from "../src/validate-env-vars";
 import { usdcAbi } from "./abis/usdc";
+import { multicallAbi } from "./abis/multicall";
 
 dotenv.config();
 
@@ -104,22 +105,50 @@ const transferTokens = async () => {
     const r = ethers.utils.splitSignature(signature).r;
     const s = ethers.utils.splitSignature(signature).s;
 
-    const transfer = await usdc.transferWithAuthorization(
-        "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
-        "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
-        1000000,
-        0,
-        expiry,
-        nonce,
-        v,
-        r,
-        s,
-        {
-            gasPrice: 100_000_000_000,
-            gasLimit: 200_000,
-        },
+    const multicall = new ethers.Contract(
+        "0xcA11bde05977b3631167028862bE2a173976CA11",
+        multicallAbi,
+        signer,
     );
-    console.log(transfer.hash);
+
+    const transferWithAuthCall = {
+        target: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        allowFailure: false,
+        callData: usdc.interface.encodeFunctionData(
+            "transferWithAuthorization",
+            [
+                "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
+                "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
+                1000000,
+                0,
+                expiry,
+                nonce,
+                v,
+                r,
+                s,
+            ],
+        ),
+    };
+
+    const transaction = await multicall.aggregate([transferWithAuthCall]);
+    console.log(transaction.hash);
+
+    // const transfer = await usdc.transferWithAuthorization(
+    //     "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
+    //     "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
+    //     1000000,
+    //     0,
+    //     expiry,
+    //     nonce,
+    //     v,
+    //     r,
+    //     s,
+    //     {
+    //         gasPrice: 100_000_000_000,
+    //         gasLimit: 200_000,
+    //     },
+    // );
+    // console.log(transfer.hash);
 };
 
 (async () => {
