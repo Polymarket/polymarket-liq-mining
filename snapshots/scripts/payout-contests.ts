@@ -8,6 +8,15 @@ import { multicallAbi } from "./abis/multicall";
 
 dotenv.config();
 
+const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+const MULTICALL_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11";
+
+export interface targetCall {
+    target: string;
+    allowFailure: boolean;
+    callData: string;
+}
+
 const confirmRiskyWithMessage = async (message: string) => {
     const { confirm } = await inquirer.prompt([
         {
@@ -44,116 +53,107 @@ const confirmRiskyWithMessage = async (message: string) => {
 //   { name: 'salt', type: 'bytes32' }
 // ]
 
-const transferTokens = async () => {
+const transferTokens = async (
+    addressesToDistribute: string[],
+    amountsToDistributeUnscaled: number[],
+) => {
     const PRIV_KEY = process.env.PRIV_KEY;
     const RPC_URL = process.env.RPC_URL;
 
     const provider = new ethers.providers.JsonRpcProvider(RPC_URL as string);
     const wallet = new ethers.Wallet(PRIV_KEY as string);
 
+    const fromAddress = wallet.address;
+
     console.log("Wallet address", wallet.address);
 
     const signer = wallet.connect(provider);
 
     const usdc = new ethers.Contract(
-        "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", // Polygon USDC
+        USDC_ADDRESS, // Polygon USDC
         usdcAbi,
         signer,
     );
 
     const expiry = Math.floor(Date.now() / 1000) + 3600;
-    const nonce = ethers.utils.randomBytes(32);
 
-    const data = {
-        types: {
-            TransferWithAuthorization: [
-                { name: "from", type: "address" },
-                { name: "to", type: "address" },
-                { name: "value", type: "uint256" },
-                { name: "validAfter", type: "uint256" },
-                { name: "validBefore", type: "uint256" },
-                { name: "nonce", type: "bytes32" },
-            ],
-        },
-        domain: {
-            name: "USD Coin (PoS)",
-            version: "1",
-            verifyingContract: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-            salt: ethers.utils.hexZeroPad(
-                ethers.BigNumber.from(137).toHexString(),
-                32,
+    let transferWithAuthCalls: targetCall[] = [];
+
+    for (let i = 0; i < addressesToDistribute.length; i++) {
+        const nonce = ethers.utils.randomBytes(32);
+
+        const data = {
+            types: {
+                TransferWithAuthorization: [
+                    { name: "from", type: "address" },
+                    { name: "to", type: "address" },
+                    { name: "value", type: "uint256" },
+                    { name: "validAfter", type: "uint256" },
+                    { name: "validBefore", type: "uint256" },
+                    { name: "nonce", type: "bytes32" },
+                ],
+            },
+            domain: {
+                name: "USD Coin (PoS)",
+                version: "1",
+                verifyingContract: USDC_ADDRESS,
+                salt: ethers.utils.hexZeroPad(
+                    ethers.BigNumber.from(137).toHexString(),
+                    32,
+                ),
+            },
+            primaryType: "TransferWithAuthorization",
+            message: {
+                from: fromAddress,
+                to: addressesToDistribute[i],
+                value: amountsToDistributeUnscaled[i] * 10 ** 6,
+                validAfter: 0,
+                validBefore: expiry, // Valid for an hour
+                nonce: nonce,
+            },
+        };
+
+        const signature = await signer._signTypedData(
+            data.domain,
+            data.types,
+            data.message,
+        );
+
+        const { v, r, s } = ethers.utils.splitSignature(signature);
+
+        const transferWithAuthCall = {
+            target: USDC_ADDRESS,
+            allowFailure: false,
+            callData: usdc.interface.encodeFunctionData(
+                "transferWithAuthorization",
+                [
+                    fromAddress,
+                    addressesToDistribute[i],
+                    amountsToDistributeUnscaled[i] * 10 ** 6,
+                    0,
+                    expiry,
+                    nonce,
+                    v,
+                    r,
+                    s,
+                ],
             ),
-        },
-        primaryType: "TransferWithAuthorization",
-        message: {
-            from: "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
-            to: "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
-            value: 1000000,
-            validAfter: 0,
-            validBefore: expiry, // Valid for an hour
-            nonce: nonce,
-        },
-    };
+        };
 
-    const signature = await signer._signTypedData(
-        data.domain,
-        data.types,
-        data.message,
-    );
-
-    const v = ethers.utils.splitSignature(signature).v;
-    const r = ethers.utils.splitSignature(signature).r;
-    const s = ethers.utils.splitSignature(signature).s;
+        transferWithAuthCalls.push(transferWithAuthCall);
+    }
 
     const multicall = new ethers.Contract(
-        "0xcA11bde05977b3631167028862bE2a173976CA11",
+        MULTICALL_ADDRESS,
         multicallAbi,
         signer,
     );
 
-    const transferWithAuthCall = {
-        target: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-        allowFailure: false,
-        callData: usdc.interface.encodeFunctionData(
-            "transferWithAuthorization",
-            [
-                "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
-                "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
-                1000000,
-                0,
-                expiry,
-                nonce,
-                v,
-                r,
-                s,
-            ],
-        ),
-    };
-
-    const transaction = await multicall.aggregate([transferWithAuthCall]);
-    console.log(transaction.hash);
-
-    // const transfer = await usdc.transferWithAuthorization(
-    //     "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
-    //     "0x1ce89f5a40374dd57cebd37f325e9a022804e133",
-    //     1000000,
-    //     0,
-    //     expiry,
-    //     nonce,
-    //     v,
-    //     r,
-    //     s,
-    //     {
-    //         gasPrice: 100_000_000_000,
-    //         gasLimit: 200_000,
-    //     },
-    // );
-    // console.log(transfer.hash);
+    const transaction = await multicall.aggregate(transferWithAuthCalls);
+    console.log("transaction in flight", transaction.hash);
 };
 
 (async () => {
-    //await transferTokensTwo();
-    await transferTokens();
     const CHECK_ENV_VARS = ["CONTESTS_API_URL"];
     const validEnvVars = await validateEnvVars(CHECK_ENV_VARS);
     if (!validEnvVars) return;
@@ -208,13 +208,19 @@ const transferTokens = async () => {
         0,
     );
 
-    const riskyMessage = `You're about to distribute $${totalToDistribute} in payouts to ${contestInfo.prizes.length} addresses, do you wish to proceed?`;
+    // check usdc balance here
+
+    const numberOfPrizes: number = contestInfo.prizes.length;
+
+    const riskyMessage = `You're about to distribute $${totalToDistribute} in payouts to ${numberOfPrizes} addresses, do you wish to proceed?`;
     const confirm = await confirmRiskyWithMessage(riskyMessage);
     if (!confirm) {
         return;
     }
 
-    await transferTokens();
+    const addressesToDistribute = contest
+        .map((user: any) => user.address)
+        .splice(0, numberOfPrizes);
 
-    // use open zeppelin to send transactions
+    await transferTokens(addressesToDistribute, contestInfo.prizes);
 })();
