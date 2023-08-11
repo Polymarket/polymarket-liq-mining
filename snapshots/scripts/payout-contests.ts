@@ -206,6 +206,7 @@ const transferTokens = async (
                 contestType: contests[i].contestType,
                 state: contests[i].state,
                 prizes: contests[i].prizes,
+                direction: contests[i].direction,
             };
             break;
         }
@@ -221,7 +222,7 @@ const transferTokens = async (
 
     const contest = await (
         await fetch(
-            `${contestUrl}/contest?contestid=${contestInfo.contestId}&type=${contestInfo.contestType}`,
+            `${contestUrl}/contest?contestid=${contestInfo.contestId}&type=${contestInfo.contestType}&direction=${contestInfo.direction}`,
         )
     ).json();
 
