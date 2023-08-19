@@ -11,6 +11,8 @@ dotenv.config();
 const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
 const MULTICALL_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11";
 
+const EXCLUDED_ADDRESSES = [""].map((address) => address.toLowerCase());
+
 export interface targetCall {
     target: string;
     allowFailure: boolean;
@@ -102,6 +104,10 @@ const transferTokens = async (
     let transferWithAuthCalls: targetCall[] = [];
 
     for (let i = 0; i < addressesToDistribute.length; i++) {
+        if (EXCLUDED_ADDRESSES.includes(addressesToDistribute[i])) {
+            continue;
+        }
+
         const nonce = ethers.utils.randomBytes(32);
 
         const data = {
