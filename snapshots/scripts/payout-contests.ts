@@ -11,7 +11,7 @@ dotenv.config();
 const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
 const MULTICALL_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11";
 
-const EXCLUDED_ADDRESSES = ["0xb59d37859b7ae042d11bbd2dd2276a84a32f7ed4"].map((address) => address.toLowerCase());
+const EXCLUDED_ADDRESSES = ["0xb59d37859b7ae042d11bbd2dd2276a84a32f7ed4", "0x72d0663ea65a1c99387a56e910c5a5b6ac0dc59c"].map((address) => address.toLowerCase());
 
 export interface targetCall {
     target: string;
